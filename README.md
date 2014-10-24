@@ -5,7 +5,7 @@
 ## What makes *Adebar* specific?
 There are plenty of backup solutions available for Android, including such intended as front-end for ADB. So what is specific for *Adebar* that I wrote it, knowing of those other solutions?
 
-The task I wrote *Adebar* for is to be able to quickly backup a device, and restore the backup again – e.g. when I need to factory-reset a device. That includes the case where I have to send a device to be serviced, and need to use a different device meanwhile: that would rule out a "complete restore" due to the side-effects system-apps might cause, especially when the second device is from a completely different manufacturer, and/or runs a different version of Android or even a completely different ROM.
+The task I wrote *Adebar* for is to be able to quickly backup a device, and restore the backup again – e.g. when I need to factory-reset a device. That includes the case where I have to send a device to be serviced, and need to use a different device meanwhile: that would rule out a "complete restore" due to the side-effects system-apps might cause, especially when the second device is from a completely different manufacturer, and/or runs a different version of Android or even a completely different ROM. That's one of the reasons why *Adebar* creates one backup file per app (instead of one huge `backup.ab` holding them all) – while the other is to be able to select what to restore in general.
 
 
 ## What kind of backup does *Adebar* create?
@@ -14,7 +14,7 @@ The task I wrote *Adebar* for is to be able to quickly backup a device, and rest
 * a [shell script](http://en.wikipedia.org/wiki/Shell_script "Wikipedia: Shell script") to create separate ADB backups for the apps you've installed yourself ("user-apps"), including their `.apk` files and their data
 * a shell script to create ADB backups of system apps, only containing their data
 * a shell script to disable (freeze) all apps you had disabled/frozen on your device
-* it pulls the `wpa_supplicant.conf` from your device, which holds information on all WiFi APs you've configured
+* it pulls the `wpa_supplicant.conf` from your device, which holds information on all WiFi APs you've configured (requires the ADB daemon to run in root mode)
 * it pulls the `packages.xml` from your device, which holds all information about apps installed on your device
 
 Optionally, if you have the PHP [CLI](http://en.wikipedia.org/wiki/Command-line_interface "Wikipedia: Command-line interface") available on your computer, it parses the `packages.xml` and creates additional files:

@@ -9,47 +9,97 @@ else
   OUTDIR="$1"
 fi
 
+if [ ! -d "$OUTDIR" ]; then
+  mkdir -p "$OUTDIR" || {
+    echo "Output directory does not exist, and I cannot create it. Sorry."
+    echo
+    exit
+  }
+fi
+
 # Configuration
 #OUTDIR='.'
+USERDIR="userApps"
+SYSDIR="sysApps"
 
 #########################################[ Helpers ]###
 
 # Create script for disabled apps
 getDisabled() {
-  echo "#!/bin/bash" > $OUTDIR/disable
-  echo "# Disabled apps as of $(date '+%Y-%m-%d %H:%M')" >> $OUTDIR/disable
+  local scriptname="$OUTDIR/disable"
+  echo "#!/bin/bash" > "${scriptname}"
+  echo "# Disabled apps as of $(date '+%Y-%m-%d %H:%M')" >> "${scriptname}"
+  echo >> "${scriptname}"
+
   for app in $(adb shell "pm list packages -d"); do
     app=$(echo $app | tr -d '\r' | awk -F : '{print $2}')
-    echo "adb shell \"pm disable $app\"" >> $OUTDIR/disable
+    echo "adb shell \"pm disable $app\"" >> "${scriptname}"
   done
+
+  chmod u+x "${scriptname}"
 }
+
 
 # Create script to backup all user-apps
 getUserAppBackup() {
-  echo "#!/bin/bash" > $OUTDIR/userbackup
-  echo "# Backup script as of $(date '+%Y-%m-%d %H:%M')" >> $OUTDIR/userbackup
-  echo "# Backs up all user apps including their .apk files and data" >> $OUTDIR/userbackup
+  local backupscript="$OUTDIR/userbackup"
+  local restorescript="$OUTDIR/userrestore"
+  echo "#!/bin/bash" > "$backupscript"
+  echo "# Backup script as of $(date '+%Y-%m-%d %H:%M')" >> "$backupscript"
+  echo "# Backs up all user apps including their .apk files and data" >> "$backupscript"
+  echo "# Feel free to comment out/remove apps you don't want/need to be backed up." >> "$backupscript"
+  echo  >> "$backupscript"
+  echo "[ ! -d \"${USERDIR}\" ] && mkdir \"${USERDIR}\"" >> "$backupscript"
+  echo >> "$backupscript"
+
+  echo "#!/bin/bash" > "$restorescript"
+  echo "# Restore script as of $(date '+%Y-%m-%d %H:%M')" >> "$restorescript"
+  echo "# Restores all app backups. Comment out (or delete) those you do not wish to restore." >> "$restorescript"
+  echo  >> "$restorescript"
+
   for app in $(adb shell "pm list packages -3"); do
     app=$(echo $app | tr -d '\r' | awk -F : '{print $2}')
-    echo -e "adb backup -f ${app}.ab -apk $app" >> $OUTDIR/userbackup
+    echo -e "adb backup -f \"${USERDIR}/${app}.ab\" -apk $app" >> "$backupscript"
+    echo "sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
+    echo -e "adb restore \"${USERDIR}/${app}.ab\"" >> "$restorescript"
   done
+
+  chmod u+x "$backupscript" "$restorescript"
 }
+
 
 # Create script to backup all system-app data
 getSystemAppBackup() {
-  echo "#!/bin/bash" > $OUTDIR/sysbackup
-  echo "# Backup script as of $(date '+%Y-%m-%d %H:%M')" >> $OUTDIR/sysbackup
+  local backupscript="$OUTDIR/sysbackup"
+  local restorescript="$OUTDIR/sysrestore"
+  echo "#!/bin/bash" > "$backupscript"
+  echo "# Backup script as of $(date '+%Y-%m-%d %H:%M')" >> "$backupscript"
+  echo "# Backs up the data (not the .apk files) of all your system apps" >> "$backupscript"
+  echo "# Feel free to comment out/remove apps you don't want/need to be backed up." >> "$backupscript"
+  echo  >> "$backupscript"
+  echo "[ ! -d \"${SYSDIR}\" ] && mkdir \"${SYSDIR}\"" >> "$backupscript"
+  echo >> "$backupscript"
+
+  echo "#!/bin/bash" > "$restorescript"
+  echo "# Restore script as of $(date '+%Y-%m-%d %H:%M')" >> "$restorescript"
+  echo -e "# Restores all system app data backups.\n# DRAGONS HERE: this might fail if you restore to a different\n# device/Android version/ROM, so be careful!\n# Comment out/delete what you do not wish to restore." >> "$restorescript"
+  echo  >> "$restorescript"
+
   for app in $(adb shell "pm list packages -s"); do
     app=$(echo $app | tr -d '\r' | awk -F : '{print $2}')
-    echo -e "adb backup -f ${app}.ab -noapk $app" >> $OUTDIR/sysbackup
+    echo -e "adb backup -f \"${SYSDIR}/${app}.ab\" -noapk $app" >> "$backupscript"
+    echo "sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
+    echo -e "adb restore \"${SYSDIR}/${app}.ab\"" >> "$restorescript"
   done
+
+  chmod u+x "$backupscript" "$restorescript"
 }
 
 # Get disabled broadcast receivers
 # Requires xml2 package (apt-get install xml2)
 getFrozenComponents() {
   adb pull /data/system/packages.xml $OUTDIR/packages.xml
-  xml2 < $OUTDIR/packages.xml |grep "disabled-components/item/@name" > $OUTDIR/deadreceivers
+  [ -n "$(which xml2)" ] && xml2 < $OUTDIR/packages.xml |grep "disabled-components/item/@name" > $OUTDIR/deadreceivers
 }
 
 # Get settings
