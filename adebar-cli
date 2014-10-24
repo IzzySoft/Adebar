@@ -1,0 +1,95 @@
+#!/bin/bash
+# Create backup scripts
+
+# check parameters
+if [ -z "$1" ]; then
+  echo "Syntax: $0 <target_directory>"
+  exit 1
+else
+  OUTDIR="$1"
+fi
+
+# Configuration
+#OUTDIR='.'
+
+#########################################[ Helpers ]###
+
+# Create script for disabled apps
+getDisabled() {
+  echo "#!/bin/bash" > $OUTDIR/disable
+  echo "# Disabled apps as of $(date '+%Y-%m-%d %H:%M')" >> $OUTDIR/disable
+  for app in $(adb shell "pm list packages -d"); do
+    app=$(echo $app | tr -d '\r' | awk -F : '{print $2}')
+    echo "adb shell \"pm disable $app\"" >> $OUTDIR/disable
+  done
+}
+
+# Create script to backup all user-apps
+getUserAppBackup() {
+  echo "#!/bin/bash" > $OUTDIR/userbackup
+  echo "# Backup script as of $(date '+%Y-%m-%d %H:%M')" >> $OUTDIR/userbackup
+  echo "# Backs up all user apps including their .apk files and data" >> $OUTDIR/userbackup
+  for app in $(adb shell "pm list packages -3"); do
+    app=$(echo $app | tr -d '\r' | awk -F : '{print $2}')
+    echo -e "adb backup -f ${app}.ab -apk $app" >> $OUTDIR/userbackup
+  done
+}
+
+# Create script to backup all system-app data
+getSystemAppBackup() {
+  echo "#!/bin/bash" > $OUTDIR/sysbackup
+  echo "# Backup script as of $(date '+%Y-%m-%d %H:%M')" >> $OUTDIR/sysbackup
+  for app in $(adb shell "pm list packages -s"); do
+    app=$(echo $app | tr -d '\r' | awk -F : '{print $2}')
+    echo -e "adb backup -f ${app}.ab -noapk $app" >> $OUTDIR/sysbackup
+  done
+}
+
+# Get disabled broadcast receivers
+# Requires xml2 package (apt-get install xml2)
+getFrozenComponents() {
+  adb pull /data/system/packages.xml $OUTDIR/packages.xml
+  xml2 < $OUTDIR/packages.xml |grep "disabled-components/item/@name" > $OUTDIR/deadreceivers
+}
+
+# Get settings
+# includes WiFi APs etc.
+getSettings() {
+  adb pull /data/misc/wifi/wpa_supplicant.conf $OUTDIR/wpa_supplicant.conf
+  # SMS/MMS ?
+  # CallLog ?
+  # internal SD ?
+  # ?
+}
+
+############################################[ Main ]###
+getDisabled
+getUserAppBackup
+getSystemAppBackup
+getFrozenComponents
+getSettings
+[ -f "/usr/bin/php" ] && ./getPkgData.php "$OUTDIR"
+
+exit
+
+
+######################################[ References ]###
+# pm list packages [options] <FILTER>
+# options:
+#    -f: See their associated file.
+#    -d: Filter to only show disabled packages.
+#    -e: Filter to only show enabled packages.
+#    -s: Filter to only show system packages.
+#    -3: Filter to only show third party packages.
+#    -i: See the installer for the packages.
+#    -u: Also include uninstalled packages.
+#    --user <USER_ID>: The user space to query.
+#
+# disable a component (e.g. BroadcastReceiver): pm disable com.example.com.testapp/.TestActivity
+#
+# adb pull /data/system/packages.list packages.list
+# apps with UID/GID and app path
+#
+# adb pull /data/system/packages.xml packages.xml
+# apps with permissions, intents, etc.:
+#
