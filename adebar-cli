@@ -21,12 +21,19 @@ fi
 #OUTDIR='.'
 USERDIR="userApps"
 SYSDIR="sysApps"
+DEVICE_IP=
+TIBU_PORT="8080"
+TIBU_SDINT="/storage/INTERNAL/Storage-ALL.zip"
+TIBU_SDEXT="/storage/SAMSUNG_EXT_SD_CARD/Storage-ALL.zip"
+TIBU_BACKUPS="/TitaniumBackup-ALL.zip"
 
 #########################################[ Helpers ]###
+BINDIR="${0%/*}"
+[ -f "${BINDIR}/config" ] && . "${BINDIR}/config"
 
 # Create script for disabled apps
 getDisabled() {
-  local scriptname="$OUTDIR/disable"
+  local scriptname="${OUTDIR}/disable"
   echo "#!/bin/bash" > "${scriptname}"
   echo "# Disabled apps as of $(date '+%Y-%m-%d %H:%M')" >> "${scriptname}"
   echo >> "${scriptname}"
@@ -112,12 +119,31 @@ getSettings() {
   # ?
 }
 
+
+# Create script to download SDCard Contents and TiBu Backups via TiBu WebServer
+getTibu() {
+  local scriptname="${OUTDIR}/tibu"
+  echo "#!/bin/bash" > "${scriptname}"
+  echo "# Download contents of external/internal SDCard and Backups via TitaniumBackups WebServer" >> "${scriptname}"
+  echo "# Make sure your device is connected to your local WiFi, and you've enabled TiBu's WebServer" >> "${scriptname}"
+  echo "# The latter can be done from within TiBu via the menu" >> "${scriptname}"
+  echo "# As usual: comment out the components you do not want/need :)" >> "${scriptname}"
+  echo  >> "${scriptname}"
+  timestamp="$(date '+%Y%m%d_%H%M')"
+  echo "wget -O sdinternal_${timestamp}.zip http://${DEVICE_IP}:${TIBU_PORT}${TIBU_SDINT}" >> "${scriptname}"
+  echo "wget -O sdexternal_${timestamp}.zip http://${DEVICE_IP}:${TIBU_PORT}${TIBU_SDEXT}" >> "${scriptname}"
+  echo "wget -O tibu_backups_${timestamp}.zip http://${DEVICE_IP}:${TIBU_PORT}${TIBU_BACKUPS}" >> "${scriptname}"
+  chmod u+x "${scriptname}"
+}
+
+
 ############################################[ Main ]###
 getDisabled
 getUserAppBackup
 getSystemAppBackup
 getFrozenComponents
 getSettings
+getTibu
 [ -f "/usr/bin/php" ] && ./getPkgData.php "$OUTDIR"
 
 exit

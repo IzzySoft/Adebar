@@ -1,0 +1,13 @@
+# Sample configuration file
+# Except for the DEVICE_IP, these are the settings used by default.
+# To override them, copy this file to "config" and adjust it to your needs.
+# Of course you can ommit (remove/comment out) settings which do not differ from yours
+# (e.g. have your "config" file only holding the DEVICE_IP)
+
+USERDIR="userApps"
+SYSDIR="sysApps"
+DEVICE_IP="192.168.101.111"
+TIBU_PORT="8080"
+TIBU_SDINT="/storage/INTERNAL/Storage-ALL.zip"
+TIBU_SDEXT="/storage/SAMSUNG_EXT_SD_CARD/Storage-ALL.zip"
+TIBU_BACKUPS="/TitaniumBackup-ALL.zip"
