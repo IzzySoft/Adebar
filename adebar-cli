@@ -94,9 +94,27 @@ getSystemAppBackup() {
 
   for app in $(adb shell "pm list packages -s"); do
     app=$(echo $app | tr -d '\r' | awk -F : '{print $2}')
-    echo -e "adb backup -f \"${SYSDIR}/${app}.ab\" -noapk $app" >> "$backupscript"
-    echo "sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
-    echo -e "adb restore \"${SYSDIR}/${app}.ab\"" >> "$restorescript"
+    prep=""
+    if [ "$app" = "com.android.sharedstoragebackup" ]; then # shared storage
+      prep="  "
+      echo >> "$backupscript"
+      echo  >> "$restorescript"
+      echo -e "echo \"The following command will download 'shared storage' (i.e. contents of the SD card(s)).\"\necho \"This might take quite a while, depending on what you've stored there.\"" >> "$backupscript"
+      echo -e "echo \"The following command will restore 'shared storage' (i.e. contents of the SD card(s)).\"\necho \"This might take quite a while, depending on how big your backup from it was.\"" >> "$restorescript"
+      echo -e "read -n 1 -p \"Do you wish to run this command now? (Y/n) \" res\necho\nres=\$(echo \$res|tr [:upper:] [:lower:])\nif [ \"\$res\" = \"y\" ]; then" >> "$backupscript"
+      echo -e "read -n 1 -p \"Do you wish to run this command now? (Y/n) \" res\necho\nres=\$(echo \$res|tr [:upper:] [:lower:])\nif [ \"\$res\" = \"y\" ]; then" >> "$restorescript"
+    else
+      prep=""
+    fi
+    echo -e "${prep}adb backup -f \"${SYSDIR}/${app}.ab\" -noapk $app" >> "$backupscript"
+    echo "${prep}sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
+    echo -e "${prep}adb restore \"${SYSDIR}/${app}.ab\"" >> "$restorescript"
+    if [ "$app" = "com.android.sharedstoragebackup" ]; then
+      echo -e "else\n echo \"Skipping shared storage\"\nfi" >> "$backupscript"
+      echo -e "else\n echo \"Skipping shared storage\"\nfi" >> "$restorescript"
+      echo >> "$backupscript"
+      echo  >> "$restorescript"
+    fi
   done
 
   chmod u+x "$backupscript" "$restorescript"
