@@ -40,3 +40,9 @@ As the command-line parameters are subject to change in the initial phase (i.e. 
 1. Connect your device
 1. Run `adb devices` to make sure it was recognized
 1. Run the script, passing it the output directory name as argument
+1. Adjust the created scripts to suit your needs (e.g. comment out/remove stuff you don't want to be backed up)
+1. Run the (adjusted) scripts to create your backups/restores
+
+
+## More details
+More details and hints can be found in the `doc/` sub-directory of the project.
