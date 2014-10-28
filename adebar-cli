@@ -140,6 +140,7 @@ getSettings() {
 
 # Create script to download SDCard Contents and TiBu Backups via TiBu WebServer
 getTibu() {
+  [ -z "${DEVICE_IP}" ] && return
   local scriptname="${OUTDIR}/tibu"
   echo "#!/bin/bash" > "${scriptname}"
   echo "# Download contents of external/internal SDCard and Backups via TitaniumBackups WebServer" >> "${scriptname}"
