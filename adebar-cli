@@ -124,7 +124,7 @@ getSystemAppBackup() {
 # Requires xml2 package (apt-get install xml2)
 getFrozenComponents() {
   adb pull /data/system/packages.xml $OUTDIR/packages.xml
-  [ -n "$(which xml2)" ] && xml2 < $OUTDIR/packages.xml |grep "disabled-components/item/@name" > $OUTDIR/deadreceivers
+  [ -f "${OUTDIR}/packages.xml" -a -n "$(which xml2)" ] && xml2 < $OUTDIR/packages.xml |grep "disabled-components/item/@name" > $OUTDIR/deadreceivers
 }
 
 # Get settings
@@ -163,7 +163,7 @@ getSystemAppBackup
 getFrozenComponents
 getSettings
 getTibu
-[ -f "/usr/bin/php" ] && ./getPkgData.php "$OUTDIR"
+[ -f "${OUTDIR}/packages.xml" -a -f "/usr/bin/php" ] && ./getPkgData.php "$OUTDIR"
 
 exit
 
