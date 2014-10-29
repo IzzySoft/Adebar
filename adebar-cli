@@ -9,6 +9,25 @@ else
   OUTDIR="$1"
 fi
 
+# Configuration
+#OUTDIR='.' # OUTDIR is specified via command line (mandatory parameter)
+USERDIR="userApps"
+SYSDIR="sysApps"
+DEVICE_IP=
+TIBU_PORT="8080"
+TIBU_SDINT="/storage/INTERNAL/Storage-ALL.zip"
+TIBU_SDEXT="/storage/SAMSUNG_EXT_SD_CARD/Storage-ALL.zip"
+TIBU_BACKUPS="/TitaniumBackup-ALL.zip"
+STORAGE_BASE=
+
+############################################[ Init ]###
+BINDIR="${0%/*}"
+[ -f "${BINDIR}/config" ] && . "${BINDIR}/config"
+
+# Check output directory and create it if it does not exist
+if [ -n "${STORAGE_BASE}" ]; then
+  OUTDIR="${STORAGE_BASE}/${OUTDIR}"
+fi
 if [ ! -d "$OUTDIR" ]; then
   mkdir -p "$OUTDIR" || {
     echo "Output directory does not exist, and I cannot create it. Sorry."
@@ -17,20 +36,7 @@ if [ ! -d "$OUTDIR" ]; then
   }
 fi
 
-# Configuration
-#OUTDIR='.'
-USERDIR="userApps"
-SYSDIR="sysApps"
-DEVICE_IP=
-TIBU_PORT="8080"
-TIBU_SDINT="/storage/INTERNAL/Storage-ALL.zip"
-TIBU_SDEXT="/storage/SAMSUNG_EXT_SD_CARD/Storage-ALL.zip"
-TIBU_BACKUPS="/TitaniumBackup-ALL.zip"
-
 #########################################[ Helpers ]###
-BINDIR="${0%/*}"
-[ -f "${BINDIR}/config" ] && . "${BINDIR}/config"
-
 # Create script for disabled apps
 getDisabled() {
   local scriptname="${OUTDIR}/disable"

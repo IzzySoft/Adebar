@@ -11,3 +11,4 @@ TIBU_PORT="8080"
 TIBU_SDINT="/storage/INTERNAL/Storage-ALL.zip"
 TIBU_SDEXT="/storage/SAMSUNG_EXT_SD_CARD/Storage-ALL.zip"
 TIBU_BACKUPS="/TitaniumBackup-ALL.zip"
+STORAGE_BASE=
