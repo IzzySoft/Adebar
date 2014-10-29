@@ -141,14 +141,16 @@ getSystemAppBackup() {
   chmod u+x "$backupscript" "$restorescript"
 }
 
+# Retrieve packages.xml (required in different places)
+pullPackagesXML() {
+  [ $((${MK_COMPONENTS} + ${MK_PKG_DATA})) -eq 0 ] && return
+  adb pull /data/system/packages.xml $OUTDIR/packages.xml
+}
+
 # Get disabled broadcast receivers
 # Requires xml2 package (apt-get install xml2)
 getFrozenComponents() {
-  [ $MK_COMPONENTS -ne 1 ] && return
-
-  adb pull /data/system/packages.xml $OUTDIR/packages.xml
-  [ ! -f "${OUTDIR}/packages.xml" ] && return
-
+  [ $MK_COMPONENTS -ne 1 -o ! -f "${OUTDIR}/packages.xml" ] && return
   [ -n "$(which xml2)" ] && xml2 < $OUTDIR/packages.xml |grep "disabled-components/item/@name" > $OUTDIR/deadreceivers
 }
 
@@ -185,6 +187,7 @@ getTibu() {
 
 
 ############################################[ Main ]###
+pullPackagesXML
 getDisabled
 getUserAppBackup
 getSystemAppBackup
