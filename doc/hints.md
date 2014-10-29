@@ -35,18 +35,39 @@ When running, *Adebar* checks for a file called `config` in the directory where
 it resides itself. A sample configuration file is included as `config.sample`,
 which you simply can copy and adjust. Your `config` file has only to contain the
 settings you wish to change; this will usually be the DEVICE_IP (which is not
-set by default).
+set by default) and/or the STORAGE_BASE.
 
 What the settings are standing for is:
 
-* `USERDIR="userApps"`: sub-directory where the backup scripts will place the
-  ADB backups of your user-apps into
-* `SYSDIR="sysApps"`: Similar, for the data backups of your system apps
-* `DEVICE_IP="192.168.101.111"`: IP address of your device (for *TiBu*)
-* `TIBU_PORT="8080"`: port the *TiBu* web server listens on
-* `TIBU_SDINT="/storage/INTERNAL/Storage-ALL.zip"`: URL path of the internal SD
-* `TIBU_SDEXT="/storage/SAMSUNG_EXT_SD_CARD/Storage-ALL.zip":` URL path of the external SD
-* `TIBU_BACKUPS="/TitaniumBackup-ALL.zip"`: URL path to the *TiBu* backups
+* directory settings:
+  * `STORAGE_BASE=`: that's the "base directory" everything goes below. Here
+    the command-line provided `OUTDIR` will be appended to. By default, this
+    variable is empty, so `OUTDIR` is relative to the execution path. If you
+    e.g. set it as `STORAGE_PATH=/home/me/backups`, and pass `moto_x` as
+    parameter to `adebar_cli`, your files should end up below
+    `/home/me/backups/moto_x`.
+  * `USERDIR="userApps"`: sub-directory where the backup scripts will place the
+    ADB backups of your user-apps into (relative to where they're run)
+  * `SYSDIR="sysApps"`: Similar, for the data backups of your system apps
+* TiBu specific stuff:
+  * `DEVICE_IP="192.168.101.111"`: IP address of your device
+  * `TIBU_PORT="8080"`: port the *TiBu* web server listens on
+  * `TIBU_SDINT="/storage/INTERNAL/Storage-ALL.zip"`: URL path of the internal SD
+  * `TIBU_SDEXT="/storage/SAMSUNG_EXT_SD_CARD/Storage-ALL.zip":` URL path of the external SD
+  * `TIBU_BACKUPS="/TitaniumBackup-ALL.zip"`: URL path to the *TiBu* backups
+* Disable features (optional, by default they're all enabled; set a value to "0"
+  in order to disable a feature
+  * `MK_APPDISABLE`: the script to "freeze/disable" apps
+  * `MK_USERBACKUP`/`MK_SYSBACKUP`: create the script to backup user apps+data / system app-data
+  * `MK_COMPONENTS`: create simple list for "disabled components" (for scripts & docu
+    see `MK_PKG_DATA`)
+  * `PULL_SETTINGS`: pull settings/configs from the device (currently just
+    `wpa_supplicant.conf`, but there might be more in the future)
+  * `MK_TIBU`: create the script to pull stuff from the TiBu web server
+  * `MK_PKG_DATA`: process packages.xml for further details (requires PHP-cli)
+    This creates the *script* to deal with "disabled components", plus the
+    corresponding markup document, plus the markup document holding details
+    on installed apps and their sources
 
 
 ## Shared Storage
