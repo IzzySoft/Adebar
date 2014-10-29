@@ -9,7 +9,7 @@ else
   OUTDIR="$1"
 fi
 
-# Configuration
+# #################################[ Configuration ]###
 #OUTDIR='.' # OUTDIR is specified via command line (mandatory parameter)
 USERDIR="userApps"
 SYSDIR="sysApps"
@@ -19,6 +19,15 @@ TIBU_SDINT="/storage/INTERNAL/Storage-ALL.zip"
 TIBU_SDEXT="/storage/SAMSUNG_EXT_SD_CARD/Storage-ALL.zip"
 TIBU_BACKUPS="/TitaniumBackup-ALL.zip"
 STORAGE_BASE=
+
+# Features
+MK_APPDISABLE=1
+MK_USERBACKUP=1
+MK_SYSBACKUP=1
+MK_COMPONENTS=1
+PULL_SETTINGS=1
+MK_TIBU=1
+MK_PKG_DATA=1
 
 ############################################[ Init ]###
 BINDIR="${0%/*}"
@@ -39,6 +48,8 @@ fi
 #########################################[ Helpers ]###
 # Create script for disabled apps
 getDisabled() {
+  [ $MK_APPDISABLE -ne 1 ] && return
+
   local scriptname="${OUTDIR}/disable"
   echo "#!/bin/bash" > "${scriptname}"
   echo "# Disabled apps as of $(date '+%Y-%m-%d %H:%M')" >> "${scriptname}"
@@ -55,6 +66,8 @@ getDisabled() {
 
 # Create script to backup all user-apps
 getUserAppBackup() {
+  [ $MK_USERBACKUP -ne 1 ] && return
+
   local backupscript="$OUTDIR/userbackup"
   local restorescript="$OUTDIR/userrestore"
   echo "#!/bin/bash" > "$backupscript"
@@ -83,6 +96,8 @@ getUserAppBackup() {
 
 # Create script to backup all system-app data
 getSystemAppBackup() {
+  [ $MK_USERBACKUP -ne 1 ] && return
+
   local backupscript="$OUTDIR/sysbackup"
   local restorescript="$OUTDIR/sysrestore"
   echo "#!/bin/bash" > "$backupscript"
@@ -129,24 +144,31 @@ getSystemAppBackup() {
 # Get disabled broadcast receivers
 # Requires xml2 package (apt-get install xml2)
 getFrozenComponents() {
+  [ $MK_COMPONENTS -ne 1 ] && return
+
   adb pull /data/system/packages.xml $OUTDIR/packages.xml
-  [ -f "${OUTDIR}/packages.xml" -a -n "$(which xml2)" ] && xml2 < $OUTDIR/packages.xml |grep "disabled-components/item/@name" > $OUTDIR/deadreceivers
+  [ ! -f "${OUTDIR}/packages.xml" ] && return
+
+  [ -n "$(which xml2)" ] && xml2 < $OUTDIR/packages.xml |grep "disabled-components/item/@name" > $OUTDIR/deadreceivers
 }
 
 # Get settings
 # includes WiFi APs etc.
 getSettings() {
+  [ $PULL_SETTINGS -ne 1 ] && return
+
   adb pull /data/misc/wifi/wpa_supplicant.conf $OUTDIR/wpa_supplicant.conf
   # SMS/MMS ?
   # CallLog ?
-  # internal SD ?
   # ?
 }
 
 
 # Create script to download SDCard Contents and TiBu Backups via TiBu WebServer
 getTibu() {
+  [ $MK_TIBU -ne 1 ] && return
   [ -z "${DEVICE_IP}" ] && return
+
   local scriptname="${OUTDIR}/tibu"
   echo "#!/bin/bash" > "${scriptname}"
   echo "# Download contents of external/internal SDCard and Backups via TitaniumBackups WebServer" >> "${scriptname}"
@@ -169,7 +191,7 @@ getSystemAppBackup
 getFrozenComponents
 getSettings
 getTibu
-[ -f "${OUTDIR}/packages.xml" -a -f "/usr/bin/php" ] && ./getPkgData.php "$OUTDIR"
+[ $MK_PKG_DATA -ne 0 -a -f "${OUTDIR}/packages.xml" -a -f "/usr/bin/php" ] && ./getPkgData.php "$OUTDIR"
 
 exit
 

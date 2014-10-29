@@ -20,3 +20,19 @@ TIBU_PORT="8080"
 TIBU_SDINT="/storage/INTERNAL/Storage-ALL.zip"
 TIBU_SDEXT="/storage/SAMSUNG_EXT_SD_CARD/Storage-ALL.zip"
 TIBU_BACKUPS="/TitaniumBackup-ALL.zip"
+
+# ---------------------------=[ Features ]=--
+# 1=enabled, 0=disabled; whether to ...
+# the script to "freeze/disable" apps
+MK_APPDISABLE=1
+# create the script to backup user apps+data / system app-data
+MK_USERBACKUP=1
+MK_SYSBACKUP=1
+# create scripts and docs for "disabled components"
+MK_COMPONENTS=1
+# pull settings/configs from the device
+PULL_SETTINGS=1
+# create the script to pull stuff from the TiBu web server
+MK_TIBU=1
+# process packages.xml for further details (requires PHP-cli)
+MK_PKG_DATA=1
