@@ -1,5 +1,12 @@
 #!/usr/bin/php5
 <?php
+/*
+# Adebar
+# (Android DEvice Backup And Restore)
+# Creating scripts to backup and restore your apps, settings, and more
+# © 2014 by Andreas Itzchak Rehberg
+# Licensed using GPLv2 (see the file LICENSE which should have shipped with this)
+*/
 
 # Parse arguments
 if ( !isset($argv[1]) ) {
