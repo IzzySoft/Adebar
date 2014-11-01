@@ -38,3 +38,5 @@ MK_TIBU=1
 MK_PKG_DATA=1
 # deal with the default-install-location (where apps should be installed)
 MK_INSTALLLOC=1
+# Create deviceInfo.md
+MK_DEVICEINFO=1

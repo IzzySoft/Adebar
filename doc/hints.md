@@ -84,6 +84,9 @@ What the settings are standing for is:
   * `MK_INSTALLLOC`: Deal with the default-install-location (where apps should
     be installed by default: 0=auto (system decides), 1=device, 2=sdcard).
     Creates a 1-liner script to set that again.
+  * `MK_DEVICEINFO`: Create a (Markdown) document containing device information.
+    Currently it lists the "device features" as returned by `pm list features`,
+    more might be added in the future.
 
 
 ## Shared Storage

@@ -33,6 +33,7 @@ PULL_SETTINGS=1
 MK_TIBU=1
 MK_PKG_DATA=1
 MK_INSTALLLOC=1
+MK_DEVICEINFO=1
 
 
 ############################################[ Init ]###
@@ -173,7 +174,7 @@ pullPackagesXML() {
 # Requires xml2 package (apt-get install xml2)
 getFrozenComponents() {
   [ $MK_COMPONENTS -ne 1 -o ! -f "${OUTDIR}/packages.xml" ] && return
-  [ -n "$(which xml2)" ] && xml2 < $OUTDIR/packages.xml |grep "disabled-components/item/@name" > $OUTDIR/deadreceivers
+  [ -n "$(which xml2)" ] && xml2 < $OUTDIR/packages.xml |grep "disabled-components/item/@name" > "$OUTDIR/deadreceivers"
 }
 
 # Get the default install-location
@@ -182,6 +183,18 @@ getInstallLoc() {
   foo="$(adb shell pm get-install-location)"
   echo "pm set-install-location ${foo//[^0-9]/}" > "$OUTDIR/defaultInstallLoc"
   chmod u+x "$OUTDIR/defaultInstallLoc"
+}
+
+# Get device info
+getDeviceInfo() {
+  [ $MK_DEVICEINFO -ne 1 ] && return
+  local item=""
+
+  echo "# Device features" > "${OUTDIR}/deviceInfo.md"
+  for feature in $(adb shell "pm list features"); do
+    item=$(echo $feature | tr -d '\r' | awk -F : '{print $2}')
+    echo "* $item" >> "${OUTDIR}/deviceInfo.md"
+  done
 }
 
 # Get settings
@@ -223,6 +236,7 @@ getUserAppBackup
 getSystemAppBackup
 getFrozenComponents
 getInstallLoc
+getDeviceInfo
 getSettings
 getTibu
 [ $MK_PKG_DATA -ne 0 -a -f "${OUTDIR}/packages.xml" -a -f "/usr/bin/php" ] && ./getPkgData.php "$OUTDIR"
