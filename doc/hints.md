@@ -31,9 +31,20 @@ installation-steps required.
 
 
 ## Configuration
-When running, *Adebar* checks for a file called `config` in the directory where
-it resides itself. A sample configuration file is included as `config.sample`,
-which you simply can copy and adjust. Your `config` file has only to contain the
+When running, *Adebar* first checks for an existing config file:
+
+* if `config/` is a directory, and contains a file with the same name
+  as specified by the first command-line parameter, this is used. This
+  allows for device-specific config files if you have more than one
+  device.
+* otherwise, if `config/` is a directory, and contains a file named
+  `default`, this will be used. You might want to have that for e.g.
+  "guest devices" or as a default for possible "new ones"
+* otherwise, if `config` is a file, that will be used. Makes it easier
+  if you only have one device, and don't plan for more.
+
+A sample configuration file is included as `doc/config.sample`, which you
+simply can copy and adjust. Your config file has only to contain the
 settings you wish to change; this will usually be the DEVICE_IP (which is not
 set by default) and/or the STORAGE_BASE.
 
@@ -53,14 +64,16 @@ What the settings are standing for is:
   * `DEVICE_IP="192.168.101.111"`: IP address of your device
   * `TIBU_PORT="8080"`: port the *TiBu* web server listens on
   * `TIBU_SDINT="/storage/INTERNAL/Storage-ALL.zip"`: URL path of the internal SD
-  * `TIBU_SDEXT="/storage/SAMSUNG_EXT_SD_CARD/Storage-ALL.zip":` URL path of the external SD
+  * `TIBU_SDEXT="/storage/SAMSUNG_EXT_SD_CARD/Storage-ALL.zip":` URL path of the
+    external SD
   * `TIBU_BACKUPS="/TitaniumBackup-ALL.zip"`: URL path to the *TiBu* backups
 * Disable features (optional, by default they're all enabled; set a value to "0"
   in order to disable a feature
   * `MK_APPDISABLE`: the script to "freeze/disable" apps
-  * `MK_USERBACKUP`/`MK_SYSBACKUP`: create the script to backup user apps+data / system app-data
-  * `MK_COMPONENTS`: create simple list for "disabled components" (for scripts & docu
-    see `MK_PKG_DATA`)
+  * `MK_USERBACKUP`/`MK_SYSBACKUP`: create the script to backup user apps+data /
+    system app-data
+  * `MK_COMPONENTS`: create simple list for "disabled components" (for scripts &
+    docu see `MK_PKG_DATA`)
   * `PULL_SETTINGS`: pull settings/configs from the device (currently just
     `wpa_supplicant.conf`, but there might be more in the future)
   * `MK_TIBU`: create the script to pull stuff from the TiBu web server
@@ -113,3 +126,28 @@ inside – and of course the backups reside on one of the two.
 Disadvantage here is that *TiBu* touches the timestamps of all files, so the
 original timestamps are lost: All files appear as if they would have been created
 at the time the backup was made.
+
+
+## Usage
+`adebar-cli` requires at least one parameter, which will be used to
+
+* detect a matching (device-specific) configuration file (see the "Configuration"
+  section above)
+* define the desired output-directory (residing below the configured
+  `STORAGE_BASE`)
+
+You can pass it an optional second parameter, which will then be appended
+to the output directory name. This is especially useful if you want to keep
+"historic scripts", e.g. to later detemine which apps where installed on your
+device at a given time.
+
+As this might be easier to understand with an example: Let's say you've got two devices, one Motorola and one HTC. For each of them, you wish different settings
+to be applied. So for a "shortcut", you name the first "moto" and the second "htc".
+For easier handling, you could do the following:
+
+* create the `config` directory below the directory `adebar-cli` resides in
+* copy `doc/config.sample` to `config/moto` resp. `config/htc`
+* adjust the two files to your needs
+* call `adebar-cli` with...
+  * `./adebar-cli moto` to create the scripts in `$STORAGE_BASE/moto`
+  * `./adebar-cli htc _20141101` to create them in `$STORAGE_BASE/htc_20141101`

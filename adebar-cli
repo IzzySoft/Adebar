@@ -7,7 +7,7 @@
 
 # check parameters
 if [ -z "$1" ]; then
-  echo "Syntax: $0 <target_directory>"
+  echo "Syntax: $0 <target_directory> [suffix]"
   exit 1
 else
   OUTDIR="$1"
@@ -46,6 +46,11 @@ if [ -d "${BINDIR}/config" ]; then
   fi
 elif [ -f "${BINDIR}/config" ]; then # default config as of v3
   . "${BINDIR}/config"
+fi
+
+# check whether output directory shall have a suffix
+if [ -n "$2" ]; then
+  OUTDIR="${OUTDIR}${2}"
 fi
 
 # Check output directory and create it if it does not exist
