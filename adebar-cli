@@ -33,9 +33,20 @@ PULL_SETTINGS=1
 MK_TIBU=1
 MK_PKG_DATA=1
 
+
 ############################################[ Init ]###
 BINDIR="${0%/*}"
-[ -f "${BINDIR}/config" ] && . "${BINDIR}/config"
+
+# Checking for config file and sourcing it, if exists
+if [ -d "${BINDIR}/config" ]; then
+  if [ -f "${BINDIR}/config/$OUTDIR" ]; then # device-specific config
+    . "${BINDIR}/config/$OUTDIR"
+  elif [ -f "${BINDIR}/config/default" ]; then # default config
+    . "${BINDIR}/config/default"
+  fi
+elif [ -f "${BINDIR}/config" ]; then # default config as of v3
+  . "${BINDIR}/config"
+fi
 
 # Check output directory and create it if it does not exist
 if [ -n "${STORAGE_BASE}" ]; then
@@ -48,6 +59,7 @@ if [ ! -d "$OUTDIR" ]; then
     exit
   }
 fi
+
 
 #########################################[ Helpers ]###
 # Create script for disabled apps
