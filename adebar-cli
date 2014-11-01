@@ -32,6 +32,7 @@ MK_COMPONENTS=1
 PULL_SETTINGS=1
 MK_TIBU=1
 MK_PKG_DATA=1
+MK_INSTALLLOC=1
 
 
 ############################################[ Init ]###
@@ -175,6 +176,14 @@ getFrozenComponents() {
   [ -n "$(which xml2)" ] && xml2 < $OUTDIR/packages.xml |grep "disabled-components/item/@name" > $OUTDIR/deadreceivers
 }
 
+# Get the default install-location
+getInstallLoc() {
+  [ $MK_INSTALLLOC -ne 1 ] && return
+  foo="$(adb shell pm get-install-location)"
+  echo "pm set-install-location ${foo//[^0-9]/}" > "$OUTDIR/defaultInstallLoc"
+  chmod u+x "$OUTDIR/defaultInstallLoc"
+}
+
 # Get settings
 # includes WiFi APs etc.
 getSettings() {
@@ -213,6 +222,7 @@ getDisabled
 getUserAppBackup
 getSystemAppBackup
 getFrozenComponents
+getInstallLoc
 getSettings
 getTibu
 [ $MK_PKG_DATA -ne 0 -a -f "${OUTDIR}/packages.xml" -a -f "/usr/bin/php" ] && ./getPkgData.php "$OUTDIR"

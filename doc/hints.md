@@ -81,6 +81,9 @@ What the settings are standing for is:
     This creates the *script* to deal with "disabled components", plus the
     corresponding markup document, plus the markup document holding details
     on installed apps and their sources
+  * `MK_INSTALLLOC`: Deal with the default-install-location (where apps should
+    be installed by default: 0=auto (system decides), 1=device, 2=sdcard).
+    Creates a 1-liner script to set that again.
 
 
 ## Shared Storage

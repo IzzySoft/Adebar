@@ -16,6 +16,7 @@
 * `deadreceivers`: simple list of disabled broadcast receivers
 * `deadReceivers.md`: the same in markdown format, so you can read it easier
 * `deadReceivers.sh`: script which (hopefully) disables those components again, e.g. after a factory-reset
+* `defaultInstallLoc`: 1-liner to set the default-install-location for apps
 * `disable`: shell script utilizing ADB to disable packages
 * `packages.xml`: this file is pulled from your device(s) if possible
 * `sysbackup`: script to backup all data of your system apps, including shared storage (data from the SD cards)

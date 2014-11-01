@@ -36,3 +36,5 @@ PULL_SETTINGS=1
 MK_TIBU=1
 # process packages.xml for further details (requires PHP-cli)
 MK_PKG_DATA=1
+# deal with the default-install-location (where apps should be installed)
+MK_INSTALLLOC=1
