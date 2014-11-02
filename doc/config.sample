@@ -7,9 +7,11 @@
 # ------------------------=[ directories ]=--
 # base below which all output (scripts and real backups) are placed
 STORAGE_BASE=
-# where to place the "real backups" (relative to "${STORAGE_BASE}/${OUTDIR}"
+# where to place the "real backups" (relative to "${STORAGE_BASE}/${OUTDIR}")
 USERDIR="userApps"
 SYSDIR="sysApps"
+# documentary files can have their own place (again, relative to "${STORAGE_BASE}/${OUTDIR}")
+DOCDIR="docs"
 
 # ---------------------=[ TiBu specifics ]=--
 # IP of the Android device

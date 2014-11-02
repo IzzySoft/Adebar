@@ -17,6 +17,7 @@ fi
 #OUTDIR='.' # OUTDIR is specified via command line (mandatory parameter)
 USERDIR="userApps"
 SYSDIR="sysApps"
+DOCDIR="docs"
 DEVICE_IP=
 TIBU_PORT="8080"
 TIBU_SDINT="/storage/INTERNAL/Storage-ALL.zip"
@@ -59,8 +60,10 @@ fi
 if [ -n "${STORAGE_BASE}" ]; then
   OUTDIR="${STORAGE_BASE}/${OUTDIR}"
 fi
-if [ ! -d "$OUTDIR" ]; then
-  mkdir -p "$OUTDIR" || {
+DOCDIR="${OUTDIR}/${DOCDIR}"
+PKGXML="${DOCDIR}/packages.xml"
+if [ ! -d "${DOCDIR}" ]; then
+  mkdir -p "${DOCDIR}" || {
     echo "Output directory does not exist, and I cannot create it. Sorry."
     echo
     exit
@@ -167,14 +170,14 @@ getSystemAppBackup() {
 # Retrieve packages.xml (required in different places)
 pullPackagesXML() {
   [ $((${MK_COMPONENTS} + ${MK_PKG_DATA})) -eq 0 ] && return
-  adb pull /data/system/packages.xml $OUTDIR/packages.xml
+  adb pull /data/system/packages.xml "${PKGXML}"
 }
 
 # Get disabled broadcast receivers
 # Requires xml2 package (apt-get install xml2)
 getFrozenComponents() {
-  [ $MK_COMPONENTS -ne 1 -o ! -f "${OUTDIR}/packages.xml" ] && return
-  [ -n "$(which xml2)" ] && xml2 < $OUTDIR/packages.xml |grep "disabled-components/item/@name" > "$OUTDIR/deadreceivers"
+  [ $MK_COMPONENTS -ne 1 -o ! -f "${PKGXML}" ] && return
+  [ -n "$(which xml2)" ] && xml2 < "${PKGXML}" |grep "disabled-components/item/@name" > "$DOCDIR/deadreceivers"
 }
 
 # Get the default install-location
@@ -189,13 +192,14 @@ getInstallLoc() {
 getDeviceInfo() {
   [ $MK_DEVICEINFO -ne 1 ] && return
   local item=""
+  local devicedoc="${DOCDIR}/deviceInfo.md"
 
-  echo "# Device Information" > "${OUTDIR}/deviceInfo.md"
+  echo "# Device Information" > "$devicedoc"
 
   adb pull /system/build.prop "${OUTDIR}/build.prop"
   if [ $? -eq 0 ]; then # successfully pulled the build.prop
-    echo  >> "${OUTDIR}/deviceInfo.md"
-    echo "## Device and ROM properties (from \`build.prop\`)" >> "${OUTDIR}/deviceInfo.md"
+    echo  >> "$devicedoc"
+    echo "## Device and ROM properties (from \`build.prop\`)" >> "$devicedoc"
     while read zeile; do
       zeile="${zeile//=/ }"
       foo=($zeile)
@@ -214,25 +218,25 @@ getDeviceInfo() {
         "net.dns2") local dns2=${foo[1]} ;;
       esac
     done < "${OUTDIR}/build.prop"
-    echo "* Manufacturer: ${manu}" >> "${OUTDIR}/deviceInfo.md"
-    echo "* Model: ${model} (${device})" >> "${OUTDIR}/deviceInfo.md"
-    echo "* CPU: ${cpu}" >> "${OUTDIR}/deviceInfo.md"
-    echo "* Screen density: ${density}" >> "${OUTDIR}/deviceInfo.md"
-    echo "* SDK/Android version: ${sdk}/${aver}" >> "${OUTDIR}/deviceInfo.md"
-    [ -n "$modver" ] && echo "* Mod: ${modver}" >> "${OUTDIR}/deviceInfo.md"
-    echo "* Language: ${lang}_${region}" >> "${OUTDIR}/deviceInfo.md"
-    [ -n "${dns1}${dns2}" ] && echo "* Default DNS server: ${dns1}/${dns2}" >> "${OUTDIR}/deviceInfo.md"
+    echo "* Manufacturer: ${manu}" >> "$devicedoc"
+    echo "* Model: ${model} (${device})" >> "$devicedoc"
+    echo "* CPU: ${cpu}" >> "$devicedoc"
+    echo "* Screen density: ${density}" >> "$devicedoc"
+    echo "* SDK/Android version: ${sdk}/${aver}" >> "$devicedoc"
+    [ -n "$modver" ] && echo "* Mod: ${modver}" >> "$devicedoc"
+    echo "* Language: ${lang}_${region}" >> "$devicedoc"
+    [ -n "${dns1}${dns2}" ] && echo "* Default DNS server: ${dns1}/${dns2}" >> "$devicedoc"
     # ro.product.brand=MOTO
     # ro.product.name=A953_DFP
     # ro.product.board=milestone2
     # ro.product.cpu.abi2=armeabi
   fi
 
-  echo  >> "${OUTDIR}/deviceInfo.md"
-  echo "## Device features" >> "${OUTDIR}/deviceInfo.md"
+  echo  >> "$devicedoc"
+  echo "## Device features" >> "$devicedoc"
   for feature in $(adb shell "pm list features"); do
     item=$(echo $feature | tr -d '\r' | awk -F : '{print $2}')
-    echo "* $item" >> "${OUTDIR}/deviceInfo.md"
+    echo "* $item" >> "$devicedoc"
   done
 }
 
@@ -279,7 +283,7 @@ getInstallLoc
 getDeviceInfo
 getSettings
 getTibu
-[ $MK_PKG_DATA -ne 0 -a -f "${OUTDIR}/packages.xml" -a -f "/usr/bin/php" ] && ./getPkgData.php "$OUTDIR"
+[ $MK_PKG_DATA -ne 0 -a -f "${PKGXML}" -a -f "/usr/bin/php" ] && ./getPkgData.php "$OUTDIR" "$DOCDIR"
 
 exit
 

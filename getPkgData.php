@@ -10,19 +10,21 @@
 
 # Parse arguments
 if ( !isset($argv[1]) ) {
-  echo "Syntax: ".$argv[0]." <output_dir>\n";
+  echo "Syntax: ".$argv[0]." <output_dir> [doc_dir]\n";
   exit;
 }
 $outdir  = $argv['1'];
-$pkg_xml = $outdir.'/packages.xml';
+if (empty($argv['2'])) $docdir = $outdir;
+else $docdir  = $argv['2'];
+$pkg_xml = $docdir.'/packages.xml';
 
-if ( !file_exists($pkg_xml) ) die("No packages.xml found in $outdir.\n");
+if ( !file_exists($pkg_xml) ) die("No packages.xml found in $docdir.\n");
 
 require "xml2array.php";
 
 # Configuration
-$markdownUserApps = $outdir.'/userApps.md';
-$markdownDisabled = $outdir.'/deadReceivers.md';
+$markdownUserApps = $docdir.'/userApps.md';
+$markdownDisabled = $docdir.'/deadReceivers.md';
 $adbDisabled = $outdir.'/deadReceivers.sh';
 
 $contents = file_get_contents($pkg_xml);
