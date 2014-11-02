@@ -248,7 +248,7 @@ getDeviceInfo() {
   OIFS="${IFS}"
   IFS="
 "
-  for acc in $(adb shell dumpsys account|grep " Account "|sed 's/[\{\}]//g'|awk '{print $2" "$3}'); do
+  for acc in $(adb shell dumpsys account|grep " Account "|sed 's/[\{\}]//g'|awk '{$1=""; print $0}'); do
     echo "* ${acc}" >> "$devicedoc"
   done
   IFS="${OIFS}"
@@ -266,7 +266,7 @@ getDeviceInfo() {
   for zeile in $(grep -A1 "uid:" "$tmp"|awk '{print $1}'); do
     case "$zeile" in
       "uid:"|"--") ;;
-      *) echo "  - ${zeile}" >> "$devicedoc" ;;
+      *) echo "    - ${zeile}" >> "$devicedoc" ;;
     esac
   done
   rm "$tmp"
