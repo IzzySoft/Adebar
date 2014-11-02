@@ -23,7 +23,7 @@ Optionally, if you have the PHP [CLI](http://en.wikipedia.org/wiki/Command-line_
 * a shell script to disable all broadcast receivers (aka "auto-starts") which were disabled on the given device
 * a [Markdown](http://en.wikipedia.org/wiki/Markdown "Wikipedia: Markdown") file listing all user-installed apps with their sources you've installed them from (e.g. *Google Play*, *F-Droid*, *Aptoide*)
 
-As *Adebar* still is in its early stage of development, and not tested on too many devices, there might be some errors/bugs here and there. But there are also additional features to be expected lateron. One example for the latter is a GUI, which I plan to add as soon as all the basic stuff is working reliably.
+As *Adebar* still is in its early stage of development, and not tested on too many devices, there might be some errors/bugs here and there; if you encounter one, please file an issue at [the project's Github presence][1]. But there are also additional features to be expected.
 
 
 ## Requirements
@@ -31,7 +31,8 @@ Most of them should already be obvious from above description. Nevertheless, all
 
 * **ADB** installed (and configured for your device) on your computer. This can either be the [complete Android SDK](https://developer.android.com/sdk/index.html "Android SDK at Android Developers"), or a [minimal installation of ADB](http://android.stackexchange.com/q/42474/16575 "Android.SE: Is there a minimal installation of ADB?").
 * **Bash**. As this is a very common shell environment, it's available by default on most Linux distributions. If you're a Windows user: sorry, the only windows I have are for light and fresh air.
-* **PHP CLI**: This is available in the repositories of all major Linux distributions. I've tested this with PHP 5.3 – but I see no reasons why it shouldn't work with newer versions.
+* **PHP CLI**: This is available in the repositories of all major Linux distributions. I've tested this with PHP 5.3 – but I see no reasons why it shouldn't work with newer versions. Moreover, this is optional; the "basic stuff" works without.
+* **Android 4.0+**: As the `adb backup` and `adb restore` commands have not been present before Android 4.0, *Adebar* will not be of much use with devices running older versions.
 
 
 ## Usage
@@ -46,3 +47,5 @@ As the command-line parameters are subject to change in the initial phase (i.e. 
 
 ## More details
 More details and hints can be found in the `doc/` sub-directory of the project.
+
+[1]: https://github.com/IzzySoft/Adebar "Adebar at Github"
