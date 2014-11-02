@@ -250,7 +250,9 @@ getDeviceInfo() {
 getSettings() {
   [ $PULL_SETTINGS -ne 1 ] && return
 
-  adb pull /data/misc/wifi/wpa_supplicant.conf $CONFDIR/wpa_supplicant.conf
+  adb pull /data/misc/wifi/wpa_supplicant.conf "${CONFDIR}/wpa_supplicant.conf"
+  adb pull /system/etc/gps.conf "${CONFDIR}/gps.conf"
+  adb pull /system/etc/hosts "${CONFDIR}/hosts"
   # SMS/MMS ?
   # CallLog ?
   # ?
