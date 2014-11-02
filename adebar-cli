@@ -64,6 +64,7 @@ fi
 DOCDIR="${OUTDIR}/${DOCDIR}"
 CONFDIR="${OUTDIR}/${CONFDIR}"
 PKGXML="${DOCDIR}/packages.xml"
+BUILDPROP="${DOCDIR}/build.prop"
 if [ ! -d "${DOCDIR}" ]; then
   mkdir -p "${DOCDIR}" || {
     echo "Output directory does not exist, and I cannot create it. Sorry."
@@ -199,7 +200,7 @@ getDeviceInfo() {
 
   echo "# Device Information" > "$devicedoc"
 
-  adb pull /system/build.prop "${OUTDIR}/build.prop"
+  adb pull /system/build.prop "${BUILDPROP}"
   if [ $? -eq 0 ]; then # successfully pulled the build.prop
     echo  >> "$devicedoc"
     echo "## Device and ROM properties (from \`build.prop\`)" >> "$devicedoc"
@@ -220,7 +221,7 @@ getDeviceInfo() {
         "net.dns1") local dns1=${foo[1]} ;;                # net.dns1=8.8.8.8
         "net.dns2") local dns2=${foo[1]} ;;
       esac
-    done < "${OUTDIR}/build.prop"
+    done < "${BUILDPROP}"
     echo "* Manufacturer: ${manu}" >> "$devicedoc"
     echo "* Model: ${model} (${device})" >> "$devicedoc"
     echo "* CPU: ${cpu}" >> "$devicedoc"
