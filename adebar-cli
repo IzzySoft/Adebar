@@ -190,12 +190,52 @@ getDeviceInfo() {
   [ $MK_DEVICEINFO -ne 1 ] && return
   local item=""
 
-  echo "# Device features" > "${OUTDIR}/deviceInfo.md"
+  echo "# Device Information" > "${OUTDIR}/deviceInfo.md"
+
+  adb pull /system/build.prop "${OUTDIR}/build.prop"
+  if [ $? -eq 0 ]; then # successfully pulled the build.prop
+    echo  >> "${OUTDIR}/deviceInfo.md"
+    echo "## Device and ROM properties (from \`build.prop\`)" >> "${OUTDIR}/deviceInfo.md"
+    while read zeile; do
+      zeile="${zeile//=/ }"
+      foo=($zeile)
+      case ${foo[0]} in
+        "ro.build.version.sdk") local sdk=${foo[1]} ;;
+        "ro.build.version.release") local aver=${foo[1]} ;;
+        "ro.modversion") local modver=${foo[1]} ;;         # ro.modversion=10-20121228-NIGHTLY-milestone2
+        "ro.product.manufacturer") local manu=${foo[1]} ;; # ro.product.manufacturer=Motorola
+        "ro.product.model") local model=${foo[1]} ;;       # ro.product.model=A953
+        "ro.product.device") local device=${foo[1]} ;;     # ro.product.device=milestone2
+        "ro.product.cpu.abi") local cpu=${foo[1]} ;;       # ro.product.cpu.abi=armeabi-v7a
+        "ro.product.locale.language") local lang=${foo[1]} ;; # ro.product.locale.language=en
+        "ro.product.locale.region") local region=${foo[1]} ;; # ro.product.locale.region=US
+        "ro.sf.lcd_density") local density=${foo[1]} ;;    # ro.sf.lcd_density=240
+        "net.dns1") local dns1=${foo[1]} ;;                # net.dns1=8.8.8.8
+        "net.dns2") local dns2=${foo[1]} ;;
+      esac
+    done < "${OUTDIR}/build.prop"
+    echo "* Manufacturer: ${manu}" >> "${OUTDIR}/deviceInfo.md"
+    echo "* Model: ${model} (${device})" >> "${OUTDIR}/deviceInfo.md"
+    echo "* CPU: ${cpu}" >> "${OUTDIR}/deviceInfo.md"
+    echo "* Screen density: ${density}" >> "${OUTDIR}/deviceInfo.md"
+    echo "* SDK/Android version: ${sdk}/${aver}" >> "${OUTDIR}/deviceInfo.md"
+    [ -n "$modver" ] && echo "* Mod: ${modver}" >> "${OUTDIR}/deviceInfo.md"
+    echo "* Language: ${lang}_${region}" >> "${OUTDIR}/deviceInfo.md"
+    [ -n "${dns1}${dns2}" ] && echo "* Default DNS server: ${dns1}/${dns2}" >> "${OUTDIR}/deviceInfo.md"
+    # ro.product.brand=MOTO
+    # ro.product.name=A953_DFP
+    # ro.product.board=milestone2
+    # ro.product.cpu.abi2=armeabi
+  fi
+
+  echo  >> "${OUTDIR}/deviceInfo.md"
+  echo "## Device features" >> "${OUTDIR}/deviceInfo.md"
   for feature in $(adb shell "pm list features"); do
     item=$(echo $feature | tr -d '\r' | awk -F : '{print $2}')
     echo "* $item" >> "${OUTDIR}/deviceInfo.md"
   done
 }
+
 
 # Get settings
 # includes WiFi APs etc.

@@ -86,7 +86,8 @@ What the settings are standing for is:
     Creates a 1-liner script to set that again.
   * `MK_DEVICEINFO`: Create a (Markdown) document containing device information.
     Currently it lists the "device features" as returned by `pm list features`,
-    more might be added in the future.
+    plus some selected details from the `build.prop`; more might be added in
+    the future.
 
 
 ## Shared Storage
