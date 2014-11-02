@@ -252,6 +252,24 @@ getDeviceInfo() {
     echo "* ${acc}" >> "$devicedoc"
   done
   IFS="${OIFS}"
+
+  echo >> "$devicedoc"
+  echo "## Google Cloud Backup" >> "$devicedoc"
+  tmp="./dump.$$"
+  adb shell dumpsys backup > "$tmp"
+  echo "* $(grep 'Backup Manager is' "$tmp")" >> "$devicedoc"
+  echo "* $(grep 'Auto-restore is' "$tmp")" >> "$devicedoc"
+  echo "* $(grep 'Last backup pass' "$tmp")" >> "$devicedoc"
+  echo "* $(grep 'Ever backed up:' "$tmp")" >> "$devicedoc"
+  echo "* $(grep 'Pending backup:' "$tmp")" >> "$devicedoc"
+  echo "* Participants:" >> "$devicedoc"
+  for zeile in $(grep -A1 "uid:" "$tmp"|awk '{print $1}'); do
+    case "$zeile" in
+      "uid:"|"--") ;;
+      *) echo "  - ${zeile}" >> "$devicedoc" ;;
+    esac
+  done
+  rm "$tmp"
 }
 
 
