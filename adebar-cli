@@ -18,6 +18,7 @@ fi
 USERDIR="userApps"
 SYSDIR="sysApps"
 DOCDIR="docs"
+CONFDIR="conf"
 DEVICE_IP=
 TIBU_PORT="8080"
 TIBU_SDINT="/storage/INTERNAL/Storage-ALL.zip"
@@ -61,6 +62,7 @@ if [ -n "${STORAGE_BASE}" ]; then
   OUTDIR="${STORAGE_BASE}/${OUTDIR}"
 fi
 DOCDIR="${OUTDIR}/${DOCDIR}"
+CONFDIR="${OUTDIR}/${CONFDIR}"
 PKGXML="${DOCDIR}/packages.xml"
 if [ ! -d "${DOCDIR}" ]; then
   mkdir -p "${DOCDIR}" || {
@@ -68,6 +70,7 @@ if [ ! -d "${DOCDIR}" ]; then
     echo
     exit
   }
+  mkdir -p "${CONFDIR}"
 fi
 
 
@@ -246,7 +249,7 @@ getDeviceInfo() {
 getSettings() {
   [ $PULL_SETTINGS -ne 1 ] && return
 
-  adb pull /data/misc/wifi/wpa_supplicant.conf $OUTDIR/wpa_supplicant.conf
+  adb pull /data/misc/wifi/wpa_supplicant.conf $CONFDIR/wpa_supplicant.conf
   # SMS/MMS ?
   # CallLog ?
   # ?

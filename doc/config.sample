@@ -12,6 +12,8 @@ USERDIR="userApps"
 SYSDIR="sysApps"
 # documentary files can have their own place (again, relative to "${STORAGE_BASE}/${OUTDIR}")
 DOCDIR="docs"
+# similar for pulled configuration files
+CONFDIR="conf"
 
 # ---------------------=[ TiBu specifics ]=--
 # IP of the Android device

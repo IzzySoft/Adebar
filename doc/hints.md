@@ -60,6 +60,9 @@ What the settings are standing for is:
   * `USERDIR="userApps"`: sub-directory where the backup scripts will place the
     ADB backups of your user-apps into (relative to where they're run)
   * `SYSDIR="sysApps"`: Similar, for the data backups of your system apps
+  * `DOCDIR="docs"`: Where to place created documentary files. Default is
+    `${STORAGE_PATH}/${OUTDIR}/docs`
+  * `CONFDIR="conf"`: Similar for pulled config files (`conf/`)
 * TiBu specific stuff:
   * `DEVICE_IP="192.168.101.111"`: IP address of your device
   * `TIBU_PORT="8080"`: port the *TiBu* web server listens on
