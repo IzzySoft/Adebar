@@ -242,6 +242,16 @@ getDeviceInfo() {
     item=$(echo $feature | tr -d '\r' | awk -F : '{print $2}')
     echo "* $item" >> "$devicedoc"
   done
+
+  echo >> "$devicedoc"
+  echo "## Configured accounts" >> "$devicedoc"
+  OIFS="${IFS}"
+  IFS="
+"
+  for acc in $(adb shell dumpsys account|grep " Account "|sed 's/[\{\}]//g'|awk '{print $2" "$3}'); do
+    echo "* ${acc}" >> "$devicedoc"
+  done
+  IFS="${OIFS}"
 }
 
 
