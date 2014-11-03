@@ -233,6 +233,10 @@ pullPackagesXML() {
 getFrozenComponents() {
   [ $MK_COMPONENTS -ne 1 -o ! -f "${PKGXML}" ] && return
   [ -n "$(which xml2)" ] && xml2 < "${PKGXML}" |grep "disabled-components/item/@name" > "$DOCDIR/deadreceivers"
+  [ -f "$DOCDIR/deadreceivers" -a ! -s "$DOCDIR/deadreceivers" ] && {
+    echo "No disabled components listed in packages.xml."
+    rm -f "$DOCDIR/deadreceivers"
+  }
 }
 
 # Get the default install-location
