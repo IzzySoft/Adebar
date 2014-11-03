@@ -60,14 +60,14 @@ fi
 # Check whether a device is connected at all and, if configured, the serial matches
 # No device connected:
 ADBOPTS=""
-if [ -z "$(adb devices|egrep "^[0-9A-F]+\s+device$"|awk '{print $1}')" ]; then
+if [ -z "$(adb devices|egrep "^[0-9A-Za-z]+\s+device$"|awk '{print $1}')" ]; then
   echo "No device found. Make sure you have connected your device with"
   echo "USB debugging enabled, and try again."
   echo
   exit 2
 fi
 
-serials=($(adb devices|egrep "^[0-9A-Z]+\s+device$"|awk '{print $1}'))
+serials=($(adb devices|egrep "^[0-9A-Za-z]+\s+device$"|awk '{print $1}'))
 # Multiple devices connected but no serial defined:
 if [ -z "${SERIAL}" -a ${#serials[*]} -ne 1 ]; then
   echo "There are currently multiple devices connected, and we don't know"
