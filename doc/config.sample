@@ -15,6 +15,10 @@ DOCDIR="docs"
 # similar for pulled configuration files
 CONFDIR="conf"
 
+# -------------------=[ device specifics ]=--
+# Serial of the device. Useful when multiple devices are connected.
+#SERIAL="1234567890ABCDEF"
+
 # ---------------------=[ TiBu specifics ]=--
 # IP of the Android device
 DEVICE_IP="192.168.101.111"

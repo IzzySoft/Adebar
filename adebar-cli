@@ -57,6 +57,57 @@ if [ -n "$2" ]; then
   OUTDIR="${OUTDIR}${2}"
 fi
 
+# Check whether a device is connected at all and, if configured, the serial matches
+# No device connected:
+ADBOPTS=""
+if [ -z "$(adb devices|egrep "^[0-9A-F]+\s+device$"|awk '{print $1}')" ]; then
+  echo "No device found. Make sure you have connected your device with"
+  echo "USB debugging enabled, and try again."
+  echo
+  exit 2
+fi
+
+serials=($(adb devices|egrep "^[0-9A-Z]+\s+device$"|awk '{print $1}'))
+# Multiple devices connected but no serial defined:
+if [ -z "${SERIAL}" -a ${#serials[*]} -ne 1 ]; then
+  echo "There are currently multiple devices connected, and we don't know"
+  echo "which one to connect to. Please either disconnect all but the device"
+  echo "you wish to retrieve data from, or specify its serial in your"
+  echo "Configuration. Then try again."
+  echo
+  exit 3
+fi
+
+# SERIAL specified:
+if [ -n "${SERIAL}" ]; then
+  if [ ${#serials[*]} -eq 1 -a "${serial[0]}" != "${SERIAL}" ]; then
+    echo "Your configuration specifies a serial of '${SERIAL}',"
+    echo "but the connected device presents '${serial[0]}'."
+    echo "Please check if you have the correct device connected, or might have"
+    echo "specified the wrong parameter to the script."
+    echo ""
+    exit 4
+  fi
+  if [ ${#serials[*]} -gt 1 ]; then
+    typeset -i ser=0
+    for d in ${serials[*]}; do
+      [ "$d" = "${SERIAL}" ] && {
+        ser=1
+        break
+      }
+    done
+    if [ $ser -eq 0 ]; then
+      echo "Your configuration specifies a device serial of '${SERIAL}'."
+      echo "Though multiple devices seem to be connected, that is not one"
+      echo "of them. Please check and try again."
+      echo ""
+      exit 4
+    fi
+  fi
+  ADBOPTS="-s ${SERIAL}"
+fi
+
+
 # Check output directory and create it if it does not exist
 if [ -n "${STORAGE_BASE}" ]; then
   OUTDIR="${STORAGE_BASE}/${OUTDIR}"
@@ -69,7 +120,7 @@ if [ ! -d "${DOCDIR}" ]; then
   mkdir -p "${DOCDIR}" || {
     echo "Output directory does not exist, and I cannot create it. Sorry."
     echo
-    exit
+    exit 5
   }
   mkdir -p "${CONFDIR}"
 fi
@@ -85,9 +136,9 @@ getDisabled() {
   echo "# Disabled apps as of $(date '+%Y-%m-%d %H:%M')" >> "${scriptname}"
   echo >> "${scriptname}"
 
-  for app in $(adb shell "pm list packages -d"); do
+  for app in $(adb ${ADBOPTS} shell "pm list packages -d"); do
     app=$(echo $app | tr -d '\r' | awk -F : '{print $2}')
-    echo "adb shell \"pm disable $app\"" >> "${scriptname}"
+    echo "adb ${ADBOPTS} shell \"pm disable $app\"" >> "${scriptname}"
   done
 
   chmod u+x "${scriptname}"
@@ -113,11 +164,11 @@ getUserAppBackup() {
   echo "# Restores all app backups. Comment out (or delete) those you do not wish to restore." >> "$restorescript"
   echo  >> "$restorescript"
 
-  for app in $(adb shell "pm list packages -3"); do
+  for app in $(adb ${ADBOPTS} shell "pm list packages -3"); do
     app=$(echo $app | tr -d '\r' | awk -F : '{print $2}')
-    echo -e "adb backup -f \"${USERDIR}/${app}.ab\" -apk $app" >> "$backupscript"
+    echo -e "adb ${ADBOPTS} backup -f \"${USERDIR}/${app}.ab\" -apk $app" >> "$backupscript"
     echo "sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
-    echo -e "adb restore \"${USERDIR}/${app}.ab\"" >> "$restorescript"
+    echo -e "adb ${ADBOPTS} restore \"${USERDIR}/${app}.ab\"" >> "$restorescript"
   done
 
   chmod u+x "$backupscript" "$restorescript"
@@ -143,7 +194,7 @@ getSystemAppBackup() {
   echo -e "# Restores all system app data backups.\n# DRAGONS HERE: this might fail if you restore to a different\n# device/Android version/ROM, so be careful!\n# Comment out/delete what you do not wish to restore." >> "$restorescript"
   echo  >> "$restorescript"
 
-  for app in $(adb shell "pm list packages -s"); do
+  for app in $(adb ${ADBOPTS} shell "pm list packages -s"); do
     app=$(echo $app | tr -d '\r' | awk -F : '{print $2}')
     prep=""
     if [ "$app" = "com.android.sharedstoragebackup" ]; then # shared storage
@@ -157,9 +208,9 @@ getSystemAppBackup() {
     else
       prep=""
     fi
-    echo -e "${prep}adb backup -f \"${SYSDIR}/${app}.ab\" -noapk $app" >> "$backupscript"
+    echo -e "${prep}adb ${ADBOPTS} backup -f \"${SYSDIR}/${app}.ab\" -noapk $app" >> "$backupscript"
     echo "${prep}sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
-    echo -e "${prep}adb restore \"${SYSDIR}/${app}.ab\"" >> "$restorescript"
+    echo -e "${prep}adb ${ADBOPTS} restore \"${SYSDIR}/${app}.ab\"" >> "$restorescript"
     if [ "$app" = "com.android.sharedstoragebackup" ]; then
       echo -e "else\n echo \"Skipping shared storage\"\nfi" >> "$backupscript"
       echo -e "else\n echo \"Skipping shared storage\"\nfi" >> "$restorescript"
@@ -174,7 +225,7 @@ getSystemAppBackup() {
 # Retrieve packages.xml (required in different places)
 pullPackagesXML() {
   [ $((${MK_COMPONENTS} + ${MK_PKG_DATA})) -eq 0 ] && return
-  adb pull /data/system/packages.xml "${PKGXML}"
+  adb ${ADBOPTS} pull /data/system/packages.xml "${PKGXML}"
 }
 
 # Get disabled broadcast receivers
@@ -187,7 +238,7 @@ getFrozenComponents() {
 # Get the default install-location
 getInstallLoc() {
   [ $MK_INSTALLLOC -ne 1 ] && return
-  foo="$(adb shell pm get-install-location)"
+  foo="$(adb ${ADBOPTS} shell pm get-install-location)"
   echo "pm set-install-location ${foo//[^0-9]/}" > "$OUTDIR/defaultInstallLoc"
   chmod u+x "$OUTDIR/defaultInstallLoc"
 }
@@ -200,7 +251,7 @@ getDeviceInfo() {
 
   echo "# Device Information" > "$devicedoc"
 
-  adb pull /system/build.prop "${BUILDPROP}"
+  adb ${ADBOPTS} pull /system/build.prop "${BUILDPROP}"
   if [ $? -eq 0 ]; then # successfully pulled the build.prop
     echo  >> "$devicedoc"
     echo "## Device and ROM properties (from \`build.prop\`)" >> "$devicedoc"
@@ -238,24 +289,27 @@ getDeviceInfo() {
 
   echo  >> "$devicedoc"
   echo "## Device features" >> "$devicedoc"
-  for feature in $(adb shell "pm list features"); do
+  for feature in $(adb ${ADBOPTS} shell "pm list features"); do
     item=$(echo $feature | tr -d '\r' | awk -F : '{print $2}')
     echo "* $item" >> "$devicedoc"
   done
+
+  # ADB calls for the next two blocks must be made with default IFS or will fail
+  local accs=$(adb ${ADBOPTS} shell dumpsys account|grep " Account "|sed 's/[\{\}]//g'|awk '{$1=""; print $0}')
+  tmp="./dump.$$"
+  adb ${ADBOPTS} shell dumpsys backup > "$tmp"
 
   echo >> "$devicedoc"
   echo "## Configured accounts" >> "$devicedoc"
   OIFS="${IFS}"
   IFS="
 "
-  for acc in $(adb shell dumpsys account|grep " Account "|sed 's/[\{\}]//g'|awk '{$1=""; print $0}'); do
+  for acc in $accs; do
     echo "* ${acc}" >> "$devicedoc"
   done
 
   echo >> "$devicedoc"
   echo "## Google Cloud Backup" >> "$devicedoc"
-  tmp="./dump.$$"
-  adb shell dumpsys backup > "$tmp"
   echo "* $(grep 'Backup Manager is' "$tmp")" >> "$devicedoc"
   echo "* $(grep 'Auto-restore is' "$tmp")" >> "$devicedoc"
   echo "* Backup destinations:" >> "$devicedoc"
@@ -283,9 +337,9 @@ getDeviceInfo() {
 getSettings() {
   [ $PULL_SETTINGS -ne 1 ] && return
 
-  adb pull /data/misc/wifi/wpa_supplicant.conf "${CONFDIR}/wpa_supplicant.conf"
-  adb pull /system/etc/gps.conf "${CONFDIR}/gps.conf"
-  adb pull /system/etc/hosts "${CONFDIR}/hosts"
+  adb ${ADBOPTS} pull /data/misc/wifi/wpa_supplicant.conf "${CONFDIR}/wpa_supplicant.conf"
+  adb ${ADBOPTS} pull /system/etc/gps.conf "${CONFDIR}/gps.conf"
+  adb ${ADBOPTS} pull /system/etc/hosts "${CONFDIR}/hosts"
   # SMS/MMS ?
   # CallLog ?
   # ?
@@ -324,7 +378,7 @@ getSettings
 getTibu
 [ $MK_PKG_DATA -ne 0 -a -f "${PKGXML}" -a -f "/usr/bin/php" ] && ./getPkgData.php "$OUTDIR" "$DOCDIR"
 
-exit
+exit 0
 
 
 ######################################[ References ]###

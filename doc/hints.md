@@ -161,3 +161,10 @@ For easier handling, you could do the following:
 * call `adebar-cli` with...
   * `./adebar-cli moto` to create the scripts in `$STORAGE_BASE/moto`
   * `./adebar-cli htc _20141101` to create them in `$STORAGE_BASE/htc_20141101`
+
+### Exit codes
+* 1: Syntax error (missing or wrong arguments when calling the script)
+* 2: No device found
+* 3: Multiple devices found, but no SERIAL specified in config
+* 4: SERIAL specified, but no matching device connected
+* 5: target directory doesn't exist, and neither can be created
