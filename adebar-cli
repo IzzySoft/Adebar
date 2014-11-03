@@ -251,7 +251,6 @@ getDeviceInfo() {
   for acc in $(adb shell dumpsys account|grep " Account "|sed 's/[\{\}]//g'|awk '{$1=""; print $0}'); do
     echo "* ${acc}" >> "$devicedoc"
   done
-  IFS="${OIFS}"
 
   echo >> "$devicedoc"
   echo "## Google Cloud Backup" >> "$devicedoc"
@@ -259,6 +258,10 @@ getDeviceInfo() {
   adb shell dumpsys backup > "$tmp"
   echo "* $(grep 'Backup Manager is' "$tmp")" >> "$devicedoc"
   echo "* $(grep 'Auto-restore is' "$tmp")" >> "$devicedoc"
+  echo "* Backup destinations:" >> "$devicedoc"
+  for dest in $(grep "destination:" "$tmp"|awk '{$1=""; print $0}'); do
+    echo "    - ${dest}" >> "$devicedoc"
+  done
   echo "* $(grep 'Last backup pass' "$tmp")" >> "$devicedoc"
   echo "* $(grep 'Ever backed up:' "$tmp")" >> "$devicedoc"
   echo "* $(grep 'Pending backup:' "$tmp")" >> "$devicedoc"
@@ -270,6 +273,8 @@ getDeviceInfo() {
     esac
   done
   rm "$tmp"
+
+  IFS="${OIFS}"
 }
 
 
