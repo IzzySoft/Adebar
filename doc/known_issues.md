@@ -36,5 +36,8 @@ On some devices (all 4.1+ devices with the ADB daemon running in non-root mode?)
 
 
 ## `disable` script not working?
-It seems most `adb disable` commands are not performed when `adbd` is running in
-non-root mode. Nothing we can do about that.
+It seems many (all?) `adb pm disable` commands are not performed when `adbd` is
+running in non-root mode, at least when run against pre-installed apps (aka
+„bloatware“; confirmations/dementis welcome, as the list of devices at my
+disposal is pretty limited, so I can not say whether that's a general rule).
+Nothing we can do about that.
