@@ -27,3 +27,14 @@ Yes. That's a security measure so no stranger could simply connect an USB cable
 to your device and steal your data. I didn't yet check whether it's possible to
 at least temporarily disable that. If I do and find a way, you will find it with
 the other hints :)
+
+
+## `packages.xml` not retrievable
+On some devices (all 4.1+ devices with the ADB daemon running in non-root mode?),
+`packages.xml` can not be pulled. *Adebar* should obtain related information via
+`dumpsys` instead (*Todo*).
+
+
+## `disable` script not working?
+It seems most `adb disable` commands are not performed when `adbd` is running in
+non-root mode. Nothing we can do about that.
