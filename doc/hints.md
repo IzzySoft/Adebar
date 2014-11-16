@@ -91,6 +91,11 @@ What the settings are standing for is:
     Currently it lists the "device features" as returned by `pm list features`,
     plus some selected details from the `build.prop`; more might be added in
     the future.
+* Misc
+  * `PROGRESS`: Show some progress while the script is running, so you know
+    what's going on (and don't think it got "stuck"). By default, this is
+    enabled. To disable, set it to `0`. To increase verbosity, place a higher
+    number (currently used are values from 1 to 3).
 
 
 ## Shared Storage

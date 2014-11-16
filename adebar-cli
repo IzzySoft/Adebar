@@ -37,6 +37,9 @@ MK_PKG_DATA=1
 MK_INSTALLLOC=1
 MK_DEVICEINFO=1
 
+# Misc
+PROGRESS=1
+
 
 ############################################[ Init ]###
 BINDIR="${0%/*}"
@@ -127,9 +130,26 @@ fi
 
 
 #########################################[ Helpers ]###
+# Log progress (if enabled)
+# Call: doProgress "what to show" [level]"
+# level defaults to 1
+doProgress() {
+  [[ $PROGRESS -eq 0 ]] && return
+  if [[ -z "$2" ]]; then
+    local level=1
+  else
+    local level=$2
+  fi
+  if [[ $PROGRESS -ge $level ]]; then
+    echo -e "$1"
+  fi
+}
+
 # Create script for disabled apps
 getDisabled() {
   [ $MK_APPDISABLE -ne 1 ] && return
+
+  doProgress "Obtaining list of disabled apps"
 
   local scriptname="${OUTDIR}/disable"
   echo "#!/bin/bash" > "${scriptname}"
@@ -148,6 +168,8 @@ getDisabled() {
 # Create script to backup all user-apps
 getUserAppBackup() {
   [ $MK_USERBACKUP -ne 1 ] && return
+
+  doProgress "Creating backup/restore scripts for UserApps"
 
   local backupscript="$OUTDIR/userbackup"
   local restorescript="$OUTDIR/userrestore"
@@ -178,6 +200,8 @@ getUserAppBackup() {
 # Create script to backup all system-app data
 getSystemAppBackup() {
   [ $MK_USERBACKUP -ne 1 ] && return
+
+  doProgress "Creating backup/restore scripts for SytemApps"
 
   local backupscript="$OUTDIR/sysbackup"
   local restorescript="$OUTDIR/sysrestore"
@@ -225,6 +249,7 @@ getSystemAppBackup() {
 # Retrieve packages.xml (required in different places)
 pullPackagesXML() {
   [ $((${MK_COMPONENTS} + ${MK_PKG_DATA})) -eq 0 ] && return
+  doProgress "Pulling packages.xml"
   adb ${ADBOPTS} pull /data/system/packages.xml "${PKGXML}"
 }
 
@@ -232,6 +257,7 @@ pullPackagesXML() {
 # Requires xml2 package (apt-get install xml2)
 getFrozenComponents() {
   [ $MK_COMPONENTS -ne 1 -o ! -f "${PKGXML}" ] && return
+  doProgress "Checking for disabled components"
   [ -n "$(which xml2)" ] && xml2 < "${PKGXML}" |grep "disabled-components/item/@name" > "$DOCDIR/deadreceivers"
   [ -f "$DOCDIR/deadreceivers" -a ! -s "$DOCDIR/deadreceivers" ] && {
     echo "No disabled components listed in packages.xml."
@@ -242,6 +268,7 @@ getFrozenComponents() {
 # Get the default install-location
 getInstallLoc() {
   [ $MK_INSTALLLOC -ne 1 ] && return
+  doProgress "Checking default install-location"
   foo="$(adb ${ADBOPTS} shell pm get-install-location)"
   echo "pm set-install-location ${foo//[^0-9]/}" > "$OUTDIR/defaultInstallLoc"
   chmod u+x "$OUTDIR/defaultInstallLoc"
@@ -250,6 +277,7 @@ getInstallLoc() {
 # Get device info
 getDeviceInfo() {
   [ $MK_DEVICEINFO -ne 1 ] && return
+  doProgress "Collecting device information"
   local item=""
   local devicedoc="${DOCDIR}/deviceInfo.md"
 
@@ -358,6 +386,7 @@ getDeviceInfo() {
 # includes WiFi APs etc.
 getSettings() {
   [ $PULL_SETTINGS -ne 1 ] && return
+  doProgress "Pulling configuration files"
 
   adb ${ADBOPTS} pull /data/misc/wifi/wpa_supplicant.conf "${CONFDIR}/wpa_supplicant.conf"
   adb ${ADBOPTS} pull /system/etc/gps.conf "${CONFDIR}/gps.conf"
@@ -372,6 +401,7 @@ getSettings() {
 getTibu() {
   [ $MK_TIBU -ne 1 ] && return
   [ -z "${DEVICE_IP}" ] && return
+  doProgress "Creating scripts to pull stuff via TiBu"
 
   local scriptname="${OUTDIR}/tibu"
   echo "#!/bin/bash" > "${scriptname}"
@@ -389,6 +419,7 @@ getTibu() {
 
 
 ############################################[ Main ]###
+doProgress "\n\033[1;37mAdebar running:\033[0;37m";
 pullPackagesXML
 getDisabled
 getUserAppBackup
@@ -399,6 +430,7 @@ getDeviceInfo
 getSettings
 getTibu
 [ $MK_PKG_DATA -ne 0 -a -f "${PKGXML}" -a -f "/usr/bin/php" ] && ./getPkgData.php "$OUTDIR" "$DOCDIR"
+doProgress "\033[1;37mAdebar done.\033[0;37m\n"
 
 exit 0
 
