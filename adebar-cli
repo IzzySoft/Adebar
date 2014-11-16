@@ -249,8 +249,8 @@ getSystemAppBackup() {
 # Retrieve packages.xml (required in different places)
 pullPackagesXML() {
   [ $((${MK_COMPONENTS} + ${MK_PKG_DATA})) -eq 0 ] && return
-  doProgress "Pulling packages.xml"
-  adb ${ADBOPTS} pull /data/system/packages.xml "${PKGXML}"
+  local msg="$((adb ${ADBOPTS} pull /data/system/packages.xml "${PKGXML}") 2>&1)"
+  doProgress "Pulling packages.xml: $msg" 2
 }
 
 # Get disabled broadcast receivers
@@ -280,10 +280,12 @@ getDeviceInfo() {
   doProgress "Collecting device information"
   local item=""
   local devicedoc="${DOCDIR}/deviceInfo.md"
+  local msg=""
 
   echo "# Device Information" > "$devicedoc"
 
-  adb ${ADBOPTS} pull /system/build.prop "${BUILDPROP}"
+  msg="$((adb ${ADBOPTS} pull /system/build.prop "${BUILDPROP}") 2>&1)"
+  doProgress "- Evaluating build.prop (xfer: $msg)" 2
   if [ $? -eq 0 ]; then # successfully pulled the build.prop
     echo  >> "$devicedoc"
     echo "## Device and ROM properties (from \`build.prop\` / \`getprop\`)" >> "$devicedoc"
@@ -337,6 +339,7 @@ getDeviceInfo() {
     # ro.product.cpu.abi2=armeabi
   fi
 
+  doProgress "- Evaluating 'pm list features'" 2
   echo  >> "$devicedoc"
   echo "## Device features (\`pm list features\`)" >> "$devicedoc"
   for feature in $(adb ${ADBOPTS} shell "pm list features"); do
@@ -345,6 +348,7 @@ getDeviceInfo() {
   done
 
   # ADB calls for the next two blocks must be made with default IFS or will fail
+  doProgress "- Obtaining details via dumpsys" 2
   local accs=$(adb ${ADBOPTS} shell dumpsys account|grep " Account "|sed 's/[\{\}\r]//g'|awk '{$1=""; print $0}')
   tmp="./dump.$$"
   adb ${ADBOPTS} shell dumpsys backup | sed 's/\r//g' > "$tmp"
@@ -388,9 +392,13 @@ getSettings() {
   [ $PULL_SETTINGS -ne 1 ] && return
   doProgress "Pulling configuration files"
 
-  adb ${ADBOPTS} pull /data/misc/wifi/wpa_supplicant.conf "${CONFDIR}/wpa_supplicant.conf"
-  adb ${ADBOPTS} pull /system/etc/gps.conf "${CONFDIR}/gps.conf"
-  adb ${ADBOPTS} pull /system/etc/hosts "${CONFDIR}/hosts"
+  local msg
+  msg="$((adb ${ADBOPTS} pull /data/misc/wifi/wpa_supplicant.conf "${CONFDIR}/wpa_supplicant.conf") 2>&1)"
+  doProgress "- wpa_supplicant.conf: $msg" 2
+  msg="$((adb ${ADBOPTS} pull /system/etc/gps.conf "${CONFDIR}/gps.conf") 2>&1)"
+  doProgress "- gps.conf: $msg" 2
+  msg="$((adb ${ADBOPTS} pull /system/etc/hosts "${CONFDIR}/hosts") 2>&1)"
+  doProgress "- hosts: $msg" 2
   # SMS/MMS ?
   # CallLog ?
   # ?
