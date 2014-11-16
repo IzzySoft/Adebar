@@ -199,7 +199,7 @@ getUserAppBackup() {
 
 # Create script to backup all system-app data
 getSystemAppBackup() {
-  [ $MK_USERBACKUP -ne 1 ] && return
+  [ $MK_SYSBACKUP -ne 1 ] && return
 
   doProgress "Creating backup/restore scripts for SytemApps"
 
