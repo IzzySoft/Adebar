@@ -177,7 +177,7 @@ getUserAppBackup() {
 
 # Create script to backup all system-app data
 getSystemAppBackup() {
-  [ $MK_USERBACKUP -ne 1 ] && return
+  [ $MK_SYSBACKUP -ne 1 ] && return
 
   local backupscript="$OUTDIR/sysbackup"
   local restorescript="$OUTDIR/sysrestore"
