@@ -260,7 +260,7 @@ getFrozenComponents() {
   doProgress "Checking for disabled components"
   [ -n "$(which xml2)" ] && xml2 < "${PKGXML}" |grep "disabled-components/item/@name" > "$DOCDIR/deadreceivers"
   [ -f "$DOCDIR/deadreceivers" -a ! -s "$DOCDIR/deadreceivers" ] && {
-    echo "No disabled components listed in packages.xml."
+    doProgress "  No disabled components listed in packages.xml." 2
     rm -f "$DOCDIR/deadreceivers"
   }
 }
