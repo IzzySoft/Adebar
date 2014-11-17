@@ -128,6 +128,10 @@ if [ ! -d "${DOCDIR}" ]; then
   mkdir -p "${CONFDIR}"
 fi
 
+declare -a userApps # list of package names
+declare -a sysApps
+declare -a dApps
+
 
 #########################################[ Helpers ]###
 # Log progress (if enabled)
@@ -145,6 +149,42 @@ doProgress() {
   fi
 }
 
+# Helper: Check whether $needle is contained in $haystack[]
+# Call it like: in_array $tmpstring "${P_SKIP[@]}"
+in_array() {
+    local hay needle=$1
+    shift
+    for hay; do
+        [[ $hay == $needle ]] && return 0
+    done
+    return 1
+}
+
+# Gather lists of installed apps
+initAppLists() {
+  [[ $(($MK_USERBACKUP + $MK_SYSBACKUP + $MK_COMPONENTS)) -eq 0 ]] && return
+  doProgress "Gathering lists of installed apps"
+
+  doProgress "- userApps" 2
+  for app in $(adb ${ADBOPTS} shell pm list packages -3); do
+    app=${app//[$'\t\r\n']} # remove trailing CR (^M)
+    userApps+=(${app##*:})
+  done
+  doProgress "- systemApps" 2
+  for app in $(adb ${ADBOPTS} shell pm list packages -s); do
+    app=${app//[$'\t\r\n']}
+    sysApps+=(${app##*:})
+  done
+  doProgress "- checking for uninstalled apps remembered by the system" 2
+  for app in $(adb ${ADBOPTS} shell pm list packages -u); do
+    app=${app//[$'\t\r\n']}
+    in_array "${app##*:}" ${sysApps[@]} && continue
+    in_array "${app##*:}" ${userApps[@]} && continue
+    dApps+=($app)
+    echo "Removed app: ${app##*:}"
+  done
+}
+
 # Create script for disabled apps
 getDisabled() {
   [ $MK_APPDISABLE -ne 1 ] && return
@@ -157,8 +197,8 @@ getDisabled() {
   echo >> "${scriptname}"
 
   for app in $(adb ${ADBOPTS} shell "pm list packages -d"); do
-    app=$(echo $app | tr -d '\r' | awk -F : '{print $2}')
-    echo "adb ${ADBOPTS} shell \"pm disable $app\"" >> "${scriptname}"
+    app=${app//[$'\t\r\n']}
+    echo "adb ${ADBOPTS} shell \"pm disable ${app##*:}\"" >> "${scriptname}"
   done
 
   chmod u+x "${scriptname}"
@@ -186,8 +226,7 @@ getUserAppBackup() {
   echo "# Restores all app backups. Comment out (or delete) those you do not wish to restore." >> "$restorescript"
   echo  >> "$restorescript"
 
-  for app in $(adb ${ADBOPTS} shell "pm list packages -3"); do
-    app=$(echo $app | tr -d '\r' | awk -F : '{print $2}')
+  for app in "${userApps[@]}"; do
     echo -e "adb ${ADBOPTS} backup -f \"${USERDIR}/${app}.ab\" -apk $app" >> "$backupscript"
     echo "sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
     echo -e "adb ${ADBOPTS} restore \"${USERDIR}/${app}.ab\"" >> "$restorescript"
@@ -218,8 +257,7 @@ getSystemAppBackup() {
   echo -e "# Restores all system app data backups.\n# DRAGONS HERE: this might fail if you restore to a different\n# device/Android version/ROM, so be careful!\n# Comment out/delete what you do not wish to restore." >> "$restorescript"
   echo  >> "$restorescript"
 
-  for app in $(adb ${ADBOPTS} shell "pm list packages -s"); do
-    app=$(echo $app | tr -d '\r' | awk -F : '{print $2}')
+  for app in "${sysApps[@]}"; do
     prep=""
     if [ "$app" = "com.android.sharedstoragebackup" ]; then # shared storage
       prep="  "
@@ -429,6 +467,7 @@ getTibu() {
 ############################################[ Main ]###
 doProgress "\n\033[1;37mAdebar running:\033[0;37m";
 pullPackagesXML
+initAppLists
 getDisabled
 getUserAppBackup
 getSystemAppBackup
