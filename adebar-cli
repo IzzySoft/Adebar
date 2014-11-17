@@ -381,14 +381,14 @@ getDeviceInfo() {
   echo  >> "$devicedoc"
   echo "## Device features (\`pm list features\`)" >> "$devicedoc"
   for feature in $(adb ${ADBOPTS} shell "pm list features"); do
-    item=$(echo $feature | tr -d '\r' | awk -F : '{print $2}')
-    echo "* $item" >> "$devicedoc"
+    feature=${feature//[$'\r\n']}
+    echo "* ${feature#*:}" >> "$devicedoc"
   done
 
   # ADB calls for the next two blocks must be made with default IFS or will fail
   doProgress "- Obtaining details via dumpsys" 2
   local accs=$(adb ${ADBOPTS} shell dumpsys account|grep " Account "|sed 's/[\{\}\r]//g'|awk '{$1=""; print $0}')
-  tmp="./dump.$$"
+  local tmp="./dump.$$"
   adb ${ADBOPTS} shell dumpsys backup | sed 's/\r//g' > "$tmp"
 
   echo >> "$devicedoc"
