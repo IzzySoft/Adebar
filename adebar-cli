@@ -30,7 +30,6 @@ STORAGE_BASE=
 MK_APPDISABLE=1
 MK_USERBACKUP=1
 MK_SYSBACKUP=1
-MK_COMPONENTS=1
 PULL_SETTINGS=1
 MK_TIBU=1
 MK_PKG_DATA=1
@@ -160,9 +159,12 @@ in_array() {
     return 1
 }
 
+
+#
 # Gather lists of installed apps
+#
 initAppLists() {
-  [[ $(($MK_USERBACKUP + $MK_SYSBACKUP + $MK_COMPONENTS)) -eq 0 ]] && return
+  [[ $(($MK_USERBACKUP + $MK_SYSBACKUP)) -eq 0 ]] && return
   doProgress "Gathering lists of installed apps"
 
   doProgress "- userApps" 2
@@ -185,7 +187,10 @@ initAppLists() {
   done
 }
 
+
+#
 # Create script for disabled apps
+#
 getDisabled() {
   [ $MK_APPDISABLE -ne 1 ] && return
 
@@ -205,7 +210,9 @@ getDisabled() {
 }
 
 
+#
 # Create script to backup all user-apps
+#
 getUserAppBackup() {
   [ $MK_USERBACKUP -ne 1 ] && return
 
@@ -236,7 +243,9 @@ getUserAppBackup() {
 }
 
 
+#
 # Create script to backup all system-app data
+#
 getSystemAppBackup() {
   [ $MK_SYSBACKUP -ne 1 ] && return
 
@@ -284,26 +293,20 @@ getSystemAppBackup() {
   chmod u+x "$backupscript" "$restorescript"
 }
 
+
+#
 # Retrieve packages.xml (required in different places)
+#
 pullPackagesXML() {
-  [ $((${MK_COMPONENTS} + ${MK_PKG_DATA})) -eq 0 ] && return
+  [ ${MK_PKG_DATA} -eq 0 ] && return
   local msg="$((adb ${ADBOPTS} pull /data/system/packages.xml "${PKGXML}") 2>&1)"
   doProgress "Pulling packages.xml: $msg" 2
 }
 
-# Get disabled broadcast receivers
-# Requires xml2 package (apt-get install xml2)
-getFrozenComponents() {
-  [ $MK_COMPONENTS -ne 1 -o ! -f "${PKGXML}" ] && return
-  doProgress "Checking for disabled components"
-  [ -n "$(which xml2)" ] && xml2 < "${PKGXML}" |grep "disabled-components/item/@name" > "$DOCDIR/deadreceivers"
-  [ -f "$DOCDIR/deadreceivers" -a ! -s "$DOCDIR/deadreceivers" ] && {
-    doProgress "  No disabled components listed in packages.xml." 2
-    rm -f "$DOCDIR/deadreceivers"
-  }
-}
 
+#
 # Get the default install-location
+#
 getInstallLoc() {
   [ $MK_INSTALLLOC -ne 1 ] && return
   doProgress "Checking default install-location"
@@ -312,7 +315,9 @@ getInstallLoc() {
   chmod u+x "$OUTDIR/defaultInstallLoc"
 }
 
+#
 # Get device info
+#
 getDeviceInfo() {
   [ $MK_DEVICEINFO -ne 1 ] && return
   doProgress "Collecting device information"
@@ -424,8 +429,10 @@ getDeviceInfo() {
 }
 
 
+#
 # Get settings
 # includes WiFi APs etc.
+#
 getSettings() {
   [ $PULL_SETTINGS -ne 1 ] && return
   doProgress "Pulling configuration files"
@@ -443,7 +450,9 @@ getSettings() {
 }
 
 
+#
 # Create script to download SDCard Contents and TiBu Backups via TiBu WebServer
+#
 getTibu() {
   [ $MK_TIBU -ne 1 ] && return
   [ -z "${DEVICE_IP}" ] && return
@@ -464,6 +473,263 @@ getTibu() {
 }
 
 
+#
+# Collect app details via dumpsys
+#
+getAppDetails() {
+  local P_BLOCK="none" # none|pkglist|pkg|disabled|enabled|perms
+  local P_PKGNAME=""   # name of the currently processed package
+  local tmpstring=""
+  local P_SKIP=(userId sharedUser pkg resourcePath nativeLibraryPath versionCode targetSdk timeStamp signatures permissionsFixed pkgFlags applicationInfo)
+  declare -A PK_CODEPATH
+  declare -A PK_VERSION
+  declare -A PK_DATADIR
+  declare -A PK_SCREENSIZE
+  declare -A PK_FIRSTINSTALL
+  declare -A PK_LASTUPDATE
+  declare -A PK_INSTALLERS    # per source
+  PK_INSTALLERS[none]="unknown source"
+  declare -A PK_INSTALLER     # per app
+  declare -A PK_DISABLED      # list of components separated by spaces
+  declare -A PK_FLAGS         # flags=[ SYSTEM HAS_CODE ALLOW_TASK_REPARENTING ALLOW_CLEAR_USER_DATA ALLOW_BACKUP LARGE_HEAP ]
+  declare -A APP_INSTALL_SRC
+  APP_INSTALL_SRC[org.fdroid.fdroid]="F-Droid"
+  APP_INSTALL_SRC[cm.aptoide.pt]="Aptoide"
+  APP_INSTALL_SRC[com.android.vending]="Google Play"
+  APP_INSTALL_SRC[com.google.android.feedback]="Google Play (Feedback)"
+  local PKGDUMP="dumpsys.$$"
+  local SH_DISABLED="${OUTDIR}/deadReceivers.sh"
+
+  doProgress "Generating app detail info"
+  doProgress "- collecting data via dumpsys into '${PKGDUMP}'" 2
+  adb shell "dumpsys package" |egrep -A99999 "^Packages:" |egrep -B99999 "^Shared users:" > "${PKGDUMP}"
+
+  # Parsing dump
+  doProgress "- parsing package dump from '${PKGDUMP}'" 2
+  while IFS='' read zeile; do # no idea why, but some dump lines are terminated using CRLF
+    case ${P_BLOCK} in
+      none)
+        [[ "$zeile" != "Packages:" ]] && continue;
+        P_BLOCK="pkglist"
+        doProgress "  - Found package list marker" 3
+        continue;
+        ;;
+
+      pkglist)
+        if [[ "${zeile:0:11}" = "  Package [" ]]; then  # "  Package [com.google.android.location] (40e85638):"
+          tmpstring="${zeile##*[}"                      # strip leading
+          P_PKGNAME="${tmpstring%%]*}"                  # strip trailing
+          P_BLOCK="pkg"
+          doProgress "  - Package: $P_PKGNAME" 3
+          continue
+        fi
+        ;;
+
+      pkg)
+        tmpstring="${zeile%%=*}"
+        tmpstring="${tmpstring##*[[:space:]]}"
+        in_array $tmpstring "${P_SKIP[@]}" && continue
+        [[ "$zeile" = "    grantedPermissions:" ]] && continue
+        [[ "${zeile:0:6}" = "      " ]] && continue
+        [[ -z "${zeile%%* }" ]] && break # end of package list is an empty line, sometimes with spaces
+        case "$tmpstring" in
+          "codePath")
+            PK_CODEPATH[$P_PKGNAME]="${zeile##*=}"
+            doProgress "    +codePath: ${PK_CODEPATH[$P_PKGNAME]}" 4
+            continue
+            ;;
+          "versionName")
+            PK_VERSION[$P_PKGNAME]="${zeile##*=}"
+            doProgress "    +version: ${PK_VERSION[$P_PKGNAME]}" 4
+            continue
+            ;;
+          "dataDir")
+            PK_DATADIR[$P_PKGNAME]="${zeile##*=}"
+            doProgress "    +data: ${PK_DATADIR[$P_PKGNAME]}" 4
+            continue
+            ;;
+          "supportsScreens")
+            PK_SCREENSIZE[$P_PKGNAME]="${zeile##*=}"
+            doProgress "    +screens: ${PK_SCREENSIZE[$P_PKGNAME]}" 4
+            continue
+            ;;
+          "firstInstallTime")
+            PK_FIRSTINSTALL[$P_PKGNAME]="${zeile##*=}"
+            doProgress "    +firstinst: ${PK_FIRSTINSTALL[$P_PKGNAME]}" 4
+            continue
+            ;;
+          "lastUpdateTime")
+            PK_LASTUPDATE[$P_PKGNAME]="${zeile##*=}"
+            doProgress "    +lastup: ${PK_LASTUPDATE[$P_PKGNAME]}" 4
+            continue
+            ;;
+          "installerPackageName")
+            in_array "${zeile##*=}" "${PK_INSTALLERS[@]}" || { # setting up "used sources" to group by
+              if [ -z "${APP_INSTALL_SRC[${zeile##*=}]}" ]; then
+                PK_INSTALLERS[${zeile##*=}]="${zeile##*=}"
+              else
+                PK_INSTALLERS[${zeile##*=}]="${APP_INSTALL_SRC[${zeile##*=}]}"
+              fi
+            }
+            PK_INSTALLER[$P_PKGNAME]="${zeile##*=}"
+            doProgress "    +installer: ${PK_INSTALLER[$P_PKGNAME]}" 4
+            continue
+            ;;
+          "flags")
+            PK_FLAGS[$P_PKGNAME]="${zeile##*=}"
+            doProgress "    +flags: ${PK_FLAGS[$P_PKGNAME]}" 4
+            continue
+            ;;
+          *)
+            if [[ "${zeile:0:11}" = "  Package [" ]]; then  # "  Package [com.google.android.location] (40e85638):"
+              tmpstring="${zeile##*[}"                      # strip leading
+              P_PKGNAME="${tmpstring%%]*}"                  # strip trailing
+              doProgress "  - Package: $P_PKGNAME" 3
+              continue
+            fi
+            if [[ "${zeile}" = "    disabledComponents:" ]]; then
+              P_BLOCK="disabled"
+              continue
+            fi
+            if [[ "${zeile}" = "    enabledComponents:" ]]; then
+              P_BLOCK="enabled"
+              continue
+            fi
+echo "Oops in pkg:"
+echo -e "Unexpected: '$zeile'"
+            ;;
+        esac
+        ;;
+
+      "disabled") # disabled components of current pkg
+        if [[ "${zeile:0:6}" = "      " ]]; then
+          if [[ -z "${PK_DISABLED[$P_PKGNAME]}" ]]; then
+            PK_DISABLED[$P_PKGNAME]="${zeile:6}"
+          else
+            PK_DISABLED[$P_PKGNAME]="${PK_DISABLED[$P_PKGNAME]} ${zeile:6}"
+          fi
+          continue
+        fi
+        if [[ "${zeile}" = "    grantedPermissions:" ]]; then
+          P_BLOCK="perms"
+          continue
+        fi
+        if [[ "${zeile}" = "    enabledComponents:" ]]; then
+          P_BLOCK="enabled"
+          continue
+        fi
+        if [[ "${zeile:0:11}" = "  Package [" ]]; then  # "  Package [com.google.android.location] (40e85638):"
+          tmpstring="${zeile##*[}"                      # strip leading
+          P_PKGNAME="${tmpstring%%]*}"                  # strip trailing
+          P_BLOCK="pkg"
+          doProgress "  - Package: $P_PKGNAME" 3
+          continue
+        fi
+echo "Oops in disabled:"
+echo -e "$zeile"
+exit
+        ;;
+
+      "enabled") # enabled components of current pkg
+        if [[ "${zeile:0:6}" = "      " ]]; then
+          continue # we don't include enabled components
+        fi
+        if [[ "${zeile}" = "    grantedPermissions:" ]]; then
+          P_BLOCK="perms"
+          continue
+        fi
+        if [[ "${zeile:0:11}" = "  Package [" ]]; then  # "  Package [com.google.android.location] (40e85638):"
+          tmpstring="${zeile##*[}"                      # strip leading
+          P_PKGNAME="${tmpstring%%]*}"                  # strip trailing
+          P_BLOCK="pkg"
+          doProgress "  - Package: $P_PKGNAME" 3
+          continue
+        fi
+echo "Oops in enabled:"
+echo -e "$zeile"
+        ;;
+
+      "perms")
+        if [[ "${zeile:0:6}" = "      " ]]; then
+          continue # we don't include permissions (yet)
+        fi
+        if [[ "${zeile:0:11}" = "  Package [" ]]; then  # "  Package [com.google.android.location] (40e85638):"
+          tmpstring="${zeile##*[}"                      # strip leading
+          P_PKGNAME="${tmpstring%%]*}"                  # strip trailing
+          P_BLOCK="pkg"
+          doProgress "  - Package: $P_PKGNAME" 3
+          continue
+        fi
+echo "Oops in perms:"
+echo -e "$zeile"
+        ;;
+      *)
+        ;;
+    esac
+
+  done < "${PKGDUMP}"
+
+  # Create userApps.md
+  doProgress "- generating userApps.md" 2
+  local mdfile="${DOCDIR}/userApps.md"
+  declare -A APP_INSTALL_SRC
+  APP_INSTALL_SRC[org.fdroid.fdroid]="F-Droid"
+  APP_INSTALL_SRC[cm.aptoide.pt]="Aptoide"
+  APP_INSTALL_SRC[com.android.vending]="Google Play"
+  APP_INSTALL_SRC[com.google.android.feedback]="Google Play (Feedback)"
+
+  echo "# Installed User-Apps" > "${mdfile}"
+  echo -e "#!/bin/bash\n# Disable Components" > "${SH_DISABLED}"
+  declare -A PK_INFO
+  for src in ${!PK_INSTALLERS[@]}; do
+    PK_INFO[$src]=""
+  done
+  local CUR_INSTALLER
+  for app in ${userApps[@]}; do
+    tmpstring="+ $app\n"
+    [[ -n "${PK_FIRSTINSTALL[$app]}" ]] && tmpstring+="    + first installed: ${PK_FIRSTINSTALL[$app]}\n"
+    [[ -n "${PK_LASTUPDATE[$app]}" ]]   && tmpstring+="    + last updated: ${PK_FIRSTINSTALL[$app]}\n"
+    [[ -n "${PK_VERSION[$app]}" ]]      && tmpstring+="    + installed version: ${PK_VERSION[$app]}\n"
+    [[ -n "${PK_CODEPATH[$app]}" ]]     && tmpstring+="    + CodePath: ${PK_CODEPATH[$app]}\n"
+    [[ -n "${PK_DATADIR[$app]}" ]]      && tmpstring+="    + App data: ${PK_DATADIR[$app]}\n"
+    [[ -n "${PK_SCREENSIZE[$app]}" ]]   && tmpstring+="    + supported screen sizes: ${PK_SCREENSIZE[$app]}\n"
+    [[ -n "${PK_FLAGS[$app]}" ]]        && tmpstring+="    + flags: ${PK_FLAGS[$app]}\n"
+    [[ -n "${PK_DISABLED[$app]}" ]]     && {
+      tmpstring+="    + disabled components:\n"
+      echo "" >> "${SH_DISABLED}"
+      for comp in ${PK_DISABLED[$app]}; do
+        tmpstring+="        - $comp\n"
+        echo "adb shell \"pm disable ${app}/${comp}\"" >> "${SH_DISABLED}"
+      done
+    }
+    if [[ -z "${PK_INSTALLER[$app]}" ]]; then
+      PK_INFO[none]+="$tmpstring\n"
+    else
+      CUR_INSTALLER="${PK_INSTALLER[$app]}"
+      PK_INFO[$CUR_INSTALLER]+="$tmpstring\n"
+    fi
+  done
+  for src in ${!PK_INSTALLERS[@]}; do
+    echo -e "## Installed from ${PK_INSTALLERS[$src]} (installer: $src)\n" >> "${mdfile}"
+    echo -e "${PK_INFO[$src]}\n" >> "${mdfile}"
+  done
+
+  doProgress "- checking for disabled system components" 2
+  echo -e "\n\n# Disable System Components" >> "${SH_DISABLED}"
+  for app in ${sysApps[@]}; do
+    [[ -n "${PK_DISABLED[$app]}" ]]     && {
+      echo "" >> "${SH_DISABLED}"
+      for comp in ${PK_DISABLED[$app]}; do
+        echo "adb shell \"pm disable ${app}/${comp}\"" >> "${SH_DISABLED}"
+      done
+    }
+  done
+
+  doProgress "- removing temporary dumpfile '${PKGDUMP}'" 2
+  rm -f "${PKGDUMP}"
+}
+
+
 ############################################[ Main ]###
 doProgress "\n\033[1;37mAdebar running:\033[0;37m";
 pullPackagesXML
@@ -471,12 +737,11 @@ initAppLists
 getDisabled
 getUserAppBackup
 getSystemAppBackup
-getFrozenComponents
 getInstallLoc
 getDeviceInfo
 getSettings
 getTibu
-[ $MK_PKG_DATA -ne 0 -a -f "${PKGXML}" -a -f "/usr/bin/php" ] && ./getPkgData.php "$OUTDIR" "$DOCDIR"
+[[ $MK_PKG_DATA -ne 0 ]] && getAppDetails
 doProgress "\033[1;37mAdebar done.\033[0;37m\n"
 
 exit 0

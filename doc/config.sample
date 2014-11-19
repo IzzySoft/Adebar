@@ -36,8 +36,6 @@ MK_APPDISABLE=1
 # create the script to backup user apps+data / system app-data
 MK_USERBACKUP=1
 MK_SYSBACKUP=1
-# create scripts and docs for "disabled components"
-MK_COMPONENTS=1
 # pull settings/configs from the device
 PULL_SETTINGS=1
 # create the script to pull stuff from the TiBu web server

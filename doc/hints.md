@@ -75,8 +75,6 @@ What the settings are standing for is:
   * `MK_APPDISABLE`: the script to "freeze/disable" apps
   * `MK_USERBACKUP`/`MK_SYSBACKUP`: create the script to backup user apps+data /
     system app-data
-  * `MK_COMPONENTS`: create simple list for "disabled components" (for scripts &
-    docu see `MK_PKG_DATA`)
   * `PULL_SETTINGS`: pull settings/configs from the device (currently just
     `wpa_supplicant.conf`, but there might be more in the future)
   * `MK_TIBU`: create the script to pull stuff from the TiBu web server
