@@ -4,8 +4,8 @@
 *Adebar* only creates the scripts, it doesn't backup stuff itself. There are two
 exceptions to this rule currently:
 
-* it pulls the `packages.xml` (as it requires this to obtain additional details)
-* it pulls the `wpa_supplicant.conf` directly.
+* it pulls the `packages.xml`
+* it pulls the `wpa_supplicant.conf` and some other config files directly.
 
 Both actions are relative fast. But once you run the scripts to create the real
 backups, things are different: especially pulling the "Shared Storage" (see
@@ -51,49 +51,49 @@ set by default) and/or the STORAGE_BASE.
 What the settings are standing for is:
 
 * directory settings:
-  * `STORAGE_BASE=`: that's the "base directory" everything goes below. Here
-    the command-line provided `OUTDIR` will be appended to. By default, this
-    variable is empty, so `OUTDIR` is relative to the execution path. If you
-    e.g. set it as `STORAGE_PATH=/home/me/backups`, and pass `moto_x` as
-    parameter to `adebar_cli`, your files should end up below
-    `/home/me/backups/moto_x`.
-  * `USERDIR="userApps"`: sub-directory where the backup scripts will place the
-    ADB backups of your user-apps into (relative to where they're run)
-  * `SYSDIR="sysApps"`: Similar, for the data backups of your system apps
-  * `DOCDIR="docs"`: Where to place created documentary files. Default is
-    `${STORAGE_PATH}/${OUTDIR}/docs`
-  * `CONFDIR="conf"`: Similar for pulled config files (`conf/`)
+    * `STORAGE_BASE=`: that's the "base directory" everything goes below. Here
+      the command-line provided `OUTDIR` will be appended to. By default, this
+      variable is empty, so `OUTDIR` is relative to the execution path. If you
+      e.g. set it as `STORAGE_PATH=/home/me/backups`, and pass `moto_x` as
+      parameter to `adebar_cli`, your files should end up below
+      `/home/me/backups/moto_x`.
+    * `USERDIR="userApps"`: sub-directory where the backup scripts will place the
+      ADB backups of your user-apps into (relative to where they're run)
+    * `SYSDIR="sysApps"`: Similar, for the data backups of your system apps
+    * `DOCDIR="docs"`: Where to place created documentary files. Default is
+      `${STORAGE_PATH}/${OUTDIR}/docs`
+    * `CONFDIR="conf"`: Similar for pulled config files (`conf/`)
 * TiBu specific stuff:
-  * `DEVICE_IP="192.168.101.111"`: IP address of your device
-  * `TIBU_PORT="8080"`: port the *TiBu* web server listens on
-  * `TIBU_SDINT="/storage/INTERNAL/Storage-ALL.zip"`: URL path of the internal SD
-  * `TIBU_SDEXT="/storage/SAMSUNG_EXT_SD_CARD/Storage-ALL.zip":` URL path of the
-    external SD
-  * `TIBU_BACKUPS="/TitaniumBackup-ALL.zip"`: URL path to the *TiBu* backups
+    * `DEVICE_IP="192.168.101.111"`: IP address of your device
+    * `TIBU_PORT="8080"`: port the *TiBu* web server listens on
+    * `TIBU_SDINT="/storage/INTERNAL/Storage-ALL.zip"`: URL path of the internal SD
+    * `TIBU_SDEXT="/storage/SAMSUNG_EXT_SD_CARD/Storage-ALL.zip":` URL path of the
+      external SD
+    * `TIBU_BACKUPS="/TitaniumBackup-ALL.zip"`: URL path to the *TiBu* backups
 * Disable features (optional, by default they're all enabled; set a value to "0"
   in order to disable a feature
-  * `MK_APPDISABLE`: the script to "freeze/disable" apps
-  * `MK_USERBACKUP`/`MK_SYSBACKUP`: create the script to backup user apps+data /
-    system app-data
-  * `PULL_SETTINGS`: pull settings/configs from the device (currently just
-    `wpa_supplicant.conf`, but there might be more in the future)
-  * `MK_TIBU`: create the script to pull stuff from the TiBu web server
-  * `MK_PKG_DATA`: process packages.xml for further details (requires PHP-cli)
-    This creates the *script* to deal with "disabled components", plus the
-    corresponding markup document, plus the markup document holding details
-    on installed apps and their sources
-  * `MK_INSTALLLOC`: Deal with the default-install-location (where apps should
-    be installed by default: 0=auto (system decides), 1=device, 2=sdcard).
-    Creates a 1-liner script to set that again.
-  * `MK_DEVICEINFO`: Create a (Markdown) document containing device information.
-    Currently it lists the "device features" as returned by `pm list features`,
-    plus some selected details from the `build.prop`; more might be added in
-    the future.
+    * `MK_APPDISABLE`: the script to "freeze/disable" apps
+    * `MK_USERBACKUP`/`MK_SYSBACKUP`: create the script to backup user apps+data /
+      system app-data
+    * `PULL_SETTINGS`: pull settings/configs from the device (currently just
+      `wpa_supplicant.conf`, but there might be more in the future)
+    * `MK_TIBU`: create the script to pull stuff from the TiBu web server
+    * `MK_PKG_DATA`: process packages.xml for further details (requires PHP-cli)
+      This creates the *script* to deal with "disabled components", plus the
+      corresponding markup document, plus the markup document holding details
+      on installed apps and their sources
+    * `MK_INSTALLLOC`: Deal with the default-install-location (where apps should
+      be installed by default: 0=auto (system decides), 1=device, 2=sdcard).
+      Creates a 1-liner script to set that again.
+    * `MK_DEVICEINFO`: Create a (Markdown) document containing device information.
+      Currently it lists the "device features" as returned by `pm list features`,
+      plus some selected details from the `build.prop`; more might be added in
+      the future.
 * Misc
-  * `PROGRESS`: Show some progress while the script is running, so you know
-    what's going on (and don't think it got "stuck"). By default, this is
-    enabled. To disable, set it to `0`. To increase verbosity, place a higher
-    number (currently used are values from 1 to 3).
+    * `PROGRESS`: Show some progress while the script is running, so you know
+      what's going on (and don't think it got "stuck"). By default, this is
+      enabled. To disable, set it to `0`. To increase verbosity, place a higher
+      number (currently used are values from 1 to 3).
 
 
 ## Shared Storage
@@ -128,9 +128,9 @@ but also takes much longer to backup.
 *TiBu* offers an internal web server, which you can start manually via its options
 menu. If running, you can pull 3 kinds of backups via HTTP:
 
-* contents of the internal SD card (http://<DEVICE_IP>:8080/storage/INTERNAL/Storage-ALL.zip)
-* contents of the external SD card (http://<DEVICE_IP>:8080/storage/SAMSUNG_EXT_SD_CARD/Storage-ALL.zip)
-* all your *TiBu* created backups (http://<DEVICE_IP>:8080/TitaniumBackup-ALL.zip).
+* contents of the internal SD card (`http://<DEVICE_IP>:8080/storage/INTERNAL/Storage-ALL.zip`)
+* contents of the external SD card (`http://<DEVICE_IP>:8080/storage/SAMSUNG_EXT_SD_CARD/Storage-ALL.zip`)
+* all your *TiBu* created backups (`http://<DEVICE_IP>:8080/TitaniumBackup-ALL.zip`).
 
 In case of my above mentioned *LG Optimus 4X HD* I just had to pull the contents
 of the internal card, and had them all: As noted, the external card is mounted

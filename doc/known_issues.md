@@ -12,14 +12,14 @@ fixed on the corresponding Android app's end.
 Apps which I found having this issue include the following:
 
 * installed as system apps:
-  - GMail
-  - SuperSU
+    - GMail
+    - SuperSU
 * installed as user apps:
-  - AppMonster Pro
-  - DavDroid (pre-0.6.4; fixed [on DavDroid's end](https://github.com/rfc2822/davdroid/releases/tag/v0.6.4))
-  - JuiceSSH
-  - MobilityMap
-  - WakeLockDetector
+    - AppMonster Pro
+    - DavDroid (pre-0.6.4; fixed [on DavDroid's end](https://github.com/rfc2822/davdroid/releases/tag/v0.6.4))
+    - JuiceSSH
+    - MobilityMap
+    - WakeLockDetector
 
 
 ## Backup of each app has to be confirmed separately
@@ -32,7 +32,7 @@ the other hints :)
 ## `packages.xml` not retrievable
 On some devices (all 4.1+ devices with the ADB daemon running in non-root mode?),
 `packages.xml` can not be pulled. *Adebar* should obtain related information via
-`dumpsys` instead (*Todo*).
+`dumpsys` instead (*Todo*). This applies to some other files as well, especially those with sensitive details (e.g. `wpa_supplicant.conf`).
 
 
 ## `disable` script not working?
