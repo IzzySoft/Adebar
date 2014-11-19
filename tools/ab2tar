@@ -1,0 +1,15 @@
+#!/bin/bash
+# convert ADB Backups to tar
+
+[[ -z "$1" ]] && {
+  echo -e "\n\033[1;37mab2tar\033[0;37m"
+  echo "Converting ADB Backup files into tar archives"
+  echo
+  echo "Syntax:"
+  echo -e "  $0 <ADB Backup File>\n"
+  echo "Example:"
+  echo -e "  $0 com.foo.bar.ab\n"
+  exit 1
+}
+
+dd if=$1 bs=24 skip=1 | openssl zlib -d >${1%%.ab}.tar && gzip -9 ${1%%.ab}.tar
