@@ -116,8 +116,8 @@ if [ -n "${STORAGE_BASE}" ]; then
 fi
 DOCDIR="${OUTDIR}/${DOCDIR}"
 CONFDIR="${OUTDIR}/${CONFDIR}"
-PKGXML="${DOCDIR}/packages.xml"
-BUILDPROP="${DOCDIR}/build.prop"
+PKGXML="${CONFDIR}/packages.xml"
+BUILDPROP="${CONFDIR}/build.prop"
 if [ ! -d "${DOCDIR}" ]; then
   mkdir -p "${DOCDIR}" || {
     echo "Output directory does not exist, and I cannot create it. Sorry."
