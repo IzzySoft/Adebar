@@ -50,3 +50,5 @@ MK_DEVICEINFO=1
 # -------------------------------=[ Misc ]=--
 # Show progress in terminal (0=disabled, 1..3 are verbosity levels)
 PROGRESS=1
+# Use ANSI sequences on terminal (to highlight text)?
+USE_ANSI=1

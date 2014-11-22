@@ -94,6 +94,10 @@ What the settings are standing for is:
       what's going on (and don't think it got "stuck"). By default, this is
       enabled. To disable, set it to `0`. To increase verbosity, place a higher
       number (currently used are values from 1 to 3).
+    * `USE_ANSI`: Using ANSI sequences, *Adebar* can highlight important parts
+      of the progress output: e.g. mark error messages red, titles bold, etc.
+      This is fine for interactive use, but might not be wished in scripts.
+      Set it to `0` to disable (Default: `1`, i.e. enabled)
 
 
 ## Shared Storage

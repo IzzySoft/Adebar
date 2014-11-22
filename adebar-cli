@@ -38,6 +38,7 @@ MK_DEVICEINFO=1
 
 # Misc
 PROGRESS=1
+USE_ANSI=1
 
 
 ############################################[ Init ]###
@@ -157,6 +158,27 @@ in_array() {
         [[ $hay == $needle ]] && return 0
     done
     return 1
+}
+
+
+#
+# Wrap a string in ANSI codes
+#
+ansi_code() {
+  if [[ USE_ANSI -eq 0 ]]; then
+    echo "$1"
+    return
+  fi
+  local txt="$1"
+  shift
+  while [[ -n "$1" ]]; do
+    case "$1" in
+      "bold") txt="\033[1;37m${txt}" ;; # BOLD: \033[1;37m // NORMAL: \033[0;37m // # RED: \033[1;31m
+      "red")  txt="\033[1;31m${txt}" ;; # more: http://tldp.org/HOWTO/Bash-Prompt-HOWTO/x329.html
+    esac
+    shift
+  done
+  echo "${txt}\033[0m"
 }
 
 
@@ -300,6 +322,8 @@ getSystemAppBackup() {
 pullPackagesXML() {
   [ ${MK_PKG_DATA} -eq 0 ] && return
   local msg="$((adb ${ADBOPTS} pull /data/system/packages.xml "${PKGXML}") 2>&1)"
+  # "adb pull" seems to "exit 0" also on "Permission denied" (but not on "does not exist")
+  [[ "$msg" =~ "Permission denied" ]] && msg=$(ansi_code "$msg" "red")
   doProgress "Pulling packages.xml: $msg" 2
 }
 
@@ -439,6 +463,7 @@ getSettings() {
 
   local msg
   msg="$((adb ${ADBOPTS} pull /data/misc/wifi/wpa_supplicant.conf "${CONFDIR}/wpa_supplicant.conf") 2>&1)"
+  [[ $? -ne 0 ]] && msg=$(ansi_code "${msg}" "red")
   doProgress "- wpa_supplicant.conf: $msg" 2
   msg="$((adb ${ADBOPTS} pull /system/etc/gps.conf "${CONFDIR}/gps.conf") 2>&1)"
   doProgress "- gps.conf: $msg" 2
@@ -731,7 +756,9 @@ echo -e "$zeile"
 
 
 ############################################[ Main ]###
-doProgress "\n\033[1;37mAdebar running:\033[0;37m";
+echo
+msg=$(ansi_code "Adebar running:" "bold")
+doProgress "${msg}"
 pullPackagesXML
 initAppLists
 getDisabled
@@ -742,7 +769,9 @@ getDeviceInfo
 getSettings
 getTibu
 [[ $MK_PKG_DATA -ne 0 ]] && getAppDetails
-doProgress "\033[1;37mAdebar done.\033[0;37m\n"
+msg=$(ansi_code "Adebar done." "bold")
+doProgress "${msg}"
+echo
 
 exit 0
 
