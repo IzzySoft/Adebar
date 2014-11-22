@@ -29,10 +29,15 @@ at least temporarily disable that. If I do and find a way, you will find it with
 the other hints :)
 
 
-## `packages.xml` not retrievable
+## `packages.xml` (and/or other files) not retrievable
 On some devices (all 4.1+ devices with the ADB daemon running in non-root mode?),
-`packages.xml` can not be pulled. *Adebar* should obtain related information via
-`dumpsys` instead (*Todo*). This applies to some other files as well, especially those with sensitive details (e.g. `wpa_supplicant.conf`).
+`packages.xml` can not be pulled. Hence *Adebar* obtains related information via
+`dumpsys` instead.
+
+This applies to some other files as well, especially those with sensitive details
+(e.g. `wpa_supplicant.conf`). If you want to pull them, you'll have to root your
+device and make sure the ADB daemon runs in root-mode (which can e.g. be achieved
+using chainfire's [adbd Insecure](http://play.google.com/store/apps/details?id=eu.chainfire.adbd)).
 
 
 ## `disable` script not working?
@@ -41,3 +46,12 @@ running in non-root mode, at least when run against pre-installed apps (aka
 „bloatware“; confirmations/dementis welcome, as the list of devices at my
 disposal is pretty limited, so I can not say whether that's a general rule).
 Nothing we can do about that.
+
+
+## Apps are always listed by their package names
+Even in `doc/userApps.md`, which is a documentation file, apps are only listed
+with their package names (e.g. `eu.chainfire.adbd` for chainfire's *adbd Insecure*).
+I wish there were means to list the „human readable app name“ along – but apart
+from pulling the entire `.apk` file and dissecting it via `aapt`, or trying to
+look up the package in the app stores' web pages, I know of no simple way to get
+hold on it. Suggestions welcome.

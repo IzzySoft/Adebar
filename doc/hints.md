@@ -18,9 +18,9 @@ WiFi as well – so I'd thought to better point this out).
 
 ### When running the real backup
 * as pointed out above: have a power source connected
-* with the "ADB Backups": always wait for the "complete" toast before confirming
+* with the „ADB Backups“: always wait for the „complete“ toast before confirming
   the next backup (or ADB might choke, backup won't continue)
-* if ADB "chokes" (and the backup stalls): Check your backup directory for how
+* if ADB „chokes“ (and the backup stalls): Check your backup directory for how
   far the process already went, adjust the script accordingly to start there,
   disconnect and reconnect your device, and re-start the modified script.
 
@@ -39,7 +39,7 @@ When running, *Adebar* first checks for an existing config file:
   device.
 * otherwise, if `config/` is a directory, and contains a file named
   `default`, this will be used. You might want to have that for e.g.
-  "guest devices" or as a default for possible "new ones"
+  "guest devices" or as a default for possible „new ones“
 * otherwise, if `config` is a file, that will be used. Makes it easier
   if you only have one device, and don't plan for more.
 
@@ -51,7 +51,7 @@ set by default) and/or the STORAGE_BASE.
 What the settings are standing for is:
 
 * directory settings:
-    * `STORAGE_BASE=`: that's the "base directory" everything goes below. Here
+    * `STORAGE_BASE=`: that's the „base directory“ everything goes below. Here
       the command-line provided `OUTDIR` will be appended to. By default, this
       variable is empty, so `OUTDIR` is relative to the execution path. If you
       e.g. set it as `STORAGE_PATH=/home/me/backups`, and pass `moto_x` as
@@ -72,7 +72,7 @@ What the settings are standing for is:
     * `TIBU_BACKUPS="/TitaniumBackup-ALL.zip"`: URL path to the *TiBu* backups
 * Disable features (optional, by default they're all enabled; set a value to "0"
   in order to disable a feature
-    * `MK_APPDISABLE`: the script to "freeze/disable" apps
+    * `MK_APPDISABLE`: the script to „freeze/disable“ apps
     * `MK_USERBACKUP`/`MK_SYSBACKUP`: create the script to backup user apps+data /
       system app-data
     * `PULL_SETTINGS`: pull settings/configs from the device (currently just
@@ -86,14 +86,15 @@ What the settings are standing for is:
       be installed by default: 0=auto (system decides), 1=device, 2=sdcard).
       Creates a 1-liner script to set that again.
     * `MK_DEVICEINFO`: Create a (Markdown) document containing device information.
-      Currently it lists the "device features" as returned by `pm list features`,
+      Currently it lists the „device features“ as returned by `pm list features`,
       plus some selected details from the `build.prop`; more might be added in
-      the future.
+      the future (I'm open to suggestions here).
 * Misc
     * `PROGRESS`: Show some progress while the script is running, so you know
-      what's going on (and don't think it got "stuck"). By default, this is
+      what's going on (and don't think it got „stuck“). By default, this is
       enabled. To disable, set it to `0`. To increase verbosity, place a higher
-      number (currently used are values from 1 to 3).
+      number (currently used are values from 1 to 4 – feel free to use larger
+      numbers for possibly added more-verbose-levels).
     * `USE_ANSI`: Using ANSI sequences, *Adebar* can highlight important parts
       of the progress output: e.g. mark error messages red, titles bold, etc.
       This is fine for interactive use, but might not be wished in scripts.
@@ -116,7 +117,7 @@ As you might have already guessed from the above, *SSB* is offered via ADB
 without the need of additional apps. It is simply triggered when backing up
 data from its package. These data include everything from your device's
 SD cards – both internal (`/0`) and external (`/1`). Timestamps of files
-and directories are kept, but most files seem to come as "0775" (i.e. the
+and directories are kept, but most files seem to come as `0775` (i.e. the
 execute flag is set for user and group) – a condition you might have seen
 when accessing FAT formatted drives in general.
 
@@ -126,7 +127,8 @@ e.g. mounts the external SD card *inside* the internal one (`/sdcard/external_sd
 which results in its contents backed up twice: once as part of the internal SD
 (in the `/0` subdirectory), and another time as external SD in the `/1`
 subdirectory. This not only makes the resulting backup file unnecessary huge,
-but also takes much longer to backup.
+but also takes much longer to backup. If you have the same issue, consider removing
+the external SD card before pulling the *SSB*.
 
 ### TiBu
 *TiBu* offers an internal web server, which you can start manually via its options
@@ -155,11 +157,11 @@ at the time the backup was made.
 
 You can pass it an optional second parameter, which will then be appended
 to the output directory name. This is especially useful if you want to keep
-"historic scripts", e.g. to later detemine which apps where installed on your
+„historic scripts“, e.g. to later detemine which apps where installed on your
 device at a given time.
 
 As this might be easier to understand with an example: Let's say you've got two devices, one Motorola and one HTC. For each of them, you wish different settings
-to be applied. So for a "shortcut", you name the first "moto" and the second "htc".
+to be applied. So for a „shortcut“, you name the first „moto“ and the second „htc“.
 For easier handling, you could do the following:
 
 * create the `config` directory below the directory `adebar-cli` resides in
