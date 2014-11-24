@@ -348,64 +348,94 @@ getDeviceInfo() {
   local item=""
   local devicedoc="${DOCDIR}/deviceInfo.md"
   local msg=""
+  local tmp=$(tempfile)
+  trap "rm -f -- '$t'" RETURN
 
   echo "# Device Information" > "$devicedoc"
+  adb shell ${ADBOPTS} getprop > $tmp
 
-  msg="$((adb ${ADBOPTS} pull /system/build.prop "${BUILDPROP}") 2>&1)"
-  doProgress "- Evaluating build.prop (xfer: $msg)" 2
-  if [ $? -eq 0 ]; then # successfully pulled the build.prop
-    echo  >> "$devicedoc"
-    echo "## Device and ROM properties (from \`build.prop\` / \`getprop\`)" >> "$devicedoc"
-    while read zeile; do
-      zeile="${zeile//=/ }"
-      foo=($zeile)
-      case ${foo[0]} in
-        "ro.build.version.sdk") local sdk=${foo[1]} ;;
-        "ro.build.version.release") local aver=${foo[1]} ;;
-        "ro.modversion") local modver=${foo[1]} ;;         # ro.modversion=10-20121228-NIGHTLY-milestone2
-        "ro.product.manufacturer") local manu=${foo[1]} ;; # ro.product.manufacturer=Motorola
-        "ro.product.model") local model=${foo[1]} ;;       # ro.product.model=A953
-        "ro.product.device") local device=${foo[1]} ;;     # ro.product.device=milestone2
-        "ro.product.cpu.abi") local cpu=${foo[1]} ;;       # ro.product.cpu.abi=armeabi-v7a
-        "ro.product.locale.language") local lang=${foo[1]} ;; # ro.product.locale.language=en
-        "ro.product.locale.region") local region=${foo[1]} ;; # ro.product.locale.region=US
-        "ro.sf.lcd_density") local density=${foo[1]} ;;    # ro.sf.lcd_density=240
-        "net.dns1") local dns1=${foo[1]} ;;                # net.dns1=8.8.8.8
-        "net.dns2") local dns2=${foo[1]} ;;
-      esac
-    done < "${BUILDPROP}"
-    local dserial="$(adb ${ADBOPTS} shell getprop ro.boot.serialno | sed 's/\r//g')"
-    local dradioversion="$(adb ${ADBOPTS} shell getprop ro.radio.hw.version | sed 's/\r//g')"
-    local dbaseband="$(adb ${ADBOPTS} shell getprop gsm.baseband.version | sed 's/\r//g')"
-    [ -z "${dbaseband}" ] && dbaseband="$(adb ${ADBOPTS} shell getprop gsm.version.baseband | sed 's/\r//g')"
-    local dplatform="$(adb ${ADBOPTS} shell getprop ro.board.platform | sed 's/\r//g')"
-    local dbuildid="$(adb ${ADBOPTS} shell getprop ro.build.id | sed 's/\r//g')"
-    local dwifivendor="$(adb ${ADBOPTS} shell getprop wlan.chip.vendor | sed 's/\r//g')"
-    local dwifiversion="$(adb ${ADBOPTS} shell getprop wlan.chip.version | sed 's/\r//g')"
-    echo "* Manufacturer: ${manu}" >> "$devicedoc"
-    echo "* Model: ${model} (${device})" >> "$devicedoc"
-    [ -n "${dplatform}" ] && echo "* Platform: ${dplatform}" >> "$devicedoc"
-    [ -n "$dradioversion" ] && echo "* Radio version: ${dradioversion}" >> "$devicedoc"
-    [ -n "$dbaseband" ] && echo "* Baseband: ${dbaseband}" >> "$devicedoc"
-    [ -n "${dwifivendor}${dwifiversion}" ] && echo "* WiFi vendor / version: ${dwifivendor} / ${dwifiversion}" >> "$devicedoc"
-    echo "* CPU: ${cpu}" >> "$devicedoc"
-    echo "* Screen density: ${density}" >> "$devicedoc"
-    echo "* SDK/Android version: ${sdk}/${aver}" >> "$devicedoc"
-    [ -n "$modver" ] && echo "* Mod: ${modver}" >> "$devicedoc"
-    [ -n "${dbuildid}" ] && echo "* BuildID: ${dbuildid}" >> "$devicedoc"
-    echo "* Fingerprint: $(adb ${ADBOPTS} shell getprop ro.build.fingerprint | sed 's/\r//g')" >> "$devicedoc"
-    [ -n "${dserial}" ] && echo "* Serial: ${dserial}" >> "$devicedoc"
-    echo "* IMEI: $(adb ${ADBOPTS} shell dumpsys iphonesubinfo | grep -i "device id" | awk '{print $NF}' | sed 's/\r//g')" >> "$devicedoc"
-    echo "* Factory language: ${lang}_${region}" >> "$devicedoc"
-    echo "* Configured language: $(adb ${ADBOPTS} shell getprop persist.sys.language | sed 's/\r//g')_$(adb ${ADBOPTS} shell getprop persist.sys.country | sed 's/\r//g')" >> "$devicedoc"
-    echo "* Configured timezone: $(adb ${ADBOPTS} shell getprop persist.sys.timezone | sed 's/\r//g')" >> "$devicedoc"
-    [ -n "${dns1}${dns2}" ] && echo "* Default DNS server: ${dns1}/${dns2}" >> "$devicedoc"
-    # ro.product.brand=MOTO
-    # ro.product.name=A953_DFP
-    # ro.product.board=milestone2
-    # ro.product.cpu.abi2=armeabi
+  doProgress "- Evaluating device properties" 2
+  declare -A DEVPROP
+  declare -A HAVPROPS # groups, e.g. "wifi" for "wifi.*"
+
+  # Parse getprop into DEVPROP & HAVPROPS
+  local prop
+  while read zeile; do
+    [[ -z "${zeile}" ]] && continue
+    zeile="${zeile//[\[\]:]/ }"
+    prop=($zeile)
+    [[ -z "${prop[1]}" ]] && continue
+    HAVPROPS[${prop[0]%%\.*}]="y"
+    DEVPROP[${prop[0]}]="${prop[1]}"
+  done < "${tmp}"
+
+  # Do something with the collected information
+  echo "## Device and ROM properties (from \`build.prop\` / \`getprop\`)" >> "$devicedoc"
+  echo "### Product Info" >> "$devicedoc"
+  echo "* Manufacturer: ${DEVPROP[ro.product.manufacturer]}" >> "$devicedoc"    # ro.product.manufacturer=Motorola
+  echo "* Model: ${DEVPROP[ro.product.model]} (${DEVPROP[ro.product.device]})" >> "$devicedoc"  # ro.product.model=A953 (ro.product.device=milestone2)
+  local serial="${DEVPROP[ro.serialno]}"                                        # 015ECFC703028007
+  [[ -z "$serial" ]] && {
+    if [[ -n "${DEVPROP[ro.boot.serialno]}" ]]; then
+      serial="${DEVPROP[ro.boot.serialno]}"
+    elif [[ -n "$SERIAL" ]]; then
+      serial="${SERIAL}"
+    else
+      [[ $(adb devices |grep "device$" |wc -l) -eq 1 ]] && serial="$(adb devices |grep "device$"|awk '{print $1}')"
+    fi
+  }
+  echo "* Serial: ${serial}" >> "$devicedoc"                                    # 015d3c26a420000a
+  serial="${DEVPROP[gsm.baseband.imei]}"
+  [[ -z "$serial" ]] && serial="$(adb ${ADBOPTS} shell dumpsys iphonesubinfo | grep -i "device id" | awk '{print $NF}' | sed 's/\r//g')"
+  [[ -n "$serial" ]] && echo "* IMEI: $serial" >> "$devicedoc"
+  [[ -n "${DEVPROP[ro.board.platform]}" ]] && echo "* Platform: ${DEVPROP[ro.board.platform]}" >> "$devicedoc" # omap3
+  [[ -n "${DEVPROP[ro.radio.hw.version]}" ]] && echo "* Radio version: ${DEVPROP[ro.radio.hw.version]}" >> "$devicedoc" # SJUG5980AA
+  [[ -n "${DEVPROP[gsm.baseband.version]}" ]] && echo "* Baseband: ${DEVPROP[gsm.baseband.version]}" >> "$devicedoc" # L6260_MODEM_SIC_02.1233.00
+  [[ -n "${DEVPROP[wlan.chip.vendor]}${DEVPROP[wlan.chip.version]}" ]] && echo "* WiFi vendor / version: ${DEVPROP[wlan.chip.vendor]} / ${DEVPROP[wlan.chip.version]}" >> "$devicedoc" # brcm / bcm4330x
+  echo "* CPU: ${DEVPROP[ro.product.cpu.abi]}" >> "$devicedoc"                  # ro.product.cpu.abi=armeabi-v7a
+  echo "* Screen density: ${DEVPROP[ro.sf.lcd_density]}" >> "$devicedoc"        # ro.sf.lcd_density=240
+  echo >> "$devicedoc"
+
+  echo "### OS Info" >> "$devicedoc"
+  echo "* SDK/Android version: ${DEVPROP[ro.build.version.sdk]}/${DEVPROP[ro.build.version.release]}" >> "$devicedoc" # 16/4.1.2
+  [[ -n "${DEVPROP[ro.modversion]}" ]] && echo "* Mod: ${DEVPROP[ro.modversion]}" >> "$devicedoc" # ro.modversion=10-20121228-NIGHTLY-milestone2
+  [[ -n "${DEVPROP[ro.build.id]}" ]] && echo "* BuildID: ${DEVPROP[ro.build.id]}" >> "$devicedoc" # JZO54K
+  echo "* Fingerprint: ${DEVPROP[ro.build.fingerprint]}" >> "$devicedoc" # MOTO/A953_O2DE/milestone2:2.3.6/4.5.1-134_DFP-132/1317968148:user/release-keys
+  echo "* Factory language: ${DEVPROP[ro.product.locale.language]}_${DEVPROP[ro.product.locale.region]}" >> "$devicedoc" # en_US
+  echo "* Configured language: ${DEVPROP[persist.sys.language]}_${DEVPROP[persist.sys.country]}" >> "$devicedoc" # de_DE
+  echo "* Configured timezone: ${DEVPROP[persist.sys.timezone]}" >> "$devicedoc" # Europe/Berlin
+  echo >> "$devicedoc"
+
+  echo "### Networking Info" >> "$devicedoc"
+  [[ -n "${DEVPROP[wifi.interface]}" ]] && echo "* WiFi Interface: ${DEVPROP[wifi.interface]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[net.dns1]}${DEVPROP[net.dns2]}" ]] && echo "* Default DNS server: ${DEVPROP[net.dns1]} / ${DEVPROP[net.dns2]}" >> "$devicedoc"
+  echo "* WiFi driver status: ${DEVPROP[wlan.driver.status]}" >> "$devicedoc"
+  echo "* WiFi scan interval: ${DEVPROP[wifi.supplicant_scan_interval]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[dhcp.wlan0.dns1]}" ]] && echo "* WiFi DHCP DNS: ${DEVPROP[dhcp.wlan0.dns1]} / ${DEVPROP[dhcp.wlan0.dns2]} / ${DEVPROP[dhcp.wlan0.dns3]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[dhcp.wlan0.gateway]}" ]] && echo "* WiFi default gateway: ${DEVPROP[dhcp.wlan0.gateway]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[dhcp.wlan0.ipaddress]}" ]] && echo "* WiFi IP: ${DEVPROP[dhcp.wlan0.ipaddress]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[mobiledata.interfaces]}" ]] && echo "* Mobile data interfaces: ${DEVPROP[mobiledata.interfaces]}" >> "$devicedoc"
+
+  # Storage
+  if [[ -n "${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}${DEVPROP[EXTERNAL_STORAGE_MOUNT]}${DEVPROP[ro.crypto.state]}${DEVPROP[ro.crypto.fuse_sdcard]}" ]]; then
+    echo >> "$devicedoc"
+    echo "### Storage Info" >> "$devicedoc"
+    [[ -n "${DEVPROP[EXTERNAL_STORAGE_MOUNT]}" ]] && echo "* Internal SD mount point: ${DEVPROP[EXTERNAL_STORAGE_MOUNT]}" >> "$devicedoc"
+    [[ -n "${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" ]] && echo "* External SD mount point: ${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" >> "$devicedoc"
+    [[ -n "${DEVPROP[ro.crypto.fuse_sdcard]}" ]] && echo "* Internal SD via FUSE: ${DEVPROP[ro.crypto.fuse_sdcard]}" >> "$devicedoc"
+    [[ -n "${DEVPROP[ro.crypto.state]}" ]] && echo "* Storage encrypted: ${DEVPROP[ro.crypto.state]}" >> "$devicedoc"
   fi
 
+  if [[ -n "${DEVPROP[gsm.operator.alpha]}" ]]; then # Provider info
+    echo >> "$devicedoc"
+    echo "### Provider Info" >> "$devicedoc"
+    echo "* Mobile provider: ${DEVPROP[gsm.operator.alpha]}" >> "$devicedoc"
+    [[ -n "${DEVPROP[gsm.operator.iso-country]}" ]] && echo "* Provider country: ${DEVPROP[gsm.operator.iso-country]}" >> "$devicedoc"
+    [[ -n "${DEVPROP[gsm.operator.numeric]}" ]] && echo "* Provider code: ${DEVPROP[gsm.operator.numeric]}" >> "$devicedoc"
+    [[ -n "${DEVPROP[gsm.sim.state]}" ]] && echo "* SIM state: ${DEVPROP[gsm.sim.state]}" >> "$devicedoc"
+  fi
+
+  # pm list features
   doProgress "- Evaluating 'pm list features'" 2
   echo  >> "$devicedoc"
   echo "## Device features (\`pm list features\`)" >> "$devicedoc"
@@ -417,7 +447,6 @@ getDeviceInfo() {
   # ADB calls for the next two blocks must be made with default IFS or will fail
   doProgress "- Obtaining details via dumpsys" 2
   local accs=$(adb ${ADBOPTS} shell dumpsys account|grep " Account "|sed 's/[\{\}\r]//g'|awk '{$1=""; print $0}')
-  local tmp="./dump.$$"
   adb ${ADBOPTS} shell dumpsys backup | sed 's/\r//g' > "$tmp"
 
   echo >> "$devicedoc"
@@ -462,6 +491,8 @@ getSettings() {
   doProgress "Pulling configuration files"
 
   local msg
+  msg="$((adb ${ADBOPTS} pull /system/build.prop "${BUILDPROP}") 2>&1)"
+  doProgress "- build.prop: $msg" 2
   msg="$((adb ${ADBOPTS} pull /data/misc/wifi/wpa_supplicant.conf "${CONFDIR}/wpa_supplicant.conf") 2>&1)"
   [[ $? -ne 0 ]] && msg=$(ansi_code "${msg}" "red")
   doProgress "- wpa_supplicant.conf: $msg" 2
