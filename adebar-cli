@@ -370,7 +370,7 @@ getDeviceInfo() {
   done < "${tmp}"
 
   # Do something with the collected information
-  echo "## Device and ROM properties (from \`build.prop\` / \`getprop\`)" >> "$devicedoc"
+  echo "## Device and ROM properties (from \`getprop\` / \`dumpsys\`)" >> "$devicedoc"
   echo "### Product Info" >> "$devicedoc"
   echo "* Manufacturer: ${DEVPROP[ro.product.manufacturer]}" >> "$devicedoc"    # ro.product.manufacturer=Motorola
   echo "* Model: ${DEVPROP[ro.product.model]} (${DEVPROP[ro.product.device]})" >> "$devicedoc"  # ro.product.model=A953 (ro.product.device=milestone2)
@@ -415,16 +415,22 @@ getDeviceInfo() {
   [[ -n "${DEVPROP[dhcp.wlan0.gateway]}" ]] && echo "* WiFi default gateway: ${DEVPROP[dhcp.wlan0.gateway]}" >> "$devicedoc"
   [[ -n "${DEVPROP[dhcp.wlan0.ipaddress]}" ]] && echo "* WiFi IP: ${DEVPROP[dhcp.wlan0.ipaddress]}" >> "$devicedoc"
   [[ -n "${DEVPROP[mobiledata.interfaces]}" ]] && echo "* Mobile data interfaces: ${DEVPROP[mobiledata.interfaces]}" >> "$devicedoc"
+  echo >> "$devicedoc"
 
   # Storage
-  if [[ -n "${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}${DEVPROP[EXTERNAL_STORAGE_MOUNT]}${DEVPROP[ro.crypto.state]}${DEVPROP[ro.crypto.fuse_sdcard]}" ]]; then
-    echo >> "$devicedoc"
-    echo "### Storage Info" >> "$devicedoc"
-    [[ -n "${DEVPROP[EXTERNAL_STORAGE_MOUNT]}" ]] && echo "* Internal SD mount point: ${DEVPROP[EXTERNAL_STORAGE_MOUNT]}" >> "$devicedoc"
-    [[ -n "${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" ]] && echo "* External SD mount point: ${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" >> "$devicedoc"
-    [[ -n "${DEVPROP[ro.crypto.fuse_sdcard]}" ]] && echo "* Internal SD via FUSE: ${DEVPROP[ro.crypto.fuse_sdcard]}" >> "$devicedoc"
-    [[ -n "${DEVPROP[ro.crypto.state]}" ]] && echo "* Storage encrypted: ${DEVPROP[ro.crypto.state]}" >> "$devicedoc"
-  fi
+  echo "### Storage Info" >> "$devicedoc"
+  [[ -n "${DEVPROP[EXTERNAL_STORAGE_MOUNT]}" ]] && echo "* Internal SD mount point: ${DEVPROP[EXTERNAL_STORAGE_MOUNT]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" ]] && echo "* External SD mount point: ${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[ro.crypto.fuse_sdcard]}" ]] && echo "* Internal SD via FUSE: ${DEVPROP[ro.crypto.fuse_sdcard]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[ro.crypto.state]}" ]] && echo "* Storage encrypted: ${DEVPROP[ro.crypto.state]}" >> "$devicedoc"
+  echo "* Disk statistics:" >> "$devicedoc"
+  OIFS="${IFS}"
+  IFS='
+'
+  for zeile in $(adb ${ADBOPTS} shell dumpsys diskstats); do
+    echo -e "    * ${zeile/// }" >> "$devicedoc"
+  done
+  IFS="${OIFS}"
 
   if [[ -n "${DEVPROP[gsm.operator.alpha]}" ]]; then # Provider info
     echo >> "$devicedoc"
