@@ -352,7 +352,7 @@ getDeviceInfo() {
   trap "rm -f -- '$t'" RETURN
 
   echo "# Device Information" > "$devicedoc"
-  adb shell ${ADBOPTS} getprop > $tmp
+  adb ${ADBOPTS} shell getprop > $tmp
 
   doProgress "- Evaluating device properties" 2
   declare -A DEVPROP
@@ -369,8 +369,9 @@ getDeviceInfo() {
     DEVPROP[${prop[0]}]="${prop[1]}"
   done < "${tmp}"
 
-  # Do something with the collected information
+  # Do something with the collected information (and collect more while on it)
   echo "## Device and ROM properties (from \`getprop\` / \`dumpsys\`)" >> "$devicedoc"
+  doProgress "   + checking for product details" 3
   echo "### Product Info" >> "$devicedoc"
   echo "* Manufacturer: ${DEVPROP[ro.product.manufacturer]}" >> "$devicedoc"    # ro.product.manufacturer=Motorola
   echo "* Model: ${DEVPROP[ro.product.model]} (${DEVPROP[ro.product.device]})" >> "$devicedoc"  # ro.product.model=A953 (ro.product.device=milestone2)
@@ -396,6 +397,31 @@ getDeviceInfo() {
   echo "* Screen density: ${DEVPROP[ro.sf.lcd_density]}" >> "$devicedoc"        # ro.sf.lcd_density=240
   echo >> "$devicedoc"
 
+  doProgress "   + checking for sensor details" 3
+  if [[ -n "$(adb ${ADBOPTS} shell dumpsys | grep "DUMP OF SERVICE sensorservice")" ]]; then # not all devices have this
+    echo "### Sensoren" >> "$devicedoc"
+    adb ${ADBOPTS} shell dumpsys sensorservice > $tmp
+    local left
+    local right
+    while read zeile; do
+      left="${zeile#*|}"
+      left="${zeile%%\|*}"
+      left="${left%"${left##*[![:space:]]}"}" # remove trailing spaces
+      right="${zeile%\|*}"
+      right="${right#*\|}"
+      right="${right%%\|*}"
+      right="${right%"${right##*[![:space:]]}"}"
+      [[ "$right" = "$left" ]] && continue
+      if [[ -z "${right//[[:space:]]/}" ]]; then
+        echo "* ${left}" >> "$devicedoc"
+      else
+        echo "* ${left} (${right//[[:space:]]/})" >> "$devicedoc"
+      fi
+    done < "${tmp}"
+    echo >> "$devicedoc"
+  fi
+
+  doProgress "   + checking for OS details" 3
   echo "### OS Info" >> "$devicedoc"
   echo "* SDK/Android version: ${DEVPROP[ro.build.version.sdk]}/${DEVPROP[ro.build.version.release]}" >> "$devicedoc" # 16/4.1.2
   [[ -n "${DEVPROP[ro.modversion]}" ]] && echo "* Mod: ${DEVPROP[ro.modversion]}" >> "$devicedoc" # ro.modversion=10-20121228-NIGHTLY-milestone2
@@ -406,6 +432,7 @@ getDeviceInfo() {
   echo "* Configured timezone: ${DEVPROP[persist.sys.timezone]}" >> "$devicedoc" # Europe/Berlin
   echo >> "$devicedoc"
 
+  doProgress "   + checking for networking details" 3
   echo "### Networking Info" >> "$devicedoc"
   [[ -n "${DEVPROP[wifi.interface]}" ]] && echo "* WiFi Interface: ${DEVPROP[wifi.interface]}" >> "$devicedoc"
   [[ -n "${DEVPROP[net.dns1]}${DEVPROP[net.dns2]}" ]] && echo "* Default DNS server: ${DEVPROP[net.dns1]} / ${DEVPROP[net.dns2]}" >> "$devicedoc"
@@ -418,19 +445,17 @@ getDeviceInfo() {
   echo >> "$devicedoc"
 
   # Storage
+  doProgress "   + checking for storage details" 3
   echo "### Storage Info" >> "$devicedoc"
   [[ -n "${DEVPROP[EXTERNAL_STORAGE_MOUNT]}" ]] && echo "* Internal SD mount point: ${DEVPROP[EXTERNAL_STORAGE_MOUNT]}" >> "$devicedoc"
   [[ -n "${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" ]] && echo "* External SD mount point: ${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" >> "$devicedoc"
   [[ -n "${DEVPROP[ro.crypto.fuse_sdcard]}" ]] && echo "* Internal SD via FUSE: ${DEVPROP[ro.crypto.fuse_sdcard]}" >> "$devicedoc"
   [[ -n "${DEVPROP[ro.crypto.state]}" ]] && echo "* Storage encrypted: ${DEVPROP[ro.crypto.state]}" >> "$devicedoc"
   echo "* Disk statistics:" >> "$devicedoc"
-  OIFS="${IFS}"
-  IFS='
-'
-  for zeile in $(adb ${ADBOPTS} shell dumpsys diskstats); do
+  adb ${ADBOPTS} shell dumpsys diskstats > ${tmp}
+  while read zeile; do
     echo -e "    * ${zeile/// }" >> "$devicedoc"
-  done
-  IFS="${OIFS}"
+  done < ${tmp}
 
   if [[ -n "${DEVPROP[gsm.operator.alpha]}" ]]; then # Provider info
     echo >> "$devicedoc"
@@ -451,7 +476,7 @@ getDeviceInfo() {
   done
 
   # ADB calls for the next two blocks must be made with default IFS or will fail
-  doProgress "- Obtaining details via dumpsys" 2
+  doProgress "- Obtaining account and backup details" 2
   local accs=$(adb ${ADBOPTS} shell dumpsys account|grep " Account "|sed 's/[\{\}\r]//g'|awk '{$1=""; print $0}')
   adb ${ADBOPTS} shell dumpsys backup | sed 's/\r//g' > "$tmp"
 
@@ -564,7 +589,7 @@ getAppDetails() {
 
   doProgress "Generating app detail info"
   doProgress "- collecting data via dumpsys into '${PKGDUMP}'" 2
-  adb shell "dumpsys package" |egrep -A99999 "^Packages:" |egrep -B99999 "^Shared users:" > "${PKGDUMP}"
+  adb ${ADBOPTS} shell "dumpsys package" |egrep -A99999 "^Packages:" |egrep -B99999 "^Shared users:" > "${PKGDUMP}"
 
   # Parsing dump
   doProgress "- parsing package dump from '${PKGDUMP}'" 2
@@ -573,7 +598,7 @@ getAppDetails() {
       none)
         [[ "$zeile" != "Packages:" ]] && continue;
         P_BLOCK="pkglist"
-        doProgress "  - Found package list marker" 3
+        doProgress "  - Found package list marker" 4
         continue;
         ;;
 
@@ -582,7 +607,7 @@ getAppDetails() {
           tmpstring="${zeile##*[}"                      # strip leading
           P_PKGNAME="${tmpstring%%]*}"                  # strip trailing
           P_BLOCK="pkg"
-          doProgress "  - Package: $P_PKGNAME" 3
+          doProgress "  - Package: $P_PKGNAME" 4
           continue
         fi
         ;;
@@ -597,32 +622,32 @@ getAppDetails() {
         case "$tmpstring" in
           "codePath")
             PK_CODEPATH[$P_PKGNAME]="${zeile##*=}"
-            doProgress "    +codePath: ${PK_CODEPATH[$P_PKGNAME]}" 4
+            doProgress "    +codePath: ${PK_CODEPATH[$P_PKGNAME]}" 5
             continue
             ;;
           "versionName")
             PK_VERSION[$P_PKGNAME]="${zeile##*=}"
-            doProgress "    +version: ${PK_VERSION[$P_PKGNAME]}" 4
+            doProgress "    +version: ${PK_VERSION[$P_PKGNAME]}" 5
             continue
             ;;
           "dataDir")
             PK_DATADIR[$P_PKGNAME]="${zeile##*=}"
-            doProgress "    +data: ${PK_DATADIR[$P_PKGNAME]}" 4
+            doProgress "    +data: ${PK_DATADIR[$P_PKGNAME]}" 5
             continue
             ;;
           "supportsScreens")
             PK_SCREENSIZE[$P_PKGNAME]="${zeile##*=}"
-            doProgress "    +screens: ${PK_SCREENSIZE[$P_PKGNAME]}" 4
+            doProgress "    +screens: ${PK_SCREENSIZE[$P_PKGNAME]}" 5
             continue
             ;;
           "firstInstallTime")
             PK_FIRSTINSTALL[$P_PKGNAME]="${zeile##*=}"
-            doProgress "    +firstinst: ${PK_FIRSTINSTALL[$P_PKGNAME]}" 4
+            doProgress "    +firstinst: ${PK_FIRSTINSTALL[$P_PKGNAME]}" 5
             continue
             ;;
           "lastUpdateTime")
             PK_LASTUPDATE[$P_PKGNAME]="${zeile##*=}"
-            doProgress "    +lastup: ${PK_LASTUPDATE[$P_PKGNAME]}" 4
+            doProgress "    +lastup: ${PK_LASTUPDATE[$P_PKGNAME]}" 5
             continue
             ;;
           "installerPackageName")
@@ -634,19 +659,19 @@ getAppDetails() {
               fi
             }
             PK_INSTALLER[$P_PKGNAME]="${zeile##*=}"
-            doProgress "    +installer: ${PK_INSTALLER[$P_PKGNAME]}" 4
+            doProgress "    +installer: ${PK_INSTALLER[$P_PKGNAME]}" 5
             continue
             ;;
           "flags")
             PK_FLAGS[$P_PKGNAME]="${zeile##*=}"
-            doProgress "    +flags: ${PK_FLAGS[$P_PKGNAME]}" 4
+            doProgress "    +flags: ${PK_FLAGS[$P_PKGNAME]}" 5
             continue
             ;;
           *)
             if [[ "${zeile:0:11}" = "  Package [" ]]; then  # "  Package [com.google.android.location] (40e85638):"
               tmpstring="${zeile##*[}"                      # strip leading
               P_PKGNAME="${tmpstring%%]*}"                  # strip trailing
-              doProgress "  - Package: $P_PKGNAME" 3
+              doProgress "  - Package: $P_PKGNAME" 4
               continue
             fi
             if [[ "${zeile}" = "    disabledComponents:" ]]; then
@@ -684,7 +709,7 @@ echo -e "Unexpected: '$zeile'"
           tmpstring="${zeile##*[}"                      # strip leading
           P_PKGNAME="${tmpstring%%]*}"                  # strip trailing
           P_BLOCK="pkg"
-          doProgress "  - Package: $P_PKGNAME" 3
+          doProgress "  - Package: $P_PKGNAME" 4
           continue
         fi
 echo "Oops in disabled:"
@@ -704,7 +729,7 @@ exit
           tmpstring="${zeile##*[}"                      # strip leading
           P_PKGNAME="${tmpstring%%]*}"                  # strip trailing
           P_BLOCK="pkg"
-          doProgress "  - Package: $P_PKGNAME" 3
+          doProgress "  - Package: $P_PKGNAME" 4
           continue
         fi
 echo "Oops in enabled:"
@@ -719,7 +744,7 @@ echo -e "$zeile"
           tmpstring="${zeile##*[}"                      # strip leading
           P_PKGNAME="${tmpstring%%]*}"                  # strip trailing
           P_BLOCK="pkg"
-          doProgress "  - Package: $P_PKGNAME" 3
+          doProgress "  - Package: $P_PKGNAME" 4
           continue
         fi
 echo "Oops in perms:"
