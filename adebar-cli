@@ -37,6 +37,7 @@ MK_INSTALLLOC=1
 MK_DEVICEINFO=1
 MK_DEVICEINFO_SENSORS=1
 MK_DEVICEINFO_PMLISTFEATURES=1
+MK_DEVICEINFO_STATUS=1
 
 # Misc
 PROGRESS=1
@@ -350,6 +351,8 @@ getDeviceInfo() {
   local item=""
   local devicedoc="${DOCDIR}/deviceInfo.md"
   local msg=""
+  local left
+  local right
   local tmp=$(tempfile)
   trap "rm -f -- '$tmp'" RETURN
 
@@ -404,8 +407,6 @@ getDeviceInfo() {
     if [[ -n "$(adb ${ADBOPTS} shell dumpsys | grep "DUMP OF SERVICE sensorservice")" ]]; then # not all devices have this
       echo "### Sensors" >> "$devicedoc"
       adb ${ADBOPTS} shell dumpsys sensorservice > $tmp
-      local left
-      local right
       while read zeile; do
         left="${zeile#*|}"
         left="${zeile%%\|*}"
@@ -480,6 +481,32 @@ getDeviceInfo() {
       echo "* ${feature#*:}" >> "$devicedoc"
     done
   fi
+
+  # device status
+  if [[ ${MK_DEVICEINFO_STATUS} -gt 0 ]]; then
+    doProgress "- Evaluating device status" 2
+    echo >> "$devicedoc"
+    echo "## Device Status" >> "$devicedoc"
+    doProgress "  + Battery status" 3
+    echo "### Battery Status" >> "$devicedoc"
+    adb ${ADBOPTS} shell dumpsys battery > $tmp
+    local battstat=(none unknown charging discharging "not charging" full)
+    local batthealth=(none unknown good overheat dead overvoltage "unspecified failure" cold)
+    while IFS='' read zeile; do
+      [[ "${zeile:0:1}" != " " ]] && continue # skip header
+      zeile="${zeile//[$'\t\r\n']}"
+      right="${zeile#*:}"
+      [[ "${right:0:1}" = " " ]] && right="${right:1}"
+      left="${zeile%:*}"
+      left="${left#"${left%%[![:space:]]*}"}" # remove leading spaces
+      case "$left" in
+        "status") echo "* ${left}: ${right} (${battstat[${right}]})"  >> "$devicedoc" ;;
+        "health") echo "* ${left}: ${right} (${batthealth[${right}]})"  >> "$devicedoc" ;;
+        *)        echo "* ${left}: ${right}"  >> "$devicedoc" ;;
+      esac
+    done < "${tmp}"
+  fi
+
 
   # ADB calls for the next two blocks must be made with default IFS or will fail
   doProgress "- Obtaining account and backup details" 2

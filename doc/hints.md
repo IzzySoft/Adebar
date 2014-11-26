@@ -97,6 +97,7 @@ What the settings are standing for is:
     * `MK_DEVICEINFO_PMLISTFEATURES`: Though this part is done quickly, you
       might decide it's not useful to you (as it looks a bit cryptic). So I
       decided to give you the change to switch it off :)
+    * `MK_DEVICEINFO_STATUS`: Device status details, such as battery status
 * Misc
     * `PROGRESS`: Show some progress while the script is running, so you know
       what's going on (and don't think it got „stuck“). By default, this is
