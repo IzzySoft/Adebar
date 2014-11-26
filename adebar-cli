@@ -35,6 +35,8 @@ MK_TIBU=1
 MK_PKG_DATA=1
 MK_INSTALLLOC=1
 MK_DEVICEINFO=1
+MK_DEVICEINFO_SENSORS=1
+MK_DEVICEINFO_PMLISTFEATURES=1
 
 # Misc
 PROGRESS=1
@@ -397,32 +399,34 @@ getDeviceInfo() {
   echo "* Screen density: ${DEVPROP[ro.sf.lcd_density]}" >> "$devicedoc"        # ro.sf.lcd_density=240
   echo >> "$devicedoc"
 
-  doProgress "   + checking for sensor details" 3
-  if [[ -n "$(adb ${ADBOPTS} shell dumpsys | grep "DUMP OF SERVICE sensorservice")" ]]; then # not all devices have this
-    echo "### Sensoren" >> "$devicedoc"
-    adb ${ADBOPTS} shell dumpsys sensorservice > $tmp
-    local left
-    local right
-    while read zeile; do
-      left="${zeile#*|}"
-      left="${zeile%%\|*}"
-      left="${left%"${left##*[![:space:]]}"}" # remove trailing spaces
-      right="${zeile%\|*}"
-      right="${right#*\|}"
-      right="${right%%\|*}"
-      right="${right%"${right##*[![:space:]]}"}"
-      [[ "$right" = "$left" ]] && continue
-      if [[ -z "${right//[[:space:]]/}" ]]; then
-        echo "* ${left}" >> "$devicedoc"
-      else
-        echo "* ${left} (${right//[[:space:]]/})" >> "$devicedoc"
-      fi
-    done < "${tmp}"
-    echo >> "$devicedoc"
+  if [[ ${MK_DEVICEINFO_SENSORS} -gt 0 ]]; then
+    doProgress "   + checking for sensor details" 3
+    if [[ -n "$(adb ${ADBOPTS} shell dumpsys | grep "DUMP OF SERVICE sensorservice")" ]]; then # not all devices have this
+      echo "### Sensors" >> "$devicedoc"
+      adb ${ADBOPTS} shell dumpsys sensorservice > $tmp
+      local left
+      local right
+      while read zeile; do
+        left="${zeile#*|}"
+        left="${zeile%%\|*}"
+        left="${left%"${left##*[![:space:]]}"}" # remove trailing spaces
+        right="${zeile%\|*}"
+        right="${right#*\|}"
+        right="${right%%\|*}"
+        right="${right%"${right##*[![:space:]]}"}"
+        [[ "$right" = "$left" ]] && continue
+        if [[ -z "${right//[[:space:]]/}" ]]; then
+          echo "* ${left}" >> "$devicedoc"
+        else
+          echo "* ${left} (${right//[[:space:]]/})" >> "$devicedoc"
+        fi
+      done < "${tmp}"
+      echo >> "$devicedoc"
+    fi
   fi
 
   doProgress "   + checking for OS details" 3
-  echo "### OS Info" >> "$devicedoc"
+  echo "### OS details" >> "$devicedoc"
   echo "* SDK/Android version: ${DEVPROP[ro.build.version.sdk]}/${DEVPROP[ro.build.version.release]}" >> "$devicedoc" # 16/4.1.2
   [[ -n "${DEVPROP[ro.modversion]}" ]] && echo "* Mod: ${DEVPROP[ro.modversion]}" >> "$devicedoc" # ro.modversion=10-20121228-NIGHTLY-milestone2
   [[ -n "${DEVPROP[ro.build.id]}" ]] && echo "* BuildID: ${DEVPROP[ro.build.id]}" >> "$devicedoc" # JZO54K
@@ -433,7 +437,7 @@ getDeviceInfo() {
   echo >> "$devicedoc"
 
   doProgress "   + checking for networking details" 3
-  echo "### Networking Info" >> "$devicedoc"
+  echo "### Networking details" >> "$devicedoc"
   [[ -n "${DEVPROP[wifi.interface]}" ]] && echo "* WiFi Interface: ${DEVPROP[wifi.interface]}" >> "$devicedoc"
   [[ -n "${DEVPROP[net.dns1]}${DEVPROP[net.dns2]}" ]] && echo "* Default DNS server: ${DEVPROP[net.dns1]} / ${DEVPROP[net.dns2]}" >> "$devicedoc"
   echo "* WiFi driver status: ${DEVPROP[wlan.driver.status]}" >> "$devicedoc"
@@ -446,7 +450,7 @@ getDeviceInfo() {
 
   # Storage
   doProgress "   + checking for storage details" 3
-  echo "### Storage Info" >> "$devicedoc"
+  echo "### Storage details" >> "$devicedoc"
   [[ -n "${DEVPROP[EXTERNAL_STORAGE_MOUNT]}" ]] && echo "* Internal SD mount point: ${DEVPROP[EXTERNAL_STORAGE_MOUNT]}" >> "$devicedoc"
   [[ -n "${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" ]] && echo "* External SD mount point: ${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" >> "$devicedoc"
   [[ -n "${DEVPROP[ro.crypto.fuse_sdcard]}" ]] && echo "* Internal SD via FUSE: ${DEVPROP[ro.crypto.fuse_sdcard]}" >> "$devicedoc"
@@ -459,7 +463,7 @@ getDeviceInfo() {
 
   if [[ -n "${DEVPROP[gsm.operator.alpha]}" ]]; then # Provider info
     echo >> "$devicedoc"
-    echo "### Provider Info" >> "$devicedoc"
+    echo "### Provider info" >> "$devicedoc"
     echo "* Mobile provider: ${DEVPROP[gsm.operator.alpha]}" >> "$devicedoc"
     [[ -n "${DEVPROP[gsm.operator.iso-country]}" ]] && echo "* Provider country: ${DEVPROP[gsm.operator.iso-country]}" >> "$devicedoc"
     [[ -n "${DEVPROP[gsm.operator.numeric]}" ]] && echo "* Provider code: ${DEVPROP[gsm.operator.numeric]}" >> "$devicedoc"
@@ -467,13 +471,15 @@ getDeviceInfo() {
   fi
 
   # pm list features
-  doProgress "- Evaluating 'pm list features'" 2
-  echo  >> "$devicedoc"
-  echo "## Device features (\`pm list features\`)" >> "$devicedoc"
-  for feature in $(adb ${ADBOPTS} shell "pm list features"); do
-    feature=${feature//[$'\r\n']}
-    echo "* ${feature#*:}" >> "$devicedoc"
-  done
+  if [[ ${MK_DEVICEINFO_PMLISTFEATURES} -gt 0 ]]; then
+    doProgress "- Evaluating 'pm list features'" 2
+    echo  >> "$devicedoc"
+    echo "## Device features (\`pm list features\`)" >> "$devicedoc"
+    for feature in $(adb ${ADBOPTS} shell "pm list features"); do
+      feature=${feature//[$'\r\n']}
+      echo "* ${feature#*:}" >> "$devicedoc"
+    done
+  fi
 
   # ADB calls for the next two blocks must be made with default IFS or will fail
   doProgress "- Obtaining account and backup details" 2

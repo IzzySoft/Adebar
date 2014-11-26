@@ -89,6 +89,14 @@ What the settings are standing for is:
       Currently it lists the „device features“ as returned by `pm list features`,
       plus some selected details from the `build.prop`; more might be added in
       the future (I'm open to suggestions here).
+    * `MK_DEVICEINFO_SENSORS`: Sensor details are part of device-info, but the
+      corresponding details cannot be retrieved from all devices (e.g. the
+      *LG Optimus 4X* with firmware 20C doesn't have it). Furthermore it takes
+      a little longer to verify if we can retrieve them (to avoid errors) and
+      then do it; so you might wish to switch it off from the start.
+    * `MK_DEVICEINFO_PMLISTFEATURES`: Though this part is done quickly, you
+      might decide it's not useful to you (as it looks a bit cryptic). So I
+      decided to give you the change to switch it off :)
 * Misc
     * `PROGRESS`: Show some progress while the script is running, so you know
       what's going on (and don't think it got „stuck“). By default, this is
