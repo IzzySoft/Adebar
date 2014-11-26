@@ -404,7 +404,7 @@ getDeviceInfo() {
 
   if [[ ${MK_DEVICEINFO_SENSORS} -gt 0 ]]; then
     doProgress "   + checking for sensor details" 3
-    if [[ -n "$(adb ${ADBOPTS} shell dumpsys | grep "DUMP OF SERVICE sensorservice")" ]]; then # not all devices have this
+    if [[ "$(adb ${ADBOPTS} shell dumpsys sensorservice | wc -l)" -gt 1 ]]; then # make sure sensorservice is available
       echo "### Sensors" >> "$devicedoc"
       adb ${ADBOPTS} shell dumpsys sensorservice > $tmp
       while read zeile; do
