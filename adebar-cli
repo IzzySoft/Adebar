@@ -351,7 +351,7 @@ getDeviceInfo() {
   local devicedoc="${DOCDIR}/deviceInfo.md"
   local msg=""
   local tmp=$(tempfile)
-  trap "rm -f -- '$t'" RETURN
+  trap "rm -f -- '$tmp'" RETURN
 
   echo "# Device Information" > "$devicedoc"
   adb ${ADBOPTS} shell getprop > $tmp
@@ -590,15 +590,16 @@ getAppDetails() {
   APP_INSTALL_SRC[cm.aptoide.pt]="Aptoide"
   APP_INSTALL_SRC[com.android.vending]="Google Play"
   APP_INSTALL_SRC[com.google.android.feedback]="Google Play (Feedback)"
-  local PKGDUMP="dumpsys.$$"
+  local PKGDUMP=$(tempfile)
+  trap "rm -f -- '$PKGDUMP'" RETURN
   local SH_DISABLED="${OUTDIR}/deadReceivers.sh"
 
   doProgress "Generating app detail info"
-  doProgress "- collecting data via dumpsys into '${PKGDUMP}'" 2
+  doProgress "- collecting data via dumpsys" 2
   adb ${ADBOPTS} shell "dumpsys package" |egrep -A99999 "^Packages:" |egrep -B99999 "^Shared users:" > "${PKGDUMP}"
 
   # Parsing dump
-  doProgress "- parsing package dump from '${PKGDUMP}'" 2
+  doProgress "- parsing package dump" 2
   while IFS='' read zeile; do # no idea why, but some dump lines are terminated using CRLF
     case ${P_BLOCK} in
       none)
@@ -818,7 +819,7 @@ echo -e "$zeile"
     }
   done
 
-  doProgress "- removing temporary dumpfile '${PKGDUMP}'" 2
+  doProgress "- removing temporary dumpfile" 2
   rm -f "${PKGDUMP}"
 }
 
