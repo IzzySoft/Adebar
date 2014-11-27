@@ -487,6 +487,7 @@ getDeviceInfo() {
     doProgress "- Evaluating device status" 2
     echo >> "$devicedoc"
     echo "## Device Status" >> "$devicedoc"
+
     doProgress "  + Battery status" 3
     echo "### Battery Status" >> "$devicedoc"
     adb ${ADBOPTS} shell dumpsys battery > $tmp
@@ -505,6 +506,38 @@ getDeviceInfo() {
         *)        echo "* ${left}: ${right}"  >> "$devicedoc" ;;
       esac
     done < "${tmp}"
+
+    doProgress "  + Radio status" 3
+    echo >> "$devicedoc"
+    echo "### Radio Status" >> "$devicedoc"
+    declare -A radio
+    adb shell dumpsys telephony.registry|grep "=" > $tmp
+    local callstate=(idle ringing off-hook)
+    local servicestate=(service "out of service" "emergency only" "powered off")
+    local dataactivity=(none in out inout)
+    local dataconnectionstate=(disconnected connecting connected suspended)
+    while IFS='' read zeile; do
+      zeile="${zeile//[$'\t\r\n']}"
+      zeile="${zeile#"${zeile%%[![:space:]]*}"}"
+      radio[${zeile%%=*}]="${zeile#*=}"
+    done < "${tmp}"
+    echo "* Signal strength: [${radio[mSignalStrength]}](http://android.stackexchange.com/a/74954/16575)" >> "$devicedoc"
+    echo "* Service state: ${radio[mServiceState]:0:1} (${servicestate[${radio[mServiceState]:0:1}]})" >> "$devicedoc"
+    echo "* Call state: ${radio[mCallState]} (${callstate[${radio[mCallState]}]})" >> "$devicedoc"
+    echo "* Call forwarding active: ${radio[mCallForwarding]}" >> "$devicedoc"
+    if [[ "${radio[mDataConnectionPossible]}" = "false" ]]; then
+      echo "* Data connection possible: ${radio[mDataConnectionPossible]} (${radio[mDataConnectionReason]})" >> "$devicedoc"
+    else
+      echo "* Data connection possible: ${radio[mDataConnectionPossible]}" >> "$devicedoc"
+      left="${radio[mDataActivity]}"
+      echo "* Data activity: ${radio[mDataActivity]} (${dataactivity[${radio[mDataActivity]}]})" >> "$devicedoc"
+      if [[ -n "${radio[mDataConnectionState]}" ]]; then
+        echo "* Data connection state: ${radio[mDataConnectionState]} (${dataconnectionstate[${radio[mDataConnectionState]}]})" >> "$devicedoc"
+      elif [[ -n "${radio[mActiveDataConnectionState]}" ]]; then
+        echo "* Data connection state: ${radio[mActiveDataConnectionState]} (${dataconnectionstate[${radio[mActiveDataConnectionState]}]})" >> "$devicedoc"
+      fi
+      [[ -n "${radio[mDataConnectionApn]}" ]] && echo "* Current APN: ${radio[mDataConnectionApn]}" >> "$devicedoc"
+    fi
   fi
 
 
