@@ -375,7 +375,7 @@ getDeviceInfo() {
   done < "${tmp}"
 
   # Do something with the collected information (and collect more while on it)
-  echo "## Device and ROM properties (from \`getprop\` / \`dumpsys\`)" >> "$devicedoc"
+  echo "## Device and ROM properties" >> "$devicedoc"
   doProgress "   + checking for product details" 3
   echo "### Product Info" >> "$devicedoc"
   echo "* Manufacturer: ${DEVPROP[ro.product.manufacturer]}" >> "$devicedoc"    # ro.product.manufacturer=Motorola
@@ -475,7 +475,8 @@ getDeviceInfo() {
   if [[ ${MK_DEVICEINFO_PMLISTFEATURES} -gt 0 ]]; then
     doProgress "- Evaluating 'pm list features'" 2
     echo  >> "$devicedoc"
-    echo "## Device features (\`pm list features\`)" >> "$devicedoc"
+    echo "## Device features" >> "$devicedoc"
+    echo -e "\`pm list features\`:\n" >> "$devicedoc"
     for feature in $(adb ${ADBOPTS} shell "pm list features"); do
       feature=${feature//[$'\r\n']}
       echo "* ${feature#*:}" >> "$devicedoc"
@@ -547,7 +548,7 @@ getDeviceInfo() {
   adb ${ADBOPTS} shell dumpsys backup | sed 's/\r//g' > "$tmp"
 
   echo >> "$devicedoc"
-  echo "## Configured accounts (from \`dumpsys\`)" >> "$devicedoc"
+  echo "## Configured accounts" >> "$devicedoc"
   OIFS="${IFS}"
   IFS="
 "
@@ -556,7 +557,7 @@ getDeviceInfo() {
   done
 
   echo >> "$devicedoc"
-  echo "## Google Cloud Backup (from \`dumpsys\`)" >> "$devicedoc"
+  echo "## Google Cloud Backup" >> "$devicedoc"
   echo "* $(grep 'Backup Manager is' "$tmp")" >> "$devicedoc"
   echo "* $(grep 'Auto-restore is' "$tmp")" >> "$devicedoc"
   echo "* Backup destinations:" >> "$devicedoc"
@@ -844,8 +845,8 @@ echo -e "$zeile"
     [[ -n "${PK_FIRSTINSTALL[$app]}" ]] && tmpstring+="    + first installed: ${PK_FIRSTINSTALL[$app]}\n"
     [[ -n "${PK_LASTUPDATE[$app]}" ]]   && tmpstring+="    + last updated: ${PK_FIRSTINSTALL[$app]}\n"
     [[ -n "${PK_VERSION[$app]}" ]]      && tmpstring+="    + installed version: ${PK_VERSION[$app]}\n"
-    [[ -n "${PK_CODEPATH[$app]}" ]]     && tmpstring+="    + CodePath: ${PK_CODEPATH[$app]}\n"
-    [[ -n "${PK_DATADIR[$app]}" ]]      && tmpstring+="    + App data: ${PK_DATADIR[$app]}\n"
+    [[ -n "${PK_CODEPATH[$app]}" ]]     && tmpstring+="    + CodePath: \`${PK_CODEPATH[$app]}\`\n"
+    [[ -n "${PK_DATADIR[$app]}" ]]      && tmpstring+="    + App data: \`${PK_DATADIR[$app]}\`\n"
     [[ -n "${PK_SCREENSIZE[$app]}" ]]   && tmpstring+="    + supported screen sizes: ${PK_SCREENSIZE[$app]}\n"
     [[ -n "${PK_FLAGS[$app]}" ]]        && tmpstring+="    + flags: ${PK_FLAGS[$app]}\n"
     [[ -n "${PK_DISABLED[$app]}" ]]     && {
