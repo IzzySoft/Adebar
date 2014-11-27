@@ -511,7 +511,7 @@ getDeviceInfo() {
     echo >> "$devicedoc"
     echo "### Radio Status" >> "$devicedoc"
     declare -A radio
-    adb shell dumpsys telephony.registry|grep "=" > $tmp
+    adb ${ADBOPTS} shell dumpsys telephony.registry|grep "=" > $tmp
     local callstate=(idle ringing off-hook)
     local servicestate=(service "out of service" "emergency only" "powered off")
     local dataactivity=(none in out inout)
