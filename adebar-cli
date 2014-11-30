@@ -437,40 +437,6 @@ getDeviceInfo() {
   echo "* Configured timezone: ${DEVPROP[persist.sys.timezone]}" >> "$devicedoc" # Europe/Berlin
   echo >> "$devicedoc"
 
-  doProgress "   + checking for networking details" 3
-  echo "### Networking details" >> "$devicedoc"
-  [[ -n "${DEVPROP[wifi.interface]}" ]] && echo "* WiFi Interface: ${DEVPROP[wifi.interface]}" >> "$devicedoc"
-  [[ -n "${DEVPROP[net.dns1]}${DEVPROP[net.dns2]}" ]] && echo "* Default DNS server: ${DEVPROP[net.dns1]} / ${DEVPROP[net.dns2]}" >> "$devicedoc"
-  echo "* WiFi driver status: ${DEVPROP[wlan.driver.status]}" >> "$devicedoc"
-  echo "* WiFi scan interval: ${DEVPROP[wifi.supplicant_scan_interval]}" >> "$devicedoc"
-  [[ -n "${DEVPROP[dhcp.wlan0.dns1]}" ]] && echo "* WiFi DHCP DNS: ${DEVPROP[dhcp.wlan0.dns1]} / ${DEVPROP[dhcp.wlan0.dns2]} / ${DEVPROP[dhcp.wlan0.dns3]}" >> "$devicedoc"
-  [[ -n "${DEVPROP[dhcp.wlan0.gateway]}" ]] && echo "* WiFi default gateway: ${DEVPROP[dhcp.wlan0.gateway]}" >> "$devicedoc"
-  [[ -n "${DEVPROP[dhcp.wlan0.ipaddress]}" ]] && echo "* WiFi IP: ${DEVPROP[dhcp.wlan0.ipaddress]}" >> "$devicedoc"
-  [[ -n "${DEVPROP[mobiledata.interfaces]}" ]] && echo "* Mobile data interfaces: ${DEVPROP[mobiledata.interfaces]}" >> "$devicedoc"
-  echo >> "$devicedoc"
-
-  # Storage
-  doProgress "   + checking for storage details" 3
-  echo "### Storage details" >> "$devicedoc"
-  [[ -n "${DEVPROP[EXTERNAL_STORAGE_MOUNT]}" ]] && echo "* Internal SD mount point: ${DEVPROP[EXTERNAL_STORAGE_MOUNT]}" >> "$devicedoc"
-  [[ -n "${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" ]] && echo "* External SD mount point: ${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" >> "$devicedoc"
-  [[ -n "${DEVPROP[ro.crypto.fuse_sdcard]}" ]] && echo "* Internal SD via FUSE: ${DEVPROP[ro.crypto.fuse_sdcard]}" >> "$devicedoc"
-  [[ -n "${DEVPROP[ro.crypto.state]}" ]] && echo "* Storage encrypted: ${DEVPROP[ro.crypto.state]}" >> "$devicedoc"
-  echo "* Disk statistics:" >> "$devicedoc"
-  adb ${ADBOPTS} shell dumpsys diskstats > ${tmp}
-  while read zeile; do
-    echo -e "    * ${zeile/// }" >> "$devicedoc"
-  done < ${tmp}
-
-  if [[ -n "${DEVPROP[gsm.operator.alpha]}" ]]; then # Provider info
-    echo >> "$devicedoc"
-    echo "### Provider info" >> "$devicedoc"
-    echo "* Mobile provider: ${DEVPROP[gsm.operator.alpha]}" >> "$devicedoc"
-    [[ -n "${DEVPROP[gsm.operator.iso-country]}" ]] && echo "* Provider country: ${DEVPROP[gsm.operator.iso-country]}" >> "$devicedoc"
-    [[ -n "${DEVPROP[gsm.operator.numeric]}" ]] && echo "* Provider code: ${DEVPROP[gsm.operator.numeric]}" >> "$devicedoc"
-    [[ -n "${DEVPROP[gsm.sim.state]}" ]] && echo "* SIM state: ${DEVPROP[gsm.sim.state]}" >> "$devicedoc"
-  fi
-
   # pm list features
   if [[ ${MK_DEVICEINFO_PMLISTFEATURES} -gt 0 ]]; then
     doProgress "- Evaluating 'pm list features'" 2
@@ -539,6 +505,41 @@ getDeviceInfo() {
       fi
       [[ -n "${radio[mDataConnectionApn]}" ]] && echo "* Current APN: ${radio[mDataConnectionApn]}" >> "$devicedoc"
     fi
+  fi
+
+  doProgress "  + networking details" 3
+  echo "### Networking details" >> "$devicedoc"
+  [[ -n "${DEVPROP[wifi.interface]}" ]] && echo "* WiFi Interface: ${DEVPROP[wifi.interface]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[net.dns1]}${DEVPROP[net.dns2]}" ]] && echo "* Default DNS server: ${DEVPROP[net.dns1]} / ${DEVPROP[net.dns2]}" >> "$devicedoc"
+  echo "* WiFi driver status: ${DEVPROP[wlan.driver.status]}" >> "$devicedoc"
+  echo "* WiFi scan interval: ${DEVPROP[wifi.supplicant_scan_interval]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[dhcp.wlan0.dns1]}" ]] && echo "* WiFi DHCP DNS: ${DEVPROP[dhcp.wlan0.dns1]} / ${DEVPROP[dhcp.wlan0.dns2]} / ${DEVPROP[dhcp.wlan0.dns3]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[dhcp.wlan0.gateway]}" ]] && echo "* WiFi default gateway: ${DEVPROP[dhcp.wlan0.gateway]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[dhcp.wlan0.ipaddress]}" ]] && echo "* WiFi IP: ${DEVPROP[dhcp.wlan0.ipaddress]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[mobiledata.interfaces]}" ]] && echo "* Mobile data interfaces: ${DEVPROP[mobiledata.interfaces]}" >> "$devicedoc"
+  echo >> "$devicedoc"
+
+  # Storage
+  doProgress "  + storage details" 3
+  echo "### Storage details" >> "$devicedoc"
+  [[ -n "${DEVPROP[EXTERNAL_STORAGE_MOUNT]}" ]] && echo "* Internal SD mount point: ${DEVPROP[EXTERNAL_STORAGE_MOUNT]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" ]] && echo "* External SD mount point: ${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[ro.crypto.fuse_sdcard]}" ]] && echo "* Internal SD via FUSE: ${DEVPROP[ro.crypto.fuse_sdcard]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[ro.crypto.state]}" ]] && echo "* Storage encrypted: ${DEVPROP[ro.crypto.state]}" >> "$devicedoc"
+  echo "* Disk statistics:" >> "$devicedoc"
+  adb ${ADBOPTS} shell dumpsys diskstats > ${tmp}
+  while read zeile; do
+    echo -e "    * ${zeile/// }" >> "$devicedoc"
+  done < ${tmp}
+
+  if [[ -n "${DEVPROP[gsm.operator.alpha]}" ]]; then # Provider info
+    doProgress "  + Provider info"
+    echo >> "$devicedoc"
+    echo "### Provider info" >> "$devicedoc"
+    echo "* Mobile provider: ${DEVPROP[gsm.operator.alpha]}" >> "$devicedoc"
+    [[ -n "${DEVPROP[gsm.operator.iso-country]}" ]] && echo "* Provider country: ${DEVPROP[gsm.operator.iso-country]}" >> "$devicedoc"
+    [[ -n "${DEVPROP[gsm.operator.numeric]}" ]] && echo "* Provider code: ${DEVPROP[gsm.operator.numeric]}" >> "$devicedoc"
+    [[ -n "${DEVPROP[gsm.sim.state]}" ]] && echo "* SIM state: ${DEVPROP[gsm.sim.state]}" >> "$devicedoc"
   fi
 
 
