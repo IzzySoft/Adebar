@@ -898,7 +898,13 @@ postProcess() {
   doProgress "PostProcessing and Cleanup"
   if [[ $TIMESTAMPED_SUBDIRS -gt 0 ]]; then
     if [[ $LINK_LATEST_SUBDIR -gt 0 ]]; then
-      ln -s "$(basename "${OUTDIR}")" "$(dirname "${OUTDIR}")/latest"
+      doProgress "- symlink latest generation" 2
+      local LINK_NAME="$(dirname "${OUTDIR}")/latest"
+      if [ -L "${LINK_NAME}" -o ! -e "${LINK_NAME}" ]; then
+        ln -sf "$(basename "${OUTDIR}")" "$(dirname "${OUTDIR}")/latest"
+      else
+        doProgress "$(ansi_code "! Cannot symlink latest generation subdir: some file/directory already uses its name" "red")"
+      fi
     fi
   fi
 }
