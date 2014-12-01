@@ -107,6 +107,15 @@ What the settings are standing for is:
       of the progress output: e.g. mark error messages red, titles bold, etc.
       This is fine for interactive use, but might not be wished in scripts.
       Set it to `0` to disable (Default: `1`, i.e. enabled)
+    * `TIMESTAMPED_SUBDIRS`: Is you want to keep multiple "generations" of the
+      created files, this option can come in handy. It will cause *Adebar* to
+      create a time-stamped sub-directory on each run. If you e.g. would call
+      it `adebar-cli mydevice`, it would store the generated files in a
+      directory `mydevice/201412010950` (i.e. YYYYMMDDHHMI as name below the
+      name passed at command-line). By default, this is disabled. Note further
+      that the optional second command-line parameter would override this.
+    * `LINK_LATEST_SUBDIR`: With `TIMESTAMPED_SUBDIRS=1`, this option would
+      cause *Adebar* to keep a symlink pointing to the always latest copy.
 
 
 ## Shared Storage

@@ -42,6 +42,8 @@ MK_DEVICEINFO_STATUS=1
 # Misc
 PROGRESS=1
 USE_ANSI=1
+TIMESTAMPED_SUBDIRS=0
+LINK_LATEST_SUBDIR=0
 
 
 ############################################[ Init ]###
@@ -61,6 +63,9 @@ fi
 # check whether output directory shall have a suffix
 if [ -n "$2" ]; then
   OUTDIR="${OUTDIR}${2}"
+  TIMESTAMPED_SUBDIRS=0
+elif [[ $TIMESTAMPED_SUBDIRS -gt 0 ]]; then
+  OUTDIR="${OUTDIR}/$(date +"%Y%m%d%H%M")"
 fi
 
 # Check whether a device is connected at all and, if configured, the serial matches
@@ -886,6 +891,19 @@ echo -e "$zeile"
 }
 
 
+#
+# Post processing
+#
+postProcess() {
+  doProgress "PostProcessing and Cleanup"
+  if [[ $TIMESTAMPED_SUBDIRS -gt 0 ]]; then
+    if [[ $LINK_LATEST_SUBDIR -gt 0 ]]; then
+      ln -s "$(basename "${OUTDIR}")" "$(dirname "${OUTDIR}")/latest"
+    fi
+  fi
+}
+
+
 ############################################[ Main ]###
 echo
 msg=$(ansi_code "Adebar running:" "bold")
@@ -900,6 +918,7 @@ getDeviceInfo
 getSettings
 getTibu
 [[ $MK_PKG_DATA -ne 0 ]] && getAppDetails
+postProcess
 msg=$(ansi_code "Adebar done." "bold")
 doProgress "${msg}"
 echo

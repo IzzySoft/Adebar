@@ -58,3 +58,7 @@ MK_DEVICEINFO_STATUS=1
 PROGRESS=1
 # Use ANSI sequences on terminal (to highlight text)?
 USE_ANSI=1
+# Use separate subdirs on each run?
+TIMESTAMPED_SUBDIRS=0
+# If TIMESTAMPED_SUBDIRS, do we want a symlink point to the latest one?
+LINK_LATEST_SUBDIR=0
