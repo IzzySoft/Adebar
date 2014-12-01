@@ -44,6 +44,7 @@ PROGRESS=1
 USE_ANSI=1
 TIMESTAMPED_SUBDIRS=0
 LINK_LATEST_SUBDIR=0
+KEEP_SUBDIR_GENERATIONS=0
 
 
 ############################################[ Init ]###
@@ -904,6 +905,24 @@ postProcess() {
         ln -sf "$(basename "${OUTDIR}")" "$(dirname "${OUTDIR}")/latest"
       else
         doProgress "$(ansi_code "! Cannot symlink latest generation subdir: some file/directory already uses its name" "red")"
+      fi
+
+      if [[ ${KEEP_SUBDIR_GENERATIONS} -gt 0 ]]; then
+        doProgress "- remove outaged generations"
+        declare -a GENS
+        cd "$(dirname ${OUTDIR})"
+        for d in $(ls -dpX [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]); do
+          [[ ${#d} -ne 13 ]] && continue
+          GENS+=($d)
+        done
+        declare -i counter=0
+        if [[ ${#GENS[@]} -gt ${KEEP_SUBDIR_GENERATIONS} ]]; then
+          while [[ ${#GENS[@]} -gt ${KEEP_SUBDIR_GENERATIONS} ]]; do
+            rm -rf ${GENS[${counter}]:0:12}
+            unset GENS[${counter}]
+            counter+=1
+          done
+        fi
       fi
     fi
   fi

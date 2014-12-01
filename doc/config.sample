@@ -62,3 +62,6 @@ USE_ANSI=1
 TIMESTAMPED_SUBDIRS=0
 # If TIMESTAMPED_SUBDIRS, do we want a symlink point to the latest one?
 LINK_LATEST_SUBDIR=0
+# If TIMESTAMPED_SUBDIRS, how many generations to keep (0=all)?
+KEEP_SUBDIR_GENERATIONS=0
+

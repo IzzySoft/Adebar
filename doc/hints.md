@@ -116,6 +116,10 @@ What the settings are standing for is:
       that the optional second command-line parameter would override this.
     * `LINK_LATEST_SUBDIR`: With `TIMESTAMPED_SUBDIRS=1`, this option would
       cause *Adebar* to keep a symlink pointing to the always latest copy.
+    * `KEEP_SUBDIR_GENERATIONS`: With `TIMESTAMPED_SUBDIRS=1`, and when set
+      to a value other than `0`, *Adebar* automatically deletes older
+      „generations“ and only keeps the specified number. By default, this is
+      set to `0`, so no automatic purging takes place.
 
 
 ## Shared Storage
