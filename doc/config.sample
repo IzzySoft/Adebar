@@ -64,4 +64,6 @@ TIMESTAMPED_SUBDIRS=0
 LINK_LATEST_SUBDIR=0
 # If TIMESTAMPED_SUBDIRS, how many generations to keep (0=all)?
 KEEP_SUBDIR_GENERATIONS=0
+# Give you device a name you can understand
+DEVICE_NAME="MyDroid"
 

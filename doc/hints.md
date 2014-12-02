@@ -120,6 +120,9 @@ What the settings are standing for is:
       to a value other than `0`, *Adebar* automatically deletes older
       „generations“ and only keeps the specified number. By default, this is
       set to `0`, so no automatic purging takes place.
+    * `DEVICE_NAME`: A name you can recognize your device by. This is used
+      for the documentory files such as `deviceInfo.md`, but also in scripts
+      (mainly for headers in both cases). Defaults to "MyDroid".
 
 
 ## Shared Storage

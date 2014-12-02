@@ -45,6 +45,7 @@ USE_ANSI=1
 TIMESTAMPED_SUBDIRS=0
 LINK_LATEST_SUBDIR=0
 KEEP_SUBDIR_GENERATIONS=0
+DEVICE_NAME="MyDroid"
 
 
 ############################################[ Init ]###
@@ -229,7 +230,7 @@ getDisabled() {
 
   local scriptname="${OUTDIR}/disable"
   echo "#!/bin/bash" > "${scriptname}"
-  echo "# Disabled apps as of $(date '+%Y-%m-%d %H:%M')" >> "${scriptname}"
+  echo "# Disabled apps for ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "${scriptname}"
   echo >> "${scriptname}"
 
   for app in $(adb ${ADBOPTS} shell "pm list packages -d"); do
@@ -252,7 +253,7 @@ getUserAppBackup() {
   local backupscript="$OUTDIR/userbackup"
   local restorescript="$OUTDIR/userrestore"
   echo "#!/bin/bash" > "$backupscript"
-  echo "# Backup script as of $(date '+%Y-%m-%d %H:%M')" >> "$backupscript"
+  echo "# Backup script for ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "$backupscript"
   echo "# Backs up all user apps including their .apk files and data" >> "$backupscript"
   echo "# Feel free to comment out/remove apps you don't want/need to be backed up." >> "$backupscript"
   echo  >> "$backupscript"
@@ -260,7 +261,7 @@ getUserAppBackup() {
   echo >> "$backupscript"
 
   echo "#!/bin/bash" > "$restorescript"
-  echo "# Restore script as of $(date '+%Y-%m-%d %H:%M')" >> "$restorescript"
+  echo "# Restore script from ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "$restorescript"
   echo "# Restores all app backups. Comment out (or delete) those you do not wish to restore." >> "$restorescript"
   echo  >> "$restorescript"
 
@@ -285,7 +286,7 @@ getSystemAppBackup() {
   local backupscript="$OUTDIR/sysbackup"
   local restorescript="$OUTDIR/sysrestore"
   echo "#!/bin/bash" > "$backupscript"
-  echo "# Backup script as of $(date '+%Y-%m-%d %H:%M')" >> "$backupscript"
+  echo "# Backup script for ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "$backupscript"
   echo "# Backs up the data (not the .apk files) of all your system apps" >> "$backupscript"
   echo "# Feel free to comment out/remove apps you don't want/need to be backed up." >> "$backupscript"
   echo  >> "$backupscript"
@@ -293,7 +294,7 @@ getSystemAppBackup() {
   echo >> "$backupscript"
 
   echo "#!/bin/bash" > "$restorescript"
-  echo "# Restore script as of $(date '+%Y-%m-%d %H:%M')" >> "$restorescript"
+  echo "# Restore script from ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "$restorescript"
   echo -e "# Restores all system app data backups.\n# DRAGONS HERE: this might fail if you restore to a different\n# device/Android version/ROM, so be careful!\n# Comment out/delete what you do not wish to restore." >> "$restorescript"
   echo  >> "$restorescript"
 
@@ -344,7 +345,9 @@ getInstallLoc() {
   [ $MK_INSTALLLOC -ne 1 ] && return
   doProgress "Checking default install-location"
   foo="$(adb ${ADBOPTS} shell pm get-install-location)"
-  echo "pm set-install-location ${foo//[^0-9]/}" > "$OUTDIR/defaultInstallLoc"
+  echo "#!/bin/bash" > "$OUTDIR/defaultInstallLoc"
+  echo "# Set default install location for apps (taken from ${DEVICE_NAME} at $(date '+%Y-%m-%d %H:%M'))" >> "$OUTDIR/defaultInstallLoc"
+  echo "pm set-install-location ${foo//[^0-9]/}" >> "$OUTDIR/defaultInstallLoc"
   chmod u+x "$OUTDIR/defaultInstallLoc"
 }
 
@@ -362,7 +365,7 @@ getDeviceInfo() {
   local tmp=$(tempfile)
   trap "rm -f -- '$tmp'" RETURN
 
-  echo "# Device Information" > "$devicedoc"
+  echo "# ${DEVICE_NAME} Device Information" > "$devicedoc"
   adb ${ADBOPTS} shell getprop > $tmp
 
   doProgress "- Evaluating device properties" 2
@@ -617,7 +620,7 @@ getSettings() {
 getTibu() {
   [ $MK_TIBU -ne 1 ] && return
   [ -z "${DEVICE_IP}" ] && return
-  doProgress "Creating scripts to pull stuff via TiBu"
+  doProgress "Creating scripts to pull stuff from ${DEVICE_NAME} via TiBu"
 
   local scriptname="${OUTDIR}/tibu"
   echo "#!/bin/bash" > "${scriptname}"
@@ -840,8 +843,8 @@ echo -e "$zeile"
   APP_INSTALL_SRC[com.android.vending]="Google Play"
   APP_INSTALL_SRC[com.google.android.feedback]="Google Play (Feedback)"
 
-  echo "# Installed User-Apps" > "${mdfile}"
-  echo -e "#!/bin/bash\n# Disable Components" > "${SH_DISABLED}"
+  echo "# Installed User-Apps on ${DEVICE_NAME}" > "${mdfile}"
+  echo -e "#!/bin/bash\n# Disable Components (${DEVICE_NAME})" > "${SH_DISABLED}"
   declare -A PK_INFO
   for src in ${!PK_INSTALLERS[@]}; do
     PK_INFO[$src]=""
