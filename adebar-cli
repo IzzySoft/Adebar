@@ -46,6 +46,7 @@ TIMESTAMPED_SUBDIRS=0
 LINK_LATEST_SUBDIR=0
 KEEP_SUBDIR_GENERATIONS=0
 DEVICE_NAME="MyDroid"
+POSTRUN_CMD=""
 
 
 ############################################[ Init ]###
@@ -926,8 +927,14 @@ postProcess() {
             counter+=1
           done
         fi
+        cd - >/dev/null
       fi
     fi
+  fi
+
+  if [[ -n "${POSTRUN_CMD}" ]]; then
+    doProgress "- executing post-run command" 2
+    $(${POSTRUN_CMD})
   fi
 }
 

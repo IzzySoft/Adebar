@@ -123,6 +123,11 @@ What the settings are standing for is:
     * `DEVICE_NAME`: A name you can recognize your device by. This is used
       for the documentory files such as `deviceInfo.md`, but also in scripts
       (mainly for headers in both cases). Defaults to "MyDroid".
+    * `POSTRUN_CMD`: When *Adebar* is done extracting all information from
+      your device, it optionally can run another command. This could be a
+      script, any executable (with or without parameters), or even a function
+      you've set up in your config file. This way you could e.g. zip the files
+      and send them by mail, or whatever you think useful :)
 
 
 ## Shared Storage

@@ -66,4 +66,19 @@ LINK_LATEST_SUBDIR=0
 KEEP_SUBDIR_GENERATIONS=0
 # Give you device a name you can understand
 DEVICE_NAME="MyDroid"
+# Script to call when finished (leave empty for none)
+POSTRUN_CMD=""
 
+
+# ------------=[ Example postrun function ]=--
+# to avoid possible collisions with functions defined by Adebar itself, use
+# the "uf_" ("user function") prefix for your own functions
+# This example function glues the files from the created doc/ directory
+# to one file in your web tree, the file name based on your DEVICE_NAME
+# setting:
+uf_postrun() {
+  local WEBDIR="/var/www/docs"
+  cp "${OUTDIR}/docs/deviceInfo.md" "${WEBDIR}/${DEVICE_NAME}.md"
+  echo >> "${WEBDIR}/${DEVICE_NAME}.md"
+  cat "${OUTDIR}/docs/userApps.md" >> "${WEBDIR}/${DEVICE_NAME}.md"
+}
