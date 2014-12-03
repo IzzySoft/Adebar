@@ -94,9 +94,9 @@ fi
 
 # SERIAL specified:
 if [ -n "${SERIAL}" ]; then
-  if [ ${#serials[*]} -eq 1 -a "${serial[0]}" != "${SERIAL}" ]; then
+  if [ ${#serials[*]} -eq 1 -a "${serials[0]}" != "${SERIAL}" ]; then
     echo "Your configuration specifies a serial of '${SERIAL}',"
-    echo "but the connected device presents '${serial[0]}'."
+    echo "but the connected device presents '${serials[0]}'."
     echo "Please check if you have the correct device connected, or might have"
     echo "specified the wrong parameter to the script."
     echo ""
@@ -912,7 +912,7 @@ postProcess() {
       fi
 
       if [[ ${KEEP_SUBDIR_GENERATIONS} -gt 0 ]]; then
-        doProgress "- remove outaged generations"
+        doProgress "- remove outaged generations" 2
         declare -a GENS
         cd "$(dirname ${OUTDIR})"
         for d in $(ls -dpX [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]); do
