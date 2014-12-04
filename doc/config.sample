@@ -53,6 +53,19 @@ MK_DEVICEINFO_PMLISTFEATURES=1
 # Include device status (e.g. battery status)?
 MK_DEVICEINFO_STATUS=1
 
+
+# -------------------=[ UserApp Specials ]=--
+# Name the app install sources how you want them to be displayed
+APP_INSTALL_SRC[org.fdroid.fdroid]="F-Droid"
+APP_INSTALL_SRC[cm.aptoide.pt]="Aptoide"
+APP_INSTALL_SRC[com.android.vending]="Google Play"
+APP_INSTALL_SRC[com.google.android.feedback]="Google Play (Feedback)"
+# Link to their respective markets
+APP_MARKET_URL[org.fdroid.fdroid]="https://f-droid.org/repository/browse/?fdid=%s"
+APP_MARKET_URL[com.android.vending]="https://play.google.com/store/apps/details?id=%s"
+APP_MARKET_URL[com.google.android.feedback]="https://play.google.com/store/apps/details?id=%s"
+
+
 # -------------------------------=[ Misc ]=--
 # Show progress in terminal (0=disabled, 1..3 are verbosity levels)
 PROGRESS=1

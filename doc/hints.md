@@ -97,6 +97,19 @@ What the settings are standing for is:
       might decide it's not useful to you (as it looks a bit cryptic). So I
       decided to give you the change to switch it off :)
     * `MK_DEVICEINFO_STATUS`: Device status details, such as battery status
+* UserApp specifics  
+  When an app is installed, Android records the „installer“ together with other
+  „package details“. This detail is not always available (it is e.g. missing
+  for pre-installed apps, when you „sideload“ an app via `adb install` or by
+  installing it from an `.apk` file stored on your device), so we unfortunately
+  cannot apply that to all apps.  
+  This section has some places pre-configured – but you of course can complement
+  these settings: the „installer“, if available, is listed with the package
+  details. Apps are grouped by installers in `userApps.md`.
+    * `APP_INSTALL_SRC[installer.package.name.here]`: How the installer should
+      appear in „human readable format“ with your listings.
+    * `APP_MARKET_URL[installer.package.name.here]`: The full URL of the
+      corresponding market. `%s` will be replaced by the package name.
 * Misc
     * `PROGRESS`: Show some progress while the script is running, so you know
       what's going on (and don't think it got „stuck“). By default, this is
