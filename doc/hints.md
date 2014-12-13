@@ -144,6 +144,9 @@ What the settings are standing for is:
       script, any executable (with or without parameters), or even a function
       you've set up in your config file. This way you could e.g. zip the files
       and send them by mail, or whatever you think useful :)
+    * `APPNAME_CMD`: Similar to `POSTRUN_CMD` a command to retrieve app names.
+      Must return a string only (the app name or, if it fails to retrieve it,
+      the package name as passed to it). Only parameter is the package name.
 
 
 ## Shared Storage

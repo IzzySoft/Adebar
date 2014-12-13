@@ -83,6 +83,8 @@ LINK_LATEST_SUBDIR=0
 KEEP_SUBDIR_GENERATIONS=0
 # Script to call when finished (leave empty for none)
 POSTRUN_CMD=""
+# Script to call for retrieving app names
+APPNAME_CMD=""
 
 
 # ------------=[ Example postrun function ]=--

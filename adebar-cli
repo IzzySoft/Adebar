@@ -60,6 +60,7 @@ LINK_LATEST_SUBDIR=0
 KEEP_SUBDIR_GENERATIONS=0
 DEVICE_NAME="MyDroid"
 POSTRUN_CMD=""
+APPNAME_CMD=""
 
 
 ############################################[ Init ]###
@@ -226,6 +227,14 @@ getAppname() {
     return
   fi
   # not found in cache: optionally call user script/function here
+  if [[ -n "${APPNAME_CMD}" ]]; then
+    name="$(${APPNAME_CMD} $1)"
+    if [[ "${name}" != "$1" ]]; then
+      echo "${name}" > "${CACHEDIR}/appnames/$1"
+    fi
+    echo "${name}"
+    return
+  fi
   echo "$1"
 }
 
@@ -579,7 +588,7 @@ getDeviceInfo() {
   done < ${tmp}
 
   if [[ -n "${DEVPROP[gsm.operator.alpha]}" ]]; then # Provider info
-    doProgress "  + Provider info"
+    doProgress "  + Provider info" 3
     echo >> "$devicedoc"
     echo "### Provider info" >> "$devicedoc"
     echo "* Mobile provider: ${DEVPROP[gsm.operator.alpha]}" >> "$devicedoc"
