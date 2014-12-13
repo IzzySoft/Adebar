@@ -867,7 +867,7 @@ echo -e "$zeile"
       tmpstring="+ $app\n"
     fi
     [[ -n "${PK_FIRSTINSTALL[$app]}" ]] && tmpstring+="    + first installed: ${PK_FIRSTINSTALL[$app]}\n"
-    [[ -n "${PK_LASTUPDATE[$app]}" ]]   && tmpstring+="    + last updated: ${PK_FIRSTINSTALL[$app]}\n"
+    [[ -n "${PK_LASTUPDATE[$app]}" ]]   && tmpstring+="    + last updated: ${PK_LASTUPDATE[$app]}\n"
     [[ -n "${PK_VERSION[$app]}" ]]      && tmpstring+="    + installed version: ${PK_VERSION[$app]}\n"
     [[ -n "${PK_CODEPATH[$app]}" ]]     && tmpstring+="    + CodePath: \`${PK_CODEPATH[$app]}\`\n"
     [[ -n "${PK_DATADIR[$app]}" ]]      && tmpstring+="    + App data: \`${PK_DATADIR[$app]}\`\n"
