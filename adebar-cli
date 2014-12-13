@@ -412,6 +412,7 @@ getDeviceInfo() {
   trap "rm -f -- '$tmp'" RETURN
 
   echo "# ${DEVICE_NAME} Device Information" > "$devicedoc"
+  echo "(Generated at: $(date '+%Y-%m-%d %H:%M'))" >> "$devicedoc"
   adb ${ADBOPTS} shell getprop > $tmp
 
   doProgress "- Evaluating device properties" 2
@@ -885,6 +886,7 @@ echo -e "$zeile"
   local mdfile="${DOCDIR}/userApps.md"
 
   echo "# Installed User-Apps on ${DEVICE_NAME}" > "${mdfile}"
+  echo "(As of $(date '+%Y-%m-%d %H:%M'))" >> "${mdfile}"
   echo -e "#!/bin/bash\n# Disable Components (${DEVICE_NAME})" > "${SH_DISABLED}"
   declare -A PK_INFO
   for src in ${!PK_INSTALLERS[@]}; do
