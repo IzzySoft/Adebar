@@ -99,3 +99,20 @@ uf_postrun() {
   echo >> "${WEBDIR}/${DEVICE_NAME}.md"
   cat "${OUTDIR}/docs/userApps.md" >> "${WEBDIR}/${DEVICE_NAME}.md"
 }
+
+# --=[ Example function to retrieve app names ]=--
+# This example function tries to get the app name from Google Playstore
+# by scraping the corresponding web page (Playstore has the app name
+# in the page's TITLE attribute). To use this, set APPNAME_CMD="uf_getAppname"
+uf_getAppname() {
+  URL="https://play.google.com/store/apps/details?id=$1"
+  RSTRIP=" - Android-Apps"
+  LSTRIP="A Better"
+  TITLE=$(wget --quiet -O - $URL | sed -n -e 'H;${x;s!.*<head[^>]*>\(.*\)</head>.*!\1!;tnext};b;:next;s!.*<title[^>]*>\(.*\)</title>.*!\1!p')
+  TITLE="${TITLE%%${RSTRIP}*}"
+  if [[ -n "${TITLE}" ]]; then
+    echo "${TITLE}"
+  else
+    echo "$1"
+  fi
+}
