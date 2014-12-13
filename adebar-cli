@@ -19,6 +19,7 @@ USERDIR="userApps"
 SYSDIR="sysApps"
 DOCDIR="docs"
 CONFDIR="conf"
+CACHEDIR=""
 DEVICE_IP=
 TIBU_PORT="8080"
 TIBU_SDINT="/storage/INTERNAL/Storage-ALL.zip"
@@ -204,6 +205,29 @@ ansi_code() {
   echo "${txt}\033[0m"
 }
 
+
+#
+# Get app names by package names (if possible)
+#
+getAppname() {
+  if [[ -z "${CACHEDIR}" ]]; then # not even cache available
+    echo "$1"
+    return
+  fi
+  if [[ -f "${CACHEDIR}/appnames/$1" ]]; then
+    local name="$(cat "${CACHEDIR}/appnames/$1")"
+    name="${name%"${name##*[![:space:]]}"}" # remove trailing spaces
+    name="${name#"${name%%[![:space:]]*}"}" # remove leading spaces
+    if [[ -z "${name}" ]]; then
+      echo "$1"
+    else
+      echo "${name}"
+    fi
+    return
+  fi
+  # not found in cache: optionally call user script/function here
+  echo "$1"
+}
 
 #
 # Gather lists of installed apps
@@ -858,13 +882,23 @@ echo -e "$zeile"
     PK_INFO[$src]=""
   done
   local CUR_INSTALLER
+  local APPNAME
   for app in ${userApps[@]}; do
+    APPNAME=$(getAppname "$app")
     if [[ -z "${PK_INSTALLER[$app]}" ]]; then # no installer
-      tmpstring="+ $app\n"
+      if [[ "${APPNAME}" = "${app}" ]]; then
+        tmpstring="+ $app\n"
+      else
+        tmpstring="+ ${APPNAME} (${app})\n"
+      fi
     elif [[ -n "${APP_MARKET_URL[${PK_INSTALLER[$app]}]}" ]]; then
-      tmpstring="+ [$app](${APP_MARKET_URL[${PK_INSTALLER[$app]}]/\%s/$app})\n"
+      tmpstring="+ [${APPNAME}](${APP_MARKET_URL[${PK_INSTALLER[$app]}]/\%s/$app})\n"
     else # no web source
-      tmpstring="+ $app\n"
+      if [[ "${APPNAME}" = "${app}" ]]; then
+        tmpstring="+ $app\n"
+      else
+        tmpstring="+ ${APPNAME} (${app})\n"
+      fi
     fi
     [[ -n "${PK_FIRSTINSTALL[$app]}" ]] && tmpstring+="    + first installed: ${PK_FIRSTINSTALL[$app]}\n"
     [[ -n "${PK_LASTUPDATE[$app]}" ]]   && tmpstring+="    + last updated: ${PK_FIRSTINSTALL[$app]}\n"

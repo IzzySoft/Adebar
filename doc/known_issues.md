@@ -54,4 +54,9 @@ with their package names (e.g. `eu.chainfire.adbd` for chainfire's *adbd Insecur
 I wish there were means to list the „human readable app name“ along – but apart
 from pulling the entire `.apk` file and dissecting it via `aapt`, or trying to
 look up the package in the app stores' web pages, I know of no simple way to get
-hold on it. Suggestions welcome.
+hold on it.
+
+To work around that, you can manually create the corresponding cache files, as
+described in `hints.md`.
+
+Alternative suggestions welcome.

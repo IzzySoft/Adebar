@@ -14,10 +14,14 @@ SYSDIR="sysApps"
 DOCDIR="docs"
 # similar for pulled configuration files
 CONFDIR="conf"
+# where Adebar stores information between runs, e.g. app names
+CACHEDIR=""
 
 # -------------------=[ device specifics ]=--
 # Serial of the device. Useful when multiple devices are connected.
 #SERIAL="1234567890ABCDEF"
+# Give you device a name you can understand
+DEVICE_NAME="MyDroid"
 
 # ---------------------=[ TiBu specifics ]=--
 # IP of the Android device
@@ -77,8 +81,6 @@ TIMESTAMPED_SUBDIRS=0
 LINK_LATEST_SUBDIR=0
 # If TIMESTAMPED_SUBDIRS, how many generations to keep (0=all)?
 KEEP_SUBDIR_GENERATIONS=0
-# Give you device a name you can understand
-DEVICE_NAME="MyDroid"
 # Script to call when finished (leave empty for none)
 POSTRUN_CMD=""
 
