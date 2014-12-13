@@ -134,8 +134,14 @@ What the settings are standing for is:
       cause *Adebar* to keep a symlink pointing to the always latest copy.
     * `KEEP_SUBDIR_GENERATIONS`: With `TIMESTAMPED_SUBDIRS=1`, and when set
       to a value other than `0`, *Adebar* automatically deletes older
-      „generations“ and only keeps the specified number. By default, this is
-      set to `0`, so no automatic purging takes place.
+      „generations“ and only keeps the specified number. If a „generation“
+      seems to contain „real backups“ (i.e. has files in the `$USERDIR`
+      of `$SYSDIR` directories, or contains any `.ab` (ADB Backup) or `.gz`
+      (GZipped files, e.g. ADB Backups converted using `ab2tar`) files, it
+      will not be removed: instead, *Adebar* renames it to `*.Backup` and
+      issues a corresponding warning. You will have to take care for those
+      yourself.  
+      By default, this is set to `0`, so no automatic purging takes place.
     * `DEVICE_NAME`: A name you can recognize your device by. This is used
       for the documentory files such as `deviceInfo.md`, but also in scripts
       (mainly for headers in both cases). Defaults to "MyDroid".

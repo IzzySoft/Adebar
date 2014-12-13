@@ -979,8 +979,28 @@ postProcess() {
         done
         declare -i counter=0
         if [[ ${#GENS[@]} -gt ${KEEP_SUBDIR_GENERATIONS} ]]; then
+          local HAVE_BACKUPS
+          local files
           while [[ ${#GENS[@]} -gt ${KEEP_SUBDIR_GENERATIONS} ]]; do
-            rm -rf ${GENS[${counter}]:0:12}
+            # We do not want to delete real backups, so make sure there are none
+            HAVE_BACKUPS=0
+            files=(${GENS[${counter}]:0:12}/${USERDIR}/*) # UserApps
+            [[ -e "${files[0]}" ]] && HAVE_BACKUPS=1
+            files=(${GENS[${counter}]:0:12}/${SYSDIR}/*)  # SysApps
+            [[ -e "${files[0]}" ]] && HAVE_BACKUPS=1
+            files=(${GENS[${counter}]:0:12}/*.ab)         # Any ADB backups
+            [[ -e "${files[0]}" ]] && HAVE_BACKUPS=1
+            files=(${GENS[${counter}]:0:12}/*.gz)         # Any .gz archives, e.g. converted by ab2tar
+            [[ -e "${files[0]}" ]] && HAVE_BACKUPS=1
+            if [[ $HAVE_BACKUPS -eq 0 ]]; then
+              doProgress "  + removing '${GENS[${counter}]:0:12}'" 3
+              rm -rf "${GENS[${counter}]:0:12}"
+            else
+              warning="  + '${GENS[${counter}]:0:12}' seems to contain backups. Renaming it to '${GENS[${counter}]:0:12}.Backup'"
+              warning="$(ansi_code "$warning" "red")"
+              echo -e "$warning"
+              mv "${GENS[${counter}]:0:12}" "${GENS[${counter}]:0:12}.Backup"
+            fi
             unset GENS[${counter}]
             counter+=1
           done
