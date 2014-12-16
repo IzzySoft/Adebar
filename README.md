@@ -20,8 +20,8 @@ As a side-effect, *Adebar* generates a „report“ (or „short documentation�
 * it pulls the `wpa_supplicant.conf` from your device, which holds information on all WiFi APs you've configured (requires the ADB daemon to run in root mode) – and also some more configuration files.
 * it pulls the `packages.xml` from your device, which holds all information about apps installed on your device (with Android 4.1 and above, this again requires the ADB daemon to run in root mode)
 * a shell script to disable all broadcast receivers (aka "auto-starts") which were disabled on the given device
-* a [Markdown][2] file listing all user-installed apps with their sources you've installed them from (e.g. *Google Play*, *F-Droid*, *Aptoide*), date of first install/last update, installed version, and more.
-* a [Markdown][2] file with some general device documentation (see above).
+* a [Markdown][2] file listing all user-installed apps with their sources you've installed them from (e.g. *Google Play*, *F-Droid*, *Aptoide*), date of first install/last update, installed version, and more (see [example `userApps.md` in the Wiki](https://github.com/IzzySoft/Adebar/wiki/example-userApps.md)).
+* a [Markdown][2] file with some general device documentation (see above – and the [example `deviceInfo.md` in the wiki](https://github.com/IzzySoft/Adebar/wiki/example-deviceInfo.md)).
 
 Optionally, if you have the PHP [CLI](http://en.wikipedia.org/wiki/Command-line_interface "Wikipedia: Command-line interface") available on your computer, you can parse the `packages.xml` with provided PHP scripts. The package also includes a shell script to convert ADB backup files into `.tar.gz` archives (requires `openssl`).
 
