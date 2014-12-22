@@ -23,6 +23,8 @@ As a side-effect, *Adebar* generates a „report“ (or „short documentation�
 * a [Markdown][2] file listing all user-installed apps with their sources you've installed them from (e.g. *Google Play*, *F-Droid*, *Aptoide*), date of first install/last update, installed version, and more (see [example `userApps.md` in the Wiki](https://github.com/IzzySoft/Adebar/wiki/example-userApps.md)).
 * a [Markdown][2] file with some general device documentation (see above – and the [example `deviceInfo.md` in the wiki](https://github.com/IzzySoft/Adebar/wiki/example-deviceInfo.md)).
 
+![Adebar-created files](doc/AdebarFiles.svg)
+
 Optionally, if you have the PHP [CLI](http://en.wikipedia.org/wiki/Command-line_interface "Wikipedia: Command-line interface") available on your computer, you can parse the `packages.xml` with provided PHP scripts. The package also includes a shell script to convert ADB backup files into `.tar.gz` archives (requires `openssl`).
 
 > **As *Adebar* still is in its early stage of development, and not tested on too many devices, there might be some errors/bugs here and there; if you encounter one, please file an issue at [the project's Github presence][1]. General feedback is also more than welcome if you're successfully using *Adebar* with your device.**
@@ -47,8 +49,9 @@ As the command-line parameters are subject to change in the initial phase (i.e. 
 
 
 ## More details
-More details and hints can be found in the `doc/` sub-directory of the project.
+More details and hints can be found in the `doc/` sub-directory of the project, and in [the project wiki][3].
 
 [1]: https://github.com/IzzySoft/Adebar "Adebar at Github"
 [2]: http://en.wikipedia.org/wiki/Markdown "Wikipedia: Markdown"
+[3]: https://github.com/IzzySoft/Adebar/wiki "Adebar Wiki at Github"
 
