@@ -123,25 +123,6 @@ For easier handling, you could do the following:
   * `./adebar-cli moto` to create the scripts in `$STORAGE_BASE/moto`
   * `./adebar-cli htc _20141101` to create them in `$STORAGE_BASE/htc_20141101`
 
-### App names
-There is no generic way to retrieve the names of apps. ADB does offer no such
-feature. To have your `userApps.md` reveal the names for packages, you can
-manually create the corresponding cache files:
-
-1. Create a cache directory and inside that, an additional directory
-   `appnames`
-1. Inside the `appnames` directory, for each app create a corresponding
-   file with the name of the package, e.g. `appnames/com.foobar.app`,
-   which holds nothing but the app name (e.g. "Foobar App")
-1. edit your config, and point the `CACHEDIR` to the cache directory.
-   You can use an absolute path (e.g. `/home/izzy/adebar-cache`),
-   or a relative one (e.g. `cache`); in the latter case, this is
-   interpreted as relative to the path you're in when running
-   *Adebar* (usually the one `adebar-cli` resides in).
-
-Now *Adebar* will automatically check for each app whether its name
-is known here, and use it accordingly.
-
 ### Exit codes
 * 1: Syntax error (missing or wrong arguments when calling the script)
 * 2: No device found
