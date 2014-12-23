@@ -23,7 +23,7 @@ As a side-effect, *Adebar* generates a „report“ (or „short documentation�
 * a [Markdown][2] file listing all user-installed apps with their sources you've installed them from (e.g. *Google Play*, *F-Droid*, *Aptoide*), date of first install/last update, installed version, and more (see [example `userApps.md` in the Wiki](https://github.com/IzzySoft/Adebar/wiki/example-userApps.md)).
 * a [Markdown][2] file with some general device documentation (see above – and the [example `deviceInfo.md` in the wiki](https://github.com/IzzySoft/Adebar/wiki/example-deviceInfo.md)).
 
-![Adebar-created files](https://rawgit.com/IzzySoft/Adebar/master/doc/AdebarFiles.svg)
+![Adebar-created files](https://github.com/IzzySoft/Adebar/wiki/AdebarFiles.png)
 
 Optionally, if you have the PHP [CLI](http://en.wikipedia.org/wiki/Command-line_interface "Wikipedia: Command-line interface") available on your computer, you can parse the `packages.xml` with provided PHP scripts. The package also includes a shell script to convert ADB backup files into `.tar.gz` archives (requires `openssl`).
 
@@ -38,18 +38,8 @@ Most of them should already be obvious from above description. Nevertheless, all
 * **Android 4.0+**: As the `adb backup` and `adb restore` commands have not been present before Android 4.0, *Adebar* will not be of much use with devices running older versions – except for, maybe, creating a „device documentation“ as outlined above.
 
 
-## Usage
-As the command-line parameters are subject to change in the initial phase (i.e. more of them will probably be added), just basic hints here: run the executable (shell script) without parameters, it should tell you more. Basically, you need to pass it the "target directory" (where the output files should be placed in), and it will use defaults for everything else. To give an example:
-
-1. Connect your device
-1. Run `adb devices` to make sure it was recognized
-1. Run the script, passing it the output directory name as argument
-1. Adjust the created scripts to suit your needs (e.g. comment out/remove stuff you don't want to be backed up)
-1. Run the (adjusted) scripts to create your backups/restores
-
-
 ## More details
-More details and hints can be found in the `doc/` sub-directory of the project, and in [the project wiki][3].
+A documentation describing steps for installation, configuration, usage, and more can be found in [the project wiki][3].
 
 [1]: https://github.com/IzzySoft/Adebar "Adebar at Github"
 [2]: http://en.wikipedia.org/wiki/Markdown "Wikipedia: Markdown"
