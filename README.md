@@ -27,7 +27,7 @@ As a side-effect, *Adebar* generates a „report“ (or „short documentation�
 
 Optionally, if you have the PHP [CLI](http://en.wikipedia.org/wiki/Command-line_interface "Wikipedia: Command-line interface") available on your computer, you can parse the `packages.xml` with provided PHP scripts. The package also includes a shell script to convert ADB backup files into `.tar.gz` archives (requires `openssl`).
 
-> **As *Adebar* still is in its early stage of development, and not tested on too many devices, there might be some errors/bugs here and there; if you encounter one, please file an issue at [the project's Github presence][1]. General feedback is also more than welcome if you're successfully using *Adebar* with your device.**
+> **As *Adebar* is not yet tested on too many devices, there might be some errors/bugs here and there; if you encounter one, please file an issue at [the project's Github presence][1]. General feedback is also more than welcome if you're successfully using *Adebar* with your device.**
 
 
 ## Requirements
