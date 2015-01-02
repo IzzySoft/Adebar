@@ -807,7 +807,11 @@ getAppDetails() {
               P_BLOCK="enabled"
               continue
             fi
-echo "Oops in pkg:"
+            if [[ "${zeile:0:8}" = "    User" ]]; then  # Android 4.2+ MultiUser info: **TODO**
+              # '    User 0:  installed=true stopped=false notLaunched=false enabled=0'
+              continue
+            fi
+echo "Oops in pkg at line ${LINENO}:"
 echo -e "Unexpected: '$zeile'"
             ;;
         esac
@@ -837,7 +841,7 @@ echo -e "Unexpected: '$zeile'"
           doProgress "  - Package: $P_PKGNAME" 4
           continue
         fi
-echo "Oops in disabled:"
+echo "Oops in disabled at line ${LINENO}:"
 echo -e "$zeile"
 exit
         ;;
@@ -857,7 +861,7 @@ exit
           doProgress "  - Package: $P_PKGNAME" 4
           continue
         fi
-echo "Oops in enabled:"
+echo "Oops in enabled at line ${LINENO}:"
 echo -e "$zeile"
         ;;
 
@@ -872,7 +876,7 @@ echo -e "$zeile"
           doProgress "  - Package: $P_PKGNAME" 4
           continue
         fi
-echo "Oops in perms:"
+echo "Oops in perms at line ${LINENO}:"
 echo -e "$zeile"
         ;;
       *)
