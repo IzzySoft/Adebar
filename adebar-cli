@@ -729,6 +729,7 @@ getAppDetails() {
   declare -A PK_INSTALLER     # per app
   declare -A PK_DISABLED      # list of components separated by spaces
   declare -A PK_FLAGS         # flags=[ SYSTEM HAS_CODE ALLOW_TASK_REPARENTING ALLOW_CLEAR_USER_DATA ALLOW_BACKUP LARGE_HEAP ]
+  declare -A PK_USERS         # User 0:  installed=true stopped=false notLaunched=false enabled=0
   declare -A APP_INSTALL_SRC
   APP_INSTALL_SRC[org.fdroid.fdroid]="F-Droid"
   APP_INSTALL_SRC[cm.aptoide.pt]="Aptoide"
@@ -835,6 +836,11 @@ getAppDetails() {
             fi
             if [[ "${zeile:0:8}" = "    User" ]]; then  # Android 4.2+ MultiUser info: **TODO**
               # '    User 0:  installed=true stopped=false notLaunched=false enabled=0'
+              if [[ -z "${PK_USERS[$P_PKGNAME]}" ]]; then
+                PK_USERS[$P_PKGNAME]="    + ${zeile:4}"
+              else
+                PK_USERS[$P_PKGNAME]+="\n    + ${zeile:4}"
+              fi
               continue
             fi
 
@@ -947,6 +953,7 @@ getAppDetails() {
     [[ -n "${PK_DATADIR[$app]}" ]]      && tmpstring+="    + App data: \`${PK_DATADIR[$app]}\`\n"
     [[ -n "${PK_SCREENSIZE[$app]}" ]]   && tmpstring+="    + supported screen sizes: ${PK_SCREENSIZE[$app]}\n"
     [[ -n "${PK_FLAGS[$app]}" ]]        && tmpstring+="    + flags: ${PK_FLAGS[$app]}\n"
+    [[ -n "${PK_USERS[$app]}" ]]        && tmpstring+="${PK_USERS[$app]}\n"
     [[ -n "${PK_DISABLED[$app]}" ]]     && {
       tmpstring+="    + disabled components:\n"
       echo "" >> "${SH_DISABLED}"
