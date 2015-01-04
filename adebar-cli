@@ -1011,7 +1011,8 @@ postProcess() {
       doProgress "- symlink latest generation" 2
       local LINK_NAME="$(dirname "${OUTDIR}")/latest"
       if [ -L "${LINK_NAME}" -o ! -e "${LINK_NAME}" ]; then
-        ln -sf "$(basename "${OUTDIR}")" "$(dirname "${OUTDIR}")/latest"
+        rm -f "${LINK_NAME}" > /dev/null 2>&1
+        ln -sf "$(basename "${OUTDIR}")" "${LINK_NAME}"
       else
         doProgress "$(ansi_code "! Cannot symlink latest generation subdir: some file/directory already uses its name" "red")"
       fi
