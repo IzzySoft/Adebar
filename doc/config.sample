@@ -85,7 +85,8 @@ KEEP_SUBDIR_GENERATIONS=0
 POSTRUN_CMD=""
 # Script to call for retrieving app names
 APPNAME_CMD=""
-
+# If your device is rooted, but the ADB daemon does not run in root mode, set this to 1
+ROOT_COMPAT=0
 
 # ------------=[ Example postrun function ]=--
 # to avoid possible collisions with functions defined by Adebar itself, use
