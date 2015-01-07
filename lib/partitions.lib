@@ -1,0 +1,251 @@
+#!/bin/bash
+##############################################################################
+# Adebar © 2014, 2015 by Itzchak Rehberg
+# This is part of the Adebar project, see https://github.com/IzzySoft/Adebar
+# Protected by the GPLv2
+# ----------------------------------------------------------------------------
+# library to deal with partition information
+##############################################################################
+
+PARTBACKUP_FILE="${OUTDIR}/partBackup"
+PARTITION_SRC=${PARTITION_SRC,,} # tolower
+
+#
+# Get partition info from /proc/mtd ($1="mtd") or /proc/emmc ($1=emmc)
+# If successfull, ${#MTD_D[*]} should be > 0
+# MTD_DEV could be empty if not (/proc/mtd lists parts as "mtd0" && exists /dev/block/mtdblock0)
+declare -A MTD_D
+declare -A MTD_DEV
+declare -A MTD_NAME
+declare -A MTD_SIZE
+_fsProcMtd() {
+  [[ $((${MK_PARTINFO} + ${MK_PARTBACKUP})) -eq 0 ]] && return
+  case "$1" in
+    "emmc") local src="/proc/emmc" ;;
+    "mtd")  local src="/proc/mtd"  ;;
+    *)
+      oops "_fsProcMtd" "${LINENO}" "Unexpected parameter \$1: '${1}', assuming 'mtd'" 2
+      local src="/proc/mtd"
+      ;;
+  esac
+  local tmp=$(tempfile)
+  local azeile
+  local aret
+  declare -i counter=-1
+  adb ${ADBOPTS} shell cat $src > "${tmp}"
+  while read zeile; do
+    if [[ $counter -lt 0 ]]; then
+      counter+=1
+      continue
+    fi
+    azeile=(${zeile//[$'\r']})
+    MTD_D[${counter}]="${azeile[0]//\:/}"
+    if [[ "$src" = "/proc/mtd" ]]; then
+      aret="$(adb ${ADBOPTS} shell ls /dev/block/${MTD_D[${counter}]//mtd/mtdblock})"
+    else
+      aret="$(adb ${ADBOPTS} shell ls /dev/block/${MTD_D[${counter}]})"
+    fi
+    if [[ "${aret//[$'\r']}" = "/dev/block/${MTD_D[${counter}]//mtd/mtdblock}" ]]; then
+      MTD_DEV[${counter}]="/dev/block/${MTD_D[${counter}]//mtd/mtdblock}"
+    else
+      MTD_DEV[${counter}]=""
+    fi
+    MTD_SIZE[${counter}]="$((0x${azeile[1]}/1024))"
+    MTD_NAME[${counter}]="${azeile[3]//\"/}"
+    counter+=1
+  done < "${tmp}"
+  rm -f "${tmp}"
+}
+
+#
+# Get partition info from /proc/dumchar_info
+# Not yet implemented – just to lure in possible testers :)
+_fsProcDumchar() {
+  [[ $((${MK_PARTINFO} + ${MK_PARTBACKUP})) -eq 0 ]] && return
+  local aret=$(adb ${ADBOPTS} shell ls /proc/dumchar_info)
+  [[ "${aret//[$'\r']}" = "/proc/dumchar_info" ]] && {
+    echo -e "$(ansi_code "Your device seems to have detailed partition info at /proc/dumchar_info. Please get in contact with the dev!" "green")"
+  }
+}
+
+#
+# Get partitions from /dev/block/platform/*/by-name
+# Match them against /proc/partitions and /proc/mounts for names
+_fsProcByName() {
+  [[ $((${MK_PARTINFO} + ${MK_PARTBACKUP})) -eq 0 ]] && return
+  local tmp=$(tempfile)
+  local tmp2=$(tempfile)
+  local tmp3=$(tempfile)
+  adb ${ADBOPTS} shell ls -al /dev/block/platform/*/by-name > "${tmp}"
+  adb ${ADBOPTS} shell cat /proc/partitions > "${tmp2}"
+  adb ${ADBOPTS} shell cat /proc/mounts > "${tmp3}"
+  local azeile
+  local aret
+  declare -a aaret
+  declare -i counter=0
+  while read zeile; do
+    [[ ${zeile:0:29} = "/dev/block/platform/*/by-name" || ${zeile:0:33} = "ls: /dev/block/platform/*/by-name" ]] && return # does not exist
+    azeile=(${zeile//[$'\r']})
+    MTD_D[${counter}]="${azeile[5]}"
+    MTD_DEV[${counter}]="${azeile[7]}"
+    aret=$(grep "${MTD_DEV[${counter}]##*/}
+" ${tmp2})
+    aaret=(${aret})
+    MTD_SIZE[${counter}]=${aaret[2]}
+    aret=$(grep "/by-name/${MTD_D[${counter}]}" ${tmp3})
+    if [[ -n "${aret}" ]]; then
+      aaret=(${aret})
+      MTD_NAME[${counter}]="${aaret[1]:1}"
+    fi
+    counter+=1
+  done < "${tmp}"
+  rm -f "${tmp}" "${tmp2}" "${tmp3}"
+}
+
+#
+# Last resort: get partition info from /proc/partitions and match against /proc/mounts for names
+_fsProcPart() {
+  [[ $((${MK_PARTINFO} + ${MK_PARTBACKUP})) -eq 0 ]] && return
+  local tmp=$(tempfile)
+  local tmp2=$(tempfile)
+  adb ${ADBOPTS} shell cat /proc/partitions > "${tmp}"
+  adb ${ADBOPTS} shell cat /proc/mounts > "${tmp2}"
+  local azeile
+  local aret
+  declare -a aaret
+  declare -i counter=0
+  while read zeile; do
+    azeile=(${zeile//[$'\r']})
+    [[ "${azeile[0]}" != "179" ]] && continue # we only want "major 179" (skip loop devices etc.)
+    MTD_D[${counter}]="${azeile[3]}"
+    MTD_DEV[${counter}]="/dev/block/${azeile[3]}"
+    MTD_SIZE[${counter}]="${azeile[2]}"
+    aret=$(grep "${MTD_D[${counter}]} " ${tmp2})
+    if [[ -n "${aret}" ]]; then
+      aaret=(${aret})
+      MTD_NAME[${counter}]="${aaret[1]:1}"
+    else
+      MTD_NAME[${counter}]=${MTD_D[${counter}]}
+    fi
+    counter+=1
+  done < "${tmp}"
+  rm -f "${tmp}" "${tmp2}"
+}
+
+#
+# Create partition backup script from MTD info collected by _fsProcMtd
+_fsPartBackup() {
+  [[ ${MK_PARTBACKUP} -eq 0 ]] && return
+  declare -i counter=0
+  echo "#!/bin/bash" > "${PARTBACKUP_FILE}"
+  echo "# extract images for ${DEVICE_NAME} (created at $(date '+%Y-%m-%d %H:%M'))" >> "${PARTBACKUP_FILE}"
+  echo "# WARNING! Use those images at your own risk – especially when considering a restore." >> "${PARTBACKUP_FILE}"
+  echo "# Some might contain a file system you could mount, others just 'raw data'." >> "${PARTBACKUP_FILE}"
+  echo "# use 'file <name>.img' to figure out what you've got." >> "${PARTBACKUP_FILE}"
+  echo >> "${PARTBACKUP_FILE}"
+  echo "[[ ! -d \"${PARTBACKUPDIR}\" ]] && mkdir \"${PARTBACKUPDIR}\"" >> "${PARTBACKUP_FILE}"
+  echo >> "${PARTBACKUP_FILE}"
+  while [[ -n "${MTD_DEV[${counter}]}" ]]; do
+    if [[ -z "${MTD_NAME[${counter}]}" ]]; then
+      if [[ -z "${MTD_D[${counter}]}" ]]; then
+        pname="${MTD_DEV[${counter}]##*/}"
+      else
+        pname="${MTD_D[${counter}]##*/}"
+      fi
+    else
+      pname="${MTD_NAME[${counter}]}"
+    fi
+    echo "adb ${ADBOPTS} shell \"su -c 'stty raw; cat ${MTD_DEV[${counter}]}'\" > \"${PARTBACKUPDIR}/${pname}.img\"" >> "${PARTBACKUP_FILE}"
+    counter+=1
+  done
+}
+
+#
+# Create storage report from MTD info collected by _fsProcMtd
+# $1 is the file to append the info to
+_fsPartDoc() {
+  [[ ${MK_PARTINFO} -eq 0 ]] && return
+  declare -i counter=0
+  local pname
+  echo "* Partitions (source: ${PARTITION_SRC^^})" >> "$1"
+  while [[ -n "${MTD_DEV[${counter}]}" ]]; do
+    if [[ -z "${MTD_NAME[${counter}]}" ]]; then
+      if [[ -z "${MTD_D[${counter}]}" ]]; then
+        pname="(unknown)"
+      else
+        pname="(${MTD_D[${counter}]})"
+      fi
+    else
+      pname="${MTD_NAME[${counter}]}"
+    fi
+    echo "    * ${MTD_DEV[${counter}]}: ${pname} ($(printf "%'.0f\n" $((${MTD_SIZE[${counter}]} / 1024))) MiB)" >> "$1"
+    counter+=1
+  done
+}
+
+#
+# Obtain details on partitions on the device and collect them into variables
+# this does not create/write-to any files (neither docu nor scripts), just collects information
+getPartInfo() {
+  [[ $((${MK_PARTINFO} + ${MK_PARTBACKUP})) -eq 0 ]] && return
+  _fsProcDumchar # check for possible testers :)
+  [[ "${PARTITION_SRC}" = "auto" || "${PARTITION_SRC}" = "mtd" ]] && _fsProcMtd mtd
+  if [[ ${#MTD_D[*]} -gt 0 ]]; then
+    PARTITION_SRC="mtd"
+    return
+  fi
+  [[ "${PARTITION_SRC}" = "auto" || "${PARTITION_SRC}" = "emmc" ]] && _fsProcMtd emmc
+  if [[ ${#MTD_D[*]} -gt 0 ]]; then
+    PARTITION_SRC="emmc"
+    return
+  fi
+  [[ "${PARTITION_SRC}" = "auto" || "${PARTITION_SRC}" = "byname" ]] && _fsProcByName
+  if [[ ${#MTD_D[*]} -gt 0 ]]; then
+    PARTITION_SRC="byname"
+    return
+  fi
+  [[ "${PARTITION_SRC}" = "auto" || "${PARTITION_SRC}" = "parts" ]] && _fsProcPart
+  if [[ ${#MTD_D[*]} -gt 0 ]]; then
+    PARTITION_SRC="parts"
+    return
+  fi
+  # still here? So we've got nothing from the sources set up currently.
+  # more candidates:
+  # - /proc/dumchar_info : MTK (MediaTek) based devices – we have no device to test this with
+  #     ^Part_Name    Size               StartAddr         Type   MapTo
+  #     ^preloader    0x0000000000040000 0x0000000000000000   2   /dev/misc-sd
+  # - fdisk -l ?
+}
+
+#
+# Write the script to create partition dumps
+writePartDumpScript() {
+  [[ ${MK_PARTBACKUP} -eq 0 ]] && return
+  doProgress "Generating script to create partition images"
+  case "${PARTITION_SRC}" in
+    "mtd"|"emmc"|"byname"|"parts") _fsPartBackup ;;
+    "auto")
+      doProgress "$(ansi_code "Could not find any partition info, so we can't dump it.\nConsider setting 'MK_PARTBACKUP=0' in your config." "red")" 1
+      ;;
+    *)
+      oops "writePartDumpScript" "${LINENO}" "Unexpected PARTITION_SRC: '${PARTITION_SRC}'" 2
+      ;;
+  esac
+}
+
+#
+# Add partition info to device documentation
+# to be called from the appropriate place in getDeviceInfo()
+# $1 is the file to append the info to
+writePartInfo() {
+  [[ ${MK_PARTINFO} -eq 0 ]] && return
+  case "${PARTITION_SRC}" in
+    "mtd"|"emmc"|"byname"|"parts") _fsPartDoc "$1" ;;
+    "auto")
+      doProgress "$(ansi_code "Could not find any partition info, so we can't give it.\nConsider setting 'MK_PARTINFO=0' in your config." "red")" 1
+      ;;
+    *)
+      oops "writePartInfo" "${LINENO}" "Unexpected PARTITION_SRC: '${PARTITION_SRC}'" 2
+      ;;
+  esac
+}

@@ -19,6 +19,7 @@ fi
 STORAGE_BASE=
 USERDIR="userApps"
 SYSDIR="sysApps"
+PARTBACKUPDIR="images"
 DOCDIR="docs"
 CONFDIR="conf"
 CACHEDIR=""
@@ -46,6 +47,9 @@ MK_DEVICEINFO=1
 MK_DEVICEINFO_SENSORS=1
 MK_DEVICEINFO_PMLISTFEATURES=1
 MK_DEVICEINFO_STATUS=1
+MK_PARTINFO=1
+MK_PARTBACKUP=0
+PARTITION_SRC="auto"
 
 # -------------------=[ UserApp Specials ]=--
 declare -A APP_INSTALL_SRC
@@ -163,6 +167,9 @@ if [ ! -d "${DOCDIR}" ]; then
   }
   mkdir -p "${CONFDIR}"
 fi
+
+# Load libraries if needed
+[[ $((${MK_PARTINFO} + ${MK_PARTBACKUP})) -gt 0 ]] && . "${BINDIR}/lib/partitions.lib"
 
 declare -a userApps # list of package names
 declare -a sysApps
@@ -621,6 +628,7 @@ getDeviceInfo() {
   [[ -n "${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" ]] && echo "* External SD mount point: ${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" >> "$devicedoc"
   [[ -n "${DEVPROP[ro.crypto.fuse_sdcard]}" ]] && echo "* Internal SD via FUSE: ${DEVPROP[ro.crypto.fuse_sdcard]}" >> "$devicedoc"
   [[ -n "${DEVPROP[ro.crypto.state]}" ]] && echo "* Storage encrypted: ${DEVPROP[ro.crypto.state]}" >> "$devicedoc"
+  writePartInfo "$devicedoc"
   echo "* Disk statistics:" >> "$devicedoc"
   adb ${ADBOPTS} shell dumpsys diskstats > ${tmp}
   while read zeile; do
@@ -1082,6 +1090,8 @@ getDisabled
 getUserAppBackup
 getSystemAppBackup
 getInstallLoc
+getPartInfo
+writePartDumpScript
 getDeviceInfo
 getSettings
 getTibu

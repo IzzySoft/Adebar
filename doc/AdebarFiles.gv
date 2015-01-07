@@ -37,7 +37,7 @@ digraph AdebarFiles {
     label = "generated scripts";
 
     scripts [ shape = folder, label = "./" ];
-    scriptfiles [ shape= Mrecord, fontsize = 11, label = "deadReceivers.sh|defaultInstallLoc|disable|sysbackup|sysrestore|tibu|userbackup|userrestore" ];
+    scriptfiles [ shape= Mrecord, fontsize = 11, label = "deadReceivers.sh|defaultInstallLoc|disable|partBackup|sysbackup|sysrestore|tibu|userbackup|userrestore" ];
     scripts -> scriptfiles;
   }
 

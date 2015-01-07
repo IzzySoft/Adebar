@@ -10,6 +10,7 @@ STORAGE_BASE=
 # where to place the "real backups" (relative to "${STORAGE_BASE}/${OUTDIR}")
 USERDIR="userApps"
 SYSDIR="sysApps"
+PARTBACKUPDIR="images"
 # documentary files can have their own place (again, relative to "${STORAGE_BASE}/${OUTDIR}")
 DOCDIR="docs"
 # similar for pulled configuration files
@@ -56,6 +57,11 @@ MK_DEVICEINFO_SENSORS=1
 MK_DEVICEINFO_PMLISTFEATURES=1
 # Include device status (e.g. battery status)?
 MK_DEVICEINFO_STATUS=1
+# Partition details for device doc and backup script
+MK_PARTINFO=1
+MK_PARTBACKUP=0
+PARTITION_SRC="auto" # auto|mtd|emmc|byname|parts
+
 
 
 # -------------------=[ UserApp Specials ]=--
