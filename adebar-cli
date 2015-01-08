@@ -170,6 +170,7 @@ fi
 
 # Load libraries if needed
 [[ $((${MK_PARTINFO} + ${MK_PARTBACKUP})) -gt 0 ]] && . "${BINDIR}/lib/partitions.lib"
+[[ $PULL_SETTINGS -eq 1 ]] && . "${BINDIR}/lib/pull_config.lib"
 
 declare -a userApps # list of package names
 declare -a sysApps
@@ -410,23 +411,6 @@ getSystemAppBackup() {
   done
 
   chmod u+x "$backupscript" "$restorescript"
-}
-
-
-#
-# Retrieve packages.xml (required in different places)
-#
-pullPackagesXML() {
-  [[ ${MK_PKG_DATA} -eq 0 ]] && return
-  if [[ ${ROOT_COMPAT} -eq 1 ]]; then
-    local msg="$((adb ${ADBOPTS} shell "su -c 'cat /data/system/packages.xml'" > "${PKGXML}") 2>&1)"
-  else
-    local msg="$((adb ${ADBOPTS} pull /data/system/packages.xml "${PKGXML}") 2>&1)"
-  fi
-  # "adb pull" seems to "exit 0" also on "Permission denied" (but not on "does not exist")
-  [[ "$msg" =~ "Permission denied" ]] && msg=$(ansi_code "$msg" "red")
-  [[ -z "$msg" ]] && msg="OK"
-  doProgress "Pulling packages.xml: $msg" 2
 }
 
 
@@ -681,35 +665,6 @@ getDeviceInfo() {
   rm "$tmp"
 
   IFS="${OIFS}"
-}
-
-
-#
-# Get settings
-# includes WiFi APs etc.
-#
-getSettings() {
-  [ $PULL_SETTINGS -ne 1 ] && return
-  doProgress "Pulling configuration files"
-
-  local msg
-  msg="$((adb ${ADBOPTS} pull /system/build.prop "${BUILDPROP}") 2>&1)"
-  doProgress "- build.prop: $msg" 2
-  if [[ ${ROOT_COMPAT} -eq 1 ]]; then
-    local msg="$((adb ${ADBOPTS} shell "su -c 'cat /data/misc/wifi/wpa_supplicant.conf'" > "${CONFDIR}/wpa_supplicant.conf") 2>&1)"
-  else
-    msg="$((adb ${ADBOPTS} pull /data/misc/wifi/wpa_supplicant.conf "${CONFDIR}/wpa_supplicant.conf") 2>&1)"
-  fi
-  [[ $? -ne 0 ]] && msg=$(ansi_code "${msg}" "red")
-  [[ -z "$msg" ]] && msg="OK"
-  doProgress "- wpa_supplicant.conf: $msg" 2
-  msg="$((adb ${ADBOPTS} pull /system/etc/gps.conf "${CONFDIR}/gps.conf") 2>&1)"
-  doProgress "- gps.conf: $msg" 2
-  msg="$((adb ${ADBOPTS} pull /system/etc/hosts "${CONFDIR}/hosts") 2>&1)"
-  doProgress "- hosts: $msg" 2
-  # SMS/MMS ?
-  # CallLog ?
-  # ?
 }
 
 
@@ -1084,7 +1039,6 @@ postProcess() {
 echo
 msg=$(ansi_code "Adebar running:" "bold")
 doProgress "${msg}"
-pullPackagesXML
 initAppLists
 getDisabled
 getUserAppBackup
@@ -1093,7 +1047,7 @@ getInstallLoc
 getPartInfo
 writePartDumpScript
 getDeviceInfo
-getSettings
+[[ $PULL_SETTINGS -eq 1 ]] && getSettings
 getTibu
 [[ $MK_PKG_DATA -ne 0 ]] && getAppDetails
 postProcess

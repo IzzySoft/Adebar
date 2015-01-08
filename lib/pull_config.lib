@@ -1,0 +1,53 @@
+#!/bin/bash
+##############################################################################
+# Adebar © 2014, 2015 by Itzchak Rehberg
+# This is part of the Adebar project, see https://github.com/IzzySoft/Adebar
+# Protected by the GPLv2
+# ----------------------------------------------------------------------------
+# library to pull config files
+##############################################################################
+
+
+#
+# Get config files
+# includes WiFi APs etc.
+#
+getSettings() {
+  [ $PULL_SETTINGS -ne 1 ] && return
+  doProgress "Pulling configuration files"
+
+  local msg
+  # build.prop
+  msg="$((adb ${ADBOPTS} pull /system/build.prop "${BUILDPROP}") 2>&1)"
+  doProgress "- build.prop: $msg" 2
+  if [[ ${ROOT_COMPAT} -eq 1 ]]; then
+    msg="$((adb ${ADBOPTS} shell "su -c 'cat /data/misc/wifi/wpa_supplicant.conf'" > "${CONFDIR}/wpa_supplicant.conf") 2>&1)"
+  else
+    msg="$((adb ${ADBOPTS} pull /data/misc/wifi/wpa_supplicant.conf "${CONFDIR}/wpa_supplicant.conf") 2>&1)"
+  fi
+  [[ $? -ne 0 ]] && msg=$(ansi_code "${msg}" "red")
+  [[ -z "$msg" ]] && msg="OK"
+
+  # wpa_supplicant.conf, gps.conf, hosts
+  doProgress "- wpa_supplicant.conf: $msg" 2
+  msg="$((adb ${ADBOPTS} pull /system/etc/gps.conf "${CONFDIR}/gps.conf") 2>&1)"
+  doProgress "- gps.conf: $msg" 2
+  msg="$((adb ${ADBOPTS} pull /system/etc/hosts "${CONFDIR}/hosts") 2>&1)"
+  doProgress "- hosts: $msg" 2
+
+  # packages.xml
+  if [[ ${ROOT_COMPAT} -eq 1 ]]; then
+    local msg="$((adb ${ADBOPTS} shell "su -c 'cat /data/system/packages.xml'" > "${PKGXML}") 2>&1)"
+  else
+    local msg="$((adb ${ADBOPTS} pull /data/system/packages.xml "${PKGXML}") 2>&1)"
+  fi
+  # "adb pull" seems to "exit 0" also on "Permission denied" (but not on "does not exist")
+  [[ "$msg" =~ "Permission denied" ]] && msg=$(ansi_code "$msg" "red")
+  [[ -z "$msg" ]] && msg="OK"
+  doProgress "- packages.xml: $msg" 2
+
+  # SMS/MMS ?
+  # CallLog ?
+  # ?
+}
+
