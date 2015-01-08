@@ -612,7 +612,7 @@ getDeviceInfo() {
   [[ -n "${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" ]] && echo "* External SD mount point: ${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" >> "$devicedoc"
   [[ -n "${DEVPROP[ro.crypto.fuse_sdcard]}" ]] && echo "* Internal SD via FUSE: ${DEVPROP[ro.crypto.fuse_sdcard]}" >> "$devicedoc"
   [[ -n "${DEVPROP[ro.crypto.state]}" ]] && echo "* Storage encrypted: ${DEVPROP[ro.crypto.state]}" >> "$devicedoc"
-  writePartInfo "$devicedoc"
+  [[ ${MK_PARTINFO} -gt 0 ]] && writePartInfo "$devicedoc"
   echo "* Disk statistics:" >> "$devicedoc"
   adb ${ADBOPTS} shell dumpsys diskstats > ${tmp}
   while read zeile; do
@@ -1044,8 +1044,8 @@ getDisabled
 getUserAppBackup
 getSystemAppBackup
 getInstallLoc
-getPartInfo
-writePartDumpScript
+[[ $((${MK_PARTINFO} + ${MK_PARTBACKUP})) -gt 0 ]] && getPartInfo
+[[ ${MK_PARTBACKUP} -gt 0 ]] && writePartDumpScript
 getDeviceInfo
 [[ $PULL_SETTINGS -eq 1 ]] && getSettings
 getTibu
