@@ -15,6 +15,7 @@ As a side-effect, *Adebar* generates a „report“ (or „short documentation�
 
 * a [shell script](http://en.wikipedia.org/wiki/Shell_script "Wikipedia: Shell script") to create separate ADB backups for the apps you've installed yourself ("user-apps"), including their `.apk` files and their data
 * a shell script to create ADB backups of system apps, only containing their data
+* a shell script to create disk images of your device's partitions
 * a shell script to download contents of your internal/external SDCards and Backups via Titanium Backup's built-in web server
 * a shell script to disable (freeze) all apps you had disabled/frozen on your device
 * it pulls the `wpa_supplicant.conf` from your device, which holds information on all WiFi APs you've configured (requires the ADB daemon to run in root mode) – and also some more configuration files.
