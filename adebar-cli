@@ -171,6 +171,7 @@ fi
 # Load libraries if needed
 [[ $((${MK_PARTINFO} + ${MK_PARTBACKUP})) -gt 0 ]] && . "${BINDIR}/lib/partitions.lib"
 [[ $PULL_SETTINGS -eq 1 ]] && . "${BINDIR}/lib/pull_config.lib"
+[[ $MK_TIBU -eq 1 ]] && . "${BINDIR}/lib/tibu.lib"
 
 declare -a userApps # list of package names
 declare -a sysApps
@@ -669,29 +670,6 @@ getDeviceInfo() {
 
 
 #
-# Create script to download SDCard Contents and TiBu Backups via TiBu WebServer
-#
-getTibu() {
-  [ $MK_TIBU -ne 1 ] && return
-  [ -z "${DEVICE_IP}" ] && return
-  doProgress "Creating scripts to pull stuff from ${DEVICE_NAME} via TiBu"
-
-  local scriptname="${OUTDIR}/tibu"
-  echo "#!/bin/bash" > "${scriptname}"
-  echo "# Download contents of external/internal SDCard and Backups via TitaniumBackups WebServer" >> "${scriptname}"
-  echo "# Make sure your device is connected to your local WiFi, and you've enabled TiBu's WebServer" >> "${scriptname}"
-  echo "# The latter can be done from within TiBu via the menu" >> "${scriptname}"
-  echo "# As usual: comment out the components you do not want/need :)" >> "${scriptname}"
-  echo  >> "${scriptname}"
-  timestamp="$(date '+%Y%m%d_%H%M')"
-  echo "wget -O sdinternal_${timestamp}.zip http://${DEVICE_IP}:${TIBU_PORT}${TIBU_SDINT}" >> "${scriptname}"
-  echo "wget -O sdexternal_${timestamp}.zip http://${DEVICE_IP}:${TIBU_PORT}${TIBU_SDEXT}" >> "${scriptname}"
-  echo "wget -O tibu_backups_${timestamp}.zip http://${DEVICE_IP}:${TIBU_PORT}${TIBU_BACKUPS}" >> "${scriptname}"
-  chmod u+x "${scriptname}"
-}
-
-
-#
 # Collect app details via dumpsys
 #
 getAppDetails() {
@@ -1048,7 +1026,7 @@ getInstallLoc
 [[ ${MK_PARTBACKUP} -gt 0 ]] && writePartDumpScript
 getDeviceInfo
 [[ $PULL_SETTINGS -eq 1 ]] && getSettings
-getTibu
+[[ $MK_TIBU -eq 1 ]] && getTibu
 [[ $MK_PKG_DATA -ne 0 ]] && getAppDetails
 postProcess
 msg=$(ansi_code "Adebar done." "bold")
