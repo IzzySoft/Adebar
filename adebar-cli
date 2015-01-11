@@ -793,7 +793,7 @@ getAppDetails() {
               P_BLOCK="enabled"
               continue
             fi
-            if [[ "${zeile:0:8}" = "    User" ]]; then  # Android 4.2+ MultiUser info: **TODO**
+            if [[ "${zeile:0:8}" = "    User" ]]; then  # Android 4.2+ MultiUser info
               # '    User 0:  installed=true stopped=false notLaunched=false enabled=0'
               if [[ -z "${PK_USERS[$P_PKGNAME]}" ]]; then
                 PK_USERS[$P_PKGNAME]="    + ${zeile:4}"
@@ -993,8 +993,7 @@ postProcess() {
               rm -rf "${GENS[${counter}]:0:12}"
             else
               warning="  + '${GENS[${counter}]:0:12}' seems to contain backups. Renaming it to '${GENS[${counter}]:0:12}.Backup'"
-              warning="$(ansi_code "$warning" "red")"
-              echo -e "$warning"
+              echo -e "$(ansi_code "$warning" "red")"
               mv "${GENS[${counter}]:0:12}" "${GENS[${counter}]:0:12}.Backup"
             fi
             unset GENS[${counter}]
@@ -1015,8 +1014,7 @@ postProcess() {
 
 ############################################[ Main ]###
 echo
-msg=$(ansi_code "Adebar running:" "bold")
-doProgress "${msg}"
+doProgress "$(ansi_code "Adebar running:" "bold")"
 initAppLists
 getDisabled
 getUserAppBackup
@@ -1029,8 +1027,7 @@ getDeviceInfo
 [[ $MK_TIBU -eq 1 ]] && getTibu
 [[ $MK_PKG_DATA -ne 0 ]] && getAppDetails
 postProcess
-msg=$(ansi_code "Adebar done." "bold")
-doProgress "${msg}"
+doProgress "$(ansi_code "Adebar done." "bold")"
 echo
 
 exit 0
@@ -1052,7 +1049,3 @@ exit 0
 #
 # adb pull /data/system/packages.list packages.list
 # apps with UID/GID and app path
-#
-# adb pull /data/system/packages.xml packages.xml
-# apps with permissions, intents, etc.:
-#
