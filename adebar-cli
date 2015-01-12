@@ -172,6 +172,7 @@ fi
 [[ $((${MK_PARTINFO} + ${MK_PARTBACKUP})) -gt 0 ]] && . "${BINDIR}/lib/partitions.lib"
 [[ $PULL_SETTINGS -eq 1 ]] && . "${BINDIR}/lib/pull_config.lib"
 [[ $MK_TIBU -eq 1 ]] && . "${BINDIR}/lib/tibu.lib"
+[[ $((${MK_APPDISABLE} + ${MK_USERBACKUP} + ${MK_SYSBACKUP} + ${MK_INSTALLLOC})) -gt 0 ]] && . "${BINDIR}/lib/scriptgen.lib"
 
 declare -a userApps # list of package names
 declare -a sysApps
@@ -306,126 +307,6 @@ initAppLists() {
     dApps+=($app)
     echo "Removed app: ${app##*:}"
   done
-}
-
-
-#
-# Create script for disabled apps
-#
-getDisabled() {
-  [ $MK_APPDISABLE -ne 1 ] && return
-
-  doProgress "Obtaining list of disabled apps"
-
-  local scriptname="${OUTDIR}/disable"
-  echo "#!/bin/bash" > "${scriptname}"
-  echo "# Disabled apps for ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "${scriptname}"
-  echo >> "${scriptname}"
-
-  for app in $(adb ${ADBOPTS} shell "pm list packages -d"); do
-    app=${app//[$'\t\r\n']}
-    echo "adb ${ADBOPTS} shell \"pm disable ${app##*:}\"" >> "${scriptname}"
-  done
-
-  chmod u+x "${scriptname}"
-}
-
-
-#
-# Create script to backup all user-apps
-#
-getUserAppBackup() {
-  [ $MK_USERBACKUP -ne 1 ] && return
-
-  doProgress "Creating backup/restore scripts for UserApps"
-
-  local backupscript="$OUTDIR/userbackup"
-  local restorescript="$OUTDIR/userrestore"
-  echo "#!/bin/bash" > "$backupscript"
-  echo "# Backup script for ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "$backupscript"
-  echo "# Backs up all user apps including their .apk files and data" >> "$backupscript"
-  echo "# Feel free to comment out/remove apps you don't want/need to be backed up." >> "$backupscript"
-  echo  >> "$backupscript"
-  echo "[ ! -d \"${USERDIR}\" ] && mkdir \"${USERDIR}\"" >> "$backupscript"
-  echo >> "$backupscript"
-
-  echo "#!/bin/bash" > "$restorescript"
-  echo "# Restore script from ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "$restorescript"
-  echo "# Restores all app backups. Comment out (or delete) those you do not wish to restore." >> "$restorescript"
-  echo  >> "$restorescript"
-
-  for app in "${userApps[@]}"; do
-    echo -e "adb ${ADBOPTS} backup -f \"${USERDIR}/${app}.ab\" -apk $app" >> "$backupscript"
-    echo "sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
-    echo -e "adb ${ADBOPTS} restore \"${USERDIR}/${app}.ab\"" >> "$restorescript"
-  done
-
-  chmod u+x "$backupscript" "$restorescript"
-}
-
-
-#
-# Create script to backup all system-app data
-#
-getSystemAppBackup() {
-  [ $MK_SYSBACKUP -ne 1 ] && return
-
-  doProgress "Creating backup/restore scripts for SytemApps"
-
-  local backupscript="$OUTDIR/sysbackup"
-  local restorescript="$OUTDIR/sysrestore"
-  echo "#!/bin/bash" > "$backupscript"
-  echo "# Backup script for ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "$backupscript"
-  echo "# Backs up the data (not the .apk files) of all your system apps" >> "$backupscript"
-  echo "# Feel free to comment out/remove apps you don't want/need to be backed up." >> "$backupscript"
-  echo  >> "$backupscript"
-  echo "[ ! -d \"${SYSDIR}\" ] && mkdir \"${SYSDIR}\"" >> "$backupscript"
-  echo >> "$backupscript"
-
-  echo "#!/bin/bash" > "$restorescript"
-  echo "# Restore script from ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "$restorescript"
-  echo -e "# Restores all system app data backups.\n# DRAGONS HERE: this might fail if you restore to a different\n# device/Android version/ROM, so be careful!\n# Comment out/delete what you do not wish to restore." >> "$restorescript"
-  echo  >> "$restorescript"
-
-  for app in "${sysApps[@]}"; do
-    prep=""
-    if [ "$app" = "com.android.sharedstoragebackup" ]; then # shared storage
-      prep="  "
-      echo >> "$backupscript"
-      echo  >> "$restorescript"
-      echo -e "echo \"The following command will download 'shared storage' (i.e. contents of the SD card(s)).\"\necho \"This might take quite a while, depending on what you've stored there.\"" >> "$backupscript"
-      echo -e "echo \"The following command will restore 'shared storage' (i.e. contents of the SD card(s)).\"\necho \"This might take quite a while, depending on how big your backup from it was.\"" >> "$restorescript"
-      echo -e "read -n 1 -p \"Do you wish to run this command now? (Y/n) \" res\necho\nres=\$(echo \$res|tr [:upper:] [:lower:])\nif [ \"\$res\" = \"y\" ]; then" >> "$backupscript"
-      echo -e "read -n 1 -p \"Do you wish to run this command now? (Y/n) \" res\necho\nres=\$(echo \$res|tr [:upper:] [:lower:])\nif [ \"\$res\" = \"y\" ]; then" >> "$restorescript"
-    else
-      prep=""
-    fi
-    echo -e "${prep}adb ${ADBOPTS} backup -f \"${SYSDIR}/${app}.ab\" -noapk $app" >> "$backupscript"
-    echo "${prep}sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
-    echo -e "${prep}adb ${ADBOPTS} restore \"${SYSDIR}/${app}.ab\"" >> "$restorescript"
-    if [ "$app" = "com.android.sharedstoragebackup" ]; then
-      echo -e "else\n echo \"Skipping shared storage\"\nfi" >> "$backupscript"
-      echo -e "else\n echo \"Skipping shared storage\"\nfi" >> "$restorescript"
-      echo >> "$backupscript"
-      echo  >> "$restorescript"
-    fi
-  done
-
-  chmod u+x "$backupscript" "$restorescript"
-}
-
-
-#
-# Get the default install-location
-#
-getInstallLoc() {
-  [ $MK_INSTALLLOC -ne 1 ] && return
-  doProgress "Checking default install-location"
-  foo="$(adb ${ADBOPTS} shell pm get-install-location)"
-  echo "#!/bin/bash" > "$OUTDIR/defaultInstallLoc"
-  echo "# Set default install location for apps (taken from ${DEVICE_NAME} at $(date '+%Y-%m-%d %H:%M'))" >> "$OUTDIR/defaultInstallLoc"
-  echo "pm set-install-location ${foo//[^0-9]/}" >> "$OUTDIR/defaultInstallLoc"
-  chmod u+x "$OUTDIR/defaultInstallLoc"
 }
 
 #
