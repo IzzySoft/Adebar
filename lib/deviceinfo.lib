@@ -1,0 +1,250 @@
+#!/bin/bash
+##############################################################################
+# Adebar © 2014, 2015 by Itzchak Rehberg
+# This is part of the Adebar project, see https://github.com/IzzySoft/Adebar
+# Protected by the GPLv2
+# ----------------------------------------------------------------------------
+# library to get device info
+##############################################################################
+
+#
+# Get device info
+#
+getDeviceInfo() {
+  [[ $MK_DEVICEINFO -ne 1 ]] && return
+  doProgress "Collecting device information"
+  local item=""
+  local devicedoc="${DOCDIR}/deviceInfo.md"
+  local msg=""
+  local left
+  local right
+  local tmp=$(tempfile)
+  trap "rm -f -- '$tmp'" RETURN
+
+  echo "# ${DEVICE_NAME} Device Information" > "$devicedoc"
+  echo "(Generated at: $(date '+%Y-%m-%d %H:%M'))" >> "$devicedoc"
+  adb ${ADBOPTS} shell getprop > $tmp
+
+  doProgress "- Evaluating device properties" 2
+  declare -A DEVPROP
+  declare -A HAVPROPS # groups, e.g. "wifi" for "wifi.*"
+
+  # Parse getprop into DEVPROP & HAVPROPS
+  local prop
+  while read zeile; do
+    [[ -z "${zeile}" ]] && continue
+    zeile="${zeile//[\[\]:]/ }"
+    prop=($zeile)
+    [[ -z "${prop[1]}" ]] && continue
+    HAVPROPS[${prop[0]%%\.*}]="y"
+    DEVPROP[${prop[0]}]="${prop[1]}"
+  done < "${tmp}"
+
+  # Do something with the collected information (and collect more while on it)
+  echo "## Device and ROM properties" >> "$devicedoc"
+  doProgress "   + checking for product details" 3
+  echo "### Product Info" >> "$devicedoc"
+  echo "* Manufacturer: ${DEVPROP[ro.product.manufacturer]}" >> "$devicedoc"    # ro.product.manufacturer=Motorola
+  echo "* Model: ${DEVPROP[ro.product.model]} (${DEVPROP[ro.product.device]})" >> "$devicedoc"  # ro.product.model=A953 (ro.product.device=milestone2)
+  local serial="${DEVPROP[ro.serialno]}"                                        # 015ECFC703028007
+  [[ -z "$serial" ]] && {
+    if [[ -n "${DEVPROP[ro.boot.serialno]}" ]]; then
+      serial="${DEVPROP[ro.boot.serialno]}"
+    elif [[ -n "$SERIAL" ]]; then
+      serial="${SERIAL}"
+    else
+      [[ $(adb devices |grep "device$" |wc -l) -eq 1 ]] && serial="$(adb devices |grep "device$"|awk '{print $1}')"
+    fi
+  }
+  echo "* Serial: ${serial}" >> "$devicedoc"                                    # 015d3c26a420000a
+  serial="${DEVPROP[gsm.baseband.imei]}"
+  [[ -z "$serial" ]] && serial="$(adb ${ADBOPTS} shell dumpsys iphonesubinfo | grep -i "device id" | awk '{print $NF}' | sed 's/\r//g')"
+  [[ -n "$serial" ]] && echo "* IMEI: $serial" >> "$devicedoc"
+  [[ -n "${DEVPROP[ro.board.platform]}" ]] && echo "* Platform: ${DEVPROP[ro.board.platform]}" >> "$devicedoc" # omap3
+  [[ -n "${DEVPROP[ro.radio.hw.version]}" ]] && echo "* Radio version: ${DEVPROP[ro.radio.hw.version]}" >> "$devicedoc" # SJUG5980AA
+  [[ -n "${DEVPROP[gsm.baseband.version]}" ]] && echo "* Baseband: ${DEVPROP[gsm.baseband.version]}" >> "$devicedoc" # L6260_MODEM_SIC_02.1233.00
+  [[ -n "${DEVPROP[wlan.chip.vendor]}${DEVPROP[wlan.chip.version]}" ]] && echo "* WiFi vendor / version: ${DEVPROP[wlan.chip.vendor]} / ${DEVPROP[wlan.chip.version]}" >> "$devicedoc" # brcm / bcm4330x
+  echo "* CPU: ${DEVPROP[ro.product.cpu.abi]}" >> "$devicedoc"                  # ro.product.cpu.abi=armeabi-v7a
+  echo "* Screen density: ${DEVPROP[ro.sf.lcd_density]}" >> "$devicedoc"        # ro.sf.lcd_density=240
+  echo >> "$devicedoc"
+
+  if [[ ${MK_DEVICEINFO_SENSORS} -gt 0 ]]; then
+    doProgress "   + checking for sensor details" 3
+    if [[ "$(adb ${ADBOPTS} shell dumpsys sensorservice | wc -l)" -gt 1 ]]; then # make sure sensorservice is available
+      echo "### Sensors" >> "$devicedoc"
+      adb ${ADBOPTS} shell dumpsys sensorservice > $tmp
+      while read zeile; do
+        left="${zeile#*|}"
+        left="${zeile%%\|*}"
+        left="${left%"${left##*[![:space:]]}"}" # remove trailing spaces
+        right="${zeile%\|*}"
+        right="${right#*\|}"
+        right="${right%%\|*}"
+        right="${right%"${right##*[![:space:]]}"}"
+        [[ "$right" = "$left" ]] && continue
+        if [[ -z "${right//[[:space:]]/}" ]]; then
+          echo "* ${left}" >> "$devicedoc"
+        else
+          echo "* ${left} (${right//[[:space:]]/})" >> "$devicedoc"
+        fi
+      done < "${tmp}"
+      echo >> "$devicedoc"
+    fi
+  fi
+
+  doProgress "   + checking for OS details" 3
+  echo "### OS details" >> "$devicedoc"
+  echo "* SDK/Android version: ${DEVPROP[ro.build.version.sdk]}/${DEVPROP[ro.build.version.release]}" >> "$devicedoc" # 16/4.1.2
+  [[ -n "${DEVPROP[ro.modversion]}" ]] && echo "* Mod: ${DEVPROP[ro.modversion]}" >> "$devicedoc" # ro.modversion=10-20121228-NIGHTLY-milestone2
+  [[ -n "${DEVPROP[ro.build.id]}" ]] && echo "* BuildID: ${DEVPROP[ro.build.id]}" >> "$devicedoc" # JZO54K
+  echo "* Fingerprint: ${DEVPROP[ro.build.fingerprint]}" >> "$devicedoc" # MOTO/A953_O2DE/milestone2:2.3.6/4.5.1-134_DFP-132/1317968148:user/release-keys
+  echo "* Factory language: ${DEVPROP[ro.product.locale.language]}_${DEVPROP[ro.product.locale.region]}" >> "$devicedoc" # en_US
+  echo "* Configured language: ${DEVPROP[persist.sys.language]}_${DEVPROP[persist.sys.country]}" >> "$devicedoc" # de_DE
+  echo "* Configured timezone: ${DEVPROP[persist.sys.timezone]}" >> "$devicedoc" # Europe/Berlin
+  echo >> "$devicedoc"
+
+  # pm list features
+  if [[ ${MK_DEVICEINFO_PMLISTFEATURES} -gt 0 ]]; then
+    doProgress "- Evaluating 'pm list features'" 2
+    echo  >> "$devicedoc"
+    echo "## Device features" >> "$devicedoc"
+    echo -e "\`pm list features\`:\n" >> "$devicedoc"
+    for feature in $(adb ${ADBOPTS} shell "pm list features"); do
+      feature=${feature//[$'\r\n']}
+      echo "* ${feature#*:}" >> "$devicedoc"
+    done
+  fi
+
+  # device status
+  if [[ ${MK_DEVICEINFO_STATUS} -gt 0 ]]; then
+    doProgress "- Evaluating device status" 2
+    echo >> "$devicedoc"
+    echo "## Device Status" >> "$devicedoc"
+
+    doProgress "  + Battery status" 3
+    echo "### Battery Status" >> "$devicedoc"
+    adb ${ADBOPTS} shell dumpsys battery > $tmp
+    local battstat=(none unknown charging discharging "not charging" full)
+    local batthealth=(none unknown good overheat dead overvoltage "unspecified failure" cold)
+    while IFS='' read zeile; do
+      [[ "${zeile:0:1}" != " " ]] && continue # skip header
+      zeile="${zeile//[$'\t\r\n']}"
+      right="${zeile#*:}"
+      [[ "${right:0:1}" = " " ]] && right="${right:1}"
+      left="${zeile%:*}"
+      left="${left#"${left%%[![:space:]]*}"}" # remove leading spaces
+      case "$left" in
+        "status") echo "* ${left}: ${right} (${battstat[${right}]})"  >> "$devicedoc" ;;
+        "health") echo "* ${left}: ${right} (${batthealth[${right}]})"  >> "$devicedoc" ;;
+        *)        echo "* ${left}: ${right}"  >> "$devicedoc" ;;
+      esac
+    done < "${tmp}"
+
+    doProgress "  + Radio status" 3
+    echo >> "$devicedoc"
+    echo "### Radio Status" >> "$devicedoc"
+    declare -A radio
+    adb ${ADBOPTS} shell dumpsys telephony.registry|grep "=" > $tmp
+    local callstate=(idle ringing off-hook)
+    local servicestate=(service "out of service" "emergency only" "powered off")
+    local dataactivity=(none in out inout)
+    local dataconnectionstate=(disconnected connecting connected suspended)
+    while IFS='' read zeile; do
+      zeile="${zeile//[$'\t\r\n']}"
+      zeile="${zeile#"${zeile%%[![:space:]]*}"}"
+      radio[${zeile%%=*}]="${zeile#*=}"
+    done < "${tmp}"
+    echo "* Signal strength: [${radio[mSignalStrength]}](http://android.stackexchange.com/a/74954/16575)" >> "$devicedoc"
+    echo "* Service state: ${radio[mServiceState]:0:1} (${servicestate[${radio[mServiceState]:0:1}]})" >> "$devicedoc"
+    echo "* Call state: ${radio[mCallState]} (${callstate[${radio[mCallState]}]})" >> "$devicedoc"
+    echo "* Call forwarding active: ${radio[mCallForwarding]}" >> "$devicedoc"
+    if [[ "${radio[mDataConnectionPossible]}" = "false" ]]; then
+      echo "* Data connection possible: ${radio[mDataConnectionPossible]} (${radio[mDataConnectionReason]})" >> "$devicedoc"
+    else
+      echo "* Data connection possible: ${radio[mDataConnectionPossible]}" >> "$devicedoc"
+      left="${radio[mDataActivity]}"
+      echo "* Data activity: ${radio[mDataActivity]} (${dataactivity[${radio[mDataActivity]}]})" >> "$devicedoc"
+      if [[ -n "${radio[mDataConnectionState]}" ]]; then
+        echo "* Data connection state: ${radio[mDataConnectionState]} (${dataconnectionstate[${radio[mDataConnectionState]}]})" >> "$devicedoc"
+      elif [[ -n "${radio[mActiveDataConnectionState]}" ]]; then
+        echo "* Data connection state: ${radio[mActiveDataConnectionState]} (${dataconnectionstate[${radio[mActiveDataConnectionState]}]})" >> "$devicedoc"
+      fi
+      [[ -n "${radio[mDataConnectionApn]}" ]] && echo "* Current APN: ${radio[mDataConnectionApn]}" >> "$devicedoc"
+    fi
+  fi
+
+  doProgress "  + networking details" 3
+  echo "### Networking details" >> "$devicedoc"
+  [[ -n "${DEVPROP[wifi.interface]}" ]] && echo "* WiFi Interface: ${DEVPROP[wifi.interface]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[net.dns1]}${DEVPROP[net.dns2]}" ]] && echo "* Default DNS server: ${DEVPROP[net.dns1]} / ${DEVPROP[net.dns2]}" >> "$devicedoc"
+  echo "* WiFi driver status: ${DEVPROP[wlan.driver.status]}" >> "$devicedoc"
+  echo "* WiFi scan interval: ${DEVPROP[wifi.supplicant_scan_interval]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[dhcp.wlan0.dns1]}" ]] && echo "* WiFi DHCP DNS: ${DEVPROP[dhcp.wlan0.dns1]} / ${DEVPROP[dhcp.wlan0.dns2]} / ${DEVPROP[dhcp.wlan0.dns3]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[dhcp.wlan0.gateway]}" ]] && echo "* WiFi default gateway: ${DEVPROP[dhcp.wlan0.gateway]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[dhcp.wlan0.ipaddress]}" ]] && echo "* WiFi IP: ${DEVPROP[dhcp.wlan0.ipaddress]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[mobiledata.interfaces]}" ]] && echo "* Mobile data interfaces: ${DEVPROP[mobiledata.interfaces]}" >> "$devicedoc"
+  echo >> "$devicedoc"
+
+  # Storage
+  doProgress "  + storage details" 3
+  echo "### Storage details" >> "$devicedoc"
+  [[ -n "${DEVPROP[EXTERNAL_STORAGE_MOUNT]}" ]] && echo "* Internal SD mount point: ${DEVPROP[EXTERNAL_STORAGE_MOUNT]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" ]] && echo "* External SD mount point: ${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[ro.crypto.fuse_sdcard]}" ]] && echo "* Internal SD via FUSE: ${DEVPROP[ro.crypto.fuse_sdcard]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[ro.crypto.state]}" ]] && echo "* Storage encrypted: ${DEVPROP[ro.crypto.state]}" >> "$devicedoc"
+  [[ ${MK_PARTINFO} -gt 0 ]] && writePartInfo "$devicedoc"
+  echo "* Disk statistics:" >> "$devicedoc"
+  adb ${ADBOPTS} shell dumpsys diskstats > ${tmp}
+  while read zeile; do
+    echo -e "    * ${zeile/// }" >> "$devicedoc"
+  done < ${tmp}
+
+  if [[ -n "${DEVPROP[gsm.operator.alpha]}" ]]; then # Provider info
+    doProgress "  + Provider info" 3
+    echo >> "$devicedoc"
+    echo "### Provider info" >> "$devicedoc"
+    echo "* Mobile provider: ${DEVPROP[gsm.operator.alpha]}" >> "$devicedoc"
+    [[ -n "${DEVPROP[gsm.operator.iso-country]}" ]] && echo "* Provider country: ${DEVPROP[gsm.operator.iso-country]}" >> "$devicedoc"
+    [[ -n "${DEVPROP[gsm.operator.numeric]}" ]] && echo "* Provider code: ${DEVPROP[gsm.operator.numeric]}" >> "$devicedoc"
+    [[ -n "${DEVPROP[gsm.sim.state]}" ]] && echo "* SIM state: ${DEVPROP[gsm.sim.state]}" >> "$devicedoc"
+  fi
+
+
+  # ADB calls for the next two blocks must be made with default IFS or will fail
+  doProgress "- Obtaining account and backup details" 2
+  local accs=$(adb ${ADBOPTS} shell dumpsys account|grep " Account "|sed 's/[\{\}\r]//g'|awk '{$1=""; print $0}')
+  adb ${ADBOPTS} shell dumpsys backup | sed 's/\r//g' > "$tmp"
+
+  echo >> "$devicedoc"
+  echo "## Configured accounts" >> "$devicedoc"
+  OIFS="${IFS}"
+  IFS="
+"
+  for acc in $accs; do
+    echo "* ${acc}" >> "$devicedoc"
+  done
+
+  echo >> "$devicedoc"
+  echo "## Google Cloud Backup" >> "$devicedoc"
+  echo "* $(grep 'Backup Manager is' "$tmp")" >> "$devicedoc"
+  echo "* $(grep 'Auto-restore is' "$tmp")" >> "$devicedoc"
+  echo "* Backup destinations:" >> "$devicedoc"
+  for dest in $(grep "destination:" "$tmp"|awk '{$1=""; print $0}'); do
+    echo "    - ${dest}" >> "$devicedoc"
+  done
+  echo "* $(grep 'Last backup pass' "$tmp")" >> "$devicedoc"
+  echo "* $(grep 'Ever backed up:' "$tmp")" >> "$devicedoc"
+  echo "* $(grep 'Pending backup:' "$tmp")" >> "$devicedoc"
+  echo "* Participants:" >> "$devicedoc"
+  for zeile in $(grep -A1 "uid:" "$tmp"|awk '{print $1}'); do
+    case "$zeile" in
+      "uid:"|"--") ;;
+      *) echo "    - ${zeile}" >> "$devicedoc" ;;
+    esac
+  done
+  rm "$tmp"
+
+  IFS="${OIFS}"
+}
+
+
