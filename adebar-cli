@@ -657,10 +657,10 @@ postProcess() {
 echo
 doProgress "$(ansi_code "Adebar running:" "bold")"
 initAppLists
-getDisabled
-getUserAppBackup
-getSystemAppBackup
-getInstallLoc
+[[ ${MK_APPDISABLE} -gt 0 ]] && getDisabled
+[[ ${MK_USERBACKUP} -gt 0 ]] && getUserAppBackup
+[[ ${MK_SYSBACKUP} -gt 0 ]] && getSystemAppBackup
+[[ ${MK_INSTALLLOC} -gt 0 ]] && getInstallLoc
 [[ $((${MK_PARTINFO} + ${MK_PARTBACKUP})) -gt 0 ]] && getPartInfo
 [[ ${MK_PARTBACKUP} -gt 0 ]] && writePartDumpScript
 [[ ${MK_DEVICEINFO} -gt 0 ]] && getDeviceInfo
