@@ -255,37 +255,6 @@ ansi_code() {
 
 
 #
-# Get app names by package names (if possible)
-#
-getAppname() {
-  if [[ -z "${CACHEDIR}" ]]; then # not even cache available
-    echo "$1"
-    return
-  fi
-  if [[ -f "${CACHEDIR}/appnames/$1" ]]; then
-    local name="$(cat "${CACHEDIR}/appnames/$1")"
-    name="${name%"${name##*[![:space:]]}"}" # remove trailing spaces
-    name="${name#"${name%%[![:space:]]*}"}" # remove leading spaces
-    if [[ -z "${name}" ]]; then
-      echo "$1"
-    else
-      echo "${name}"
-    fi
-    return
-  fi
-  # not found in cache: optionally call user script/function here
-  if [[ -n "${APPNAME_CMD}" ]]; then
-    name="$(${APPNAME_CMD} $1)"
-    if [[ "${name}" != "$1" ]]; then
-      echo "${name}" > "${CACHEDIR}/appnames/$1"
-    fi
-    echo "${name}"
-    return
-  fi
-  echo "$1"
-}
-
-#
 # Gather lists of installed apps
 #
 initAppLists() {
@@ -395,21 +364,3 @@ doProgress "$(ansi_code "Adebar done." "bold")"
 echo
 
 exit 0
-
-
-######################################[ References ]###
-# pm list packages [options] <FILTER>
-# options:
-#    -f: See their associated file.
-#    -d: Filter to only show disabled packages.
-#    -e: Filter to only show enabled packages.
-#    -s: Filter to only show system packages.
-#    -3: Filter to only show third party packages.
-#    -i: See the installer for the packages.
-#    -u: Also include uninstalled packages.
-#    --user <USER_ID>: The user space to query.
-#
-# disable a component (e.g. BroadcastReceiver): pm disable com.example.com.testapp/.TestActivity
-#
-# adb pull /data/system/packages.list packages.list
-# apps with UID/GID and app path

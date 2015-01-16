@@ -8,6 +8,38 @@
 ##############################################################################
 
 #
+# Get app names by package names (if possible)
+#
+getAppname() {
+  if [[ -z "${CACHEDIR}" ]]; then # not even cache available
+    echo "$1"
+    return
+  fi
+  if [[ -f "${CACHEDIR}/appnames/$1" ]]; then
+    local name="$(cat "${CACHEDIR}/appnames/$1")"
+    name="${name%"${name##*[![:space:]]}"}" # remove trailing spaces
+    name="${name#"${name%%[![:space:]]*}"}" # remove leading spaces
+    if [[ -z "${name}" ]]; then
+      echo "$1"
+    else
+      echo "${name}"
+    fi
+    return
+  fi
+  # not found in cache: optionally call user script/function here
+  if [[ -n "${APPNAME_CMD}" ]]; then
+    name="$(${APPNAME_CMD} $1)"
+    if [[ "${name}" != "$1" ]]; then
+      echo "${name}" > "${CACHEDIR}/appnames/$1"
+    fi
+    echo "${name}"
+    return
+  fi
+  echo "$1"
+}
+
+
+#
 # Collect app details via dumpsys
 #
 getAppDetails() {
