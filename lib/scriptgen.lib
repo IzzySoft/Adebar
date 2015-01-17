@@ -94,8 +94,8 @@ getSystemAppBackup() {
       echo  >> "$restorescript"
       echo -e "echo \"The following command will download 'shared storage' (i.e. contents of the SD card(s)).\"\necho \"This might take quite a while, depending on what you've stored there.\"" >> "$backupscript"
       echo -e "echo \"The following command will restore 'shared storage' (i.e. contents of the SD card(s)).\"\necho \"This might take quite a while, depending on how big your backup from it was.\"" >> "$restorescript"
-      echo -e "read -n 1 -p \"Do you wish to run this command now? (Y/n) \" res\necho\nres=\$(echo \$res|tr [:upper:] [:lower:])\nif [ \"\$res\" = \"y\" ]; then" >> "$backupscript"
-      echo -e "read -n 1 -p \"Do you wish to run this command now? (Y/n) \" res\necho\nres=\$(echo \$res|tr [:upper:] [:lower:])\nif [ \"\$res\" = \"y\" ]; then" >> "$restorescript"
+      echo -e "read -n 1 -p \"Do you wish to run this command now? (Y/n) \" res\necho\nif [ \"\${res,,}\" = \"y\" ]; then" >> "$backupscript"
+      echo -e "read -n 1 -p \"Do you wish to run this command now? (Y/n) \" res\necho\nif [ \"\${res,,}\" = \"y\" ]; then" >> "$restorescript"
     else
       prep=""
     fi
