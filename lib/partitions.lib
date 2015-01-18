@@ -64,7 +64,23 @@ _fsProcDumchar() {
   [[ $((${MK_PARTINFO} + ${MK_PARTBACKUP})) -eq 0 ]] && return
   local aret=$(adb ${ADBOPTS} shell ls /proc/dumchar_info)
   [[ "${aret//[$'\r']}" = "/proc/dumchar_info" ]] && {
-    echo -e "$(ansi_code "Your device seems to have detailed partition info at /proc/dumchar_info. Please get in contact with the dev!" "green")"
+    # echo -e "$(ansi_code "Your device seems to have detailed partition info at /proc/dumchar_info. Please get in contact with the dev!" "green")"
+    local tmp=$(tempfile)
+    local azeile
+    local aret
+    declare -i counter=-1
+    adb ${ADBOPTS} shell cat /proc/dumchar_info > "${tmp}"
+    while read zeile; do
+      if [[ $counter -lt 0 ]]; then
+        counter+=1
+        continue
+      fi
+      azeile=(${zeile//[$'\r']})
+      MTD_D[${counter}]="${azeile[0]}"
+      MTD_DEV[${counter}]="${azeile[4]}"
+      MTD_NAME[${counter}]="${azeile[0]}"
+      MTD_SIZE[${counter}]="$((${azeile[1]}/1024))"
+    done
   }
 }
 
@@ -189,6 +205,10 @@ _fsPartDoc() {
 getPartInfo() {
   [[ $((${MK_PARTINFO} + ${MK_PARTBACKUP})) -eq 0 ]] && return
   _fsProcDumchar # check for possible testers :)
+  if [[ ${#MTD_D[*]} -gt 0 ]]; then
+    PARTITION_SRC="dumchar"
+    return
+  fi
   [[ "${PARTITION_SRC}" = "auto" || "${PARTITION_SRC}" = "mtd" ]] && _fsProcMtd mtd
   if [[ ${#MTD_D[*]} -gt 0 ]]; then
     PARTITION_SRC="mtd"
@@ -223,7 +243,7 @@ writePartDumpScript() {
   [[ ${MK_PARTBACKUP} -eq 0 ]] && return
   doProgress "Generating script to create partition images"
   case "${PARTITION_SRC}" in
-    "mtd"|"emmc"|"byname"|"parts") _fsPartBackup ;;
+    "mtd"|"emmc"|"byname"|"parts"|"dumchar") _fsPartBackup ;;
     "auto")
       doProgress "$(ansi_code "Could not find any partition info, so we can't dump it.\nConsider setting 'MK_PARTBACKUP=0' in your config." "red")" 1
       ;;
@@ -240,7 +260,7 @@ writePartDumpScript() {
 writePartInfo() {
   [[ ${MK_PARTINFO} -eq 0 ]] && return
   case "${PARTITION_SRC}" in
-    "mtd"|"emmc"|"byname"|"parts") _fsPartDoc "$1" ;;
+    "mtd"|"emmc"|"byname"|"parts"|"dumchar") _fsPartDoc "$1" ;;
     "auto")
       doProgress "$(ansi_code "Could not find any partition info, so we can't give it.\nConsider setting 'MK_PARTINFO=0' in your config." "red")" 1
       ;;
