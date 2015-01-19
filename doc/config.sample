@@ -47,8 +47,9 @@ MK_SYSBACKUP=1
 PULL_SETTINGS=1
 # create the script to pull stuff from the TiBu web server
 MK_TIBU=0
-# process package information via dumpsys
-MK_PKG_DATA=1
+# process package information via dumpsys and generate userApps.md/sysApps.md
+MK_USERAPPS=1
+MK_SYSAPPS=0
 # deal with the default-install-location (where apps should be installed)
 MK_INSTALLLOC=1
 # Create deviceInfo.md

@@ -245,20 +245,55 @@ getAppDetails() {
 
   done < "${PKGDUMP}"
 
-  # Create userApps.md
-  doProgress "- generating userApps.md" 2
-  local mdfile="${DOCDIR}/userApps.md"
+  echo -e "#!/bin/bash" > "${SH_DISABLED}"
 
-  echo "# Installed User-Apps on ${DEVICE_NAME}" > "${mdfile}"
+  [[ ${MK_USERAPPS} -ne 0 ]] && _makeAppDoc "user"
+  [[ ${MK_SYSAPPS}  -ne 0 ]] && _makeAppDoc "system"
+
+  doProgress "- removing temporary dumpfile" 2
+  rm -f "${PKGDUMP}"
+}
+
+
+#
+# Create app documentation
+# (called from getAppDetails())
+# $1 = "user"|"system"
+#
+function _makeAppDoc() {
+  local mdfile
+  local apptype
+  local applist
+  case "${1,,}" in
+    "user")
+        doProgress "- generating userApps.md" 2
+        mdfile="${DOCDIR}/userApps.md"
+        apptype="User-Apps"
+        applist=(${userApps[*]})
+        echo -e "# Disable Components (${DEVICE_NAME})" >> "${SH_DISABLED}"
+        ;;
+    "system")
+        doProgress "- generating sysApps.md" 2
+        mdfile="${DOCDIR}/sysApps.md"
+        apptype="System-Apps"
+        applist=(${sysApps[*]})
+        echo -e "\n\n# Disable System Components" >> "${SH_DISABLED}"
+        ;;
+    *) 
+        oops "makeAppDoc" "${LINENO}" "We only know about user and system apps, but got asked for '$1'" 1
+        return
+        ;;
+  esac
+
+  echo "# Installed ${apptype} on ${DEVICE_NAME}" > "${mdfile}"
   echo "(As of $(date '+%Y-%m-%d %H:%M'))" >> "${mdfile}"
-  echo -e "#!/bin/bash\n# Disable Components (${DEVICE_NAME})" > "${SH_DISABLED}"
   declare -A PK_INFO
   for src in ${!PK_INSTALLERS[@]}; do
     PK_INFO[$src]=""
   done
   local CUR_INSTALLER
   local APPNAME
-  for app in ${userApps[@]}; do
+  for app in ${applist[@]}; do
     APPNAME=$(getAppname "$app")
     if [[ -z "${PK_INSTALLER[$app]}" ]]; then # no installer
       if [[ "${APPNAME}" = "${app}" ]]; then
@@ -288,7 +323,7 @@ getAppDetails() {
       echo "" >> "${SH_DISABLED}"
       for comp in ${PK_DISABLED[$app]}; do
         tmpstring+="        - $comp\n"
-        echo "adb shell \"pm disable ${app}/${comp}\"" >> "${SH_DISABLED}"
+        echo "adb ${ADBOPTS} shell \"pm disable ${app}/${comp}\"" >> "${SH_DISABLED}"
       done
     }
     if [[ -z "${PK_INSTALLER[$app]}" ]]; then
@@ -302,18 +337,4 @@ getAppDetails() {
     echo -e "## Installed from ${PK_INSTALLERS[$src]} (installer: $src)\n" >> "${mdfile}"
     echo -e "${PK_INFO[$src]}\n" >> "${mdfile}"
   done
-
-  doProgress "- checking for disabled system components" 2
-  echo -e "\n\n# Disable System Components" >> "${SH_DISABLED}"
-  for app in ${sysApps[@]}; do
-    [[ -n "${PK_DISABLED[$app]}" ]] && {
-      echo "" >> "${SH_DISABLED}"
-      for comp in ${PK_DISABLED[$app]}; do
-        echo "adb shell \"pm disable ${app}/${comp}\"" >> "${SH_DISABLED}"
-      done
-    }
-  done
-
-  doProgress "- removing temporary dumpfile" 2
-  rm -f "${PKGDUMP}"
 }

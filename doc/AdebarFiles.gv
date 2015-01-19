@@ -25,7 +25,7 @@ digraph AdebarFiles {
     label = "generated documentation"
 
     docs [ shape = folder, label = "./docs" ];
-    docfiles [ shape = Mrecord, fontsize = 11, label = "deviceInfo.md|userApps.md" ];
+    docfiles [ shape = Mrecord, fontsize = 11, label = "deviceInfo.md|sysApps.md|userApps.md" ];
     docs -> docfiles;
   }
 

@@ -41,7 +41,8 @@ MK_USERBACKUP=1
 MK_SYSBACKUP=1
 PULL_SETTINGS=1
 MK_TIBU=0
-MK_PKG_DATA=1
+MK_USERAPPS=1
+MK_SYSAPPS=0
 MK_INSTALLLOC=1
 MK_DEVICEINFO=1
 MK_DEVICEINFO_SENSORS=1
@@ -174,7 +175,7 @@ fi
 [[ $MK_TIBU -eq 1 ]] && . "${BINDIR}/lib/tibu.lib"
 [[ $((${MK_APPDISABLE} + ${MK_USERBACKUP} + ${MK_SYSBACKUP} + ${MK_INSTALLLOC})) -gt 0 ]] && . "${BINDIR}/lib/scriptgen.lib"
 [[ ${MK_DEVICEINFO} -gt 0 ]] && . "${BINDIR}/lib/deviceinfo.lib"
-[[ ${MK_PKG_DATA} -ne 0 ]] && . "${BINDIR}/lib/packagedata.lib"
+[[ $((${MK_USERAPPS} + ${MK_SYSAPPS})) -ne 0 ]] && . "${BINDIR}/lib/packagedata.lib"
 
 
 declare -a userApps # list of package names
@@ -358,7 +359,7 @@ initAppLists
 [[ ${MK_DEVICEINFO} -gt 0 ]] && getDeviceInfo
 [[ $PULL_SETTINGS -eq 1 ]] && getSettings
 [[ $MK_TIBU -eq 1 ]] && getTibu
-[[ $MK_PKG_DATA -ne 0 ]] && getAppDetails
+[[ $((${MK_USERAPPS} + ${MK_SYSAPPS})) -ne 0 ]] && getAppDetails
 postProcess
 doProgress "$(ansi_code "Adebar done." "bold")"
 echo
