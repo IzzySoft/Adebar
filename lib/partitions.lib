@@ -47,6 +47,9 @@ _fsProcMtd() {
     fi
     if [[ "${aret//[$'\r']}" = "/dev/block/${MTD_D[${counter}]//mtd/mtdblock}" ]]; then
       MTD_DEV[${counter}]="/dev/block/${MTD_D[${counter}]//mtd/mtdblock}"
+    elif [[ "${src}" = "/proc/emmc" ]]; then
+      aret="$(adb ${ADBOPTS} shell "cat /proc/mounts" | grep "/emmc@${azeile[3]//\"/}")"
+      [[ -n "${aret}" ]] && MTD_DEV[${counter}]="/emmc@${azeile[3]}"
     else
       MTD_DEV[${counter}]=""
     fi
