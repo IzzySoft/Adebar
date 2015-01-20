@@ -107,8 +107,7 @@ _fsProcByName() {
     azeile=(${zeile//[$'\r']})
     MTD_D[${counter}]="${azeile[5]}"
     MTD_DEV[${counter}]="${azeile[7]}"
-    aret=$(grep "${MTD_DEV[${counter}]##*/}
-" ${tmp2})
+    aret=$(grep "${MTD_DEV[${counter}]##*/}" ${tmp2})
     aaret=(${aret})
     MTD_SIZE[${counter}]=${aaret[2]}
     aret=$(grep "/by-name/${MTD_D[${counter}]}" ${tmp3})
