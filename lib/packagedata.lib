@@ -338,7 +338,9 @@ function _makeAppDoc() {
     fi
   done
   for src in ${!PK_INSTALLERS[@]}; do
-    echo -e "## Installed from ${PK_INSTALLERS[$src]} (installer: $src)\n" >> "${mdfile}"
-    echo -e "${PK_INFO[$src]}\n" >> "${mdfile}"
+    [[ -n "${PK_INFO[$src]}" ]] && {
+      echo -e "## Installed from ${PK_INSTALLERS[$src]} (installer: $src)\n" >> "${mdfile}"
+      echo -e "${PK_INFO[$src]}\n" >> "${mdfile}"
+    }
   done
 }
