@@ -9,6 +9,8 @@
 
 #
 # Get app names by package names (if possible)
+# $1: package name
+# $2: whether to retrieve the app name if not found in cache
 #
 getAppname() {
   if [[ -z "${CACHEDIR}" ]]; then # not even cache available
@@ -27,7 +29,7 @@ getAppname() {
     return
   fi
   # not found in cache: optionally call user script/function here
-  if [[ -n "${APPNAME_CMD}" ]]; then
+  if [[ ${2} -gt 0 && -n "${APPNAME_CMD}" ]]; then
     name="$(${APPNAME_CMD} $1)"
     if [[ "${name}" != "$1" ]]; then
       echo "${name}" > "${CACHEDIR}/appnames/$1"
@@ -271,6 +273,7 @@ function _makeAppDoc() {
         apptype="User-Apps"
         applist=(${userApps[*]})
         echo -e "# Disable Components (${DEVICE_NAME})" >> "${SH_DISABLED}"
+        _retrieveAppNames=1
         ;;
     "system")
         doProgress "- generating sysApps.md" 2
@@ -278,6 +281,7 @@ function _makeAppDoc() {
         apptype="System-Apps"
         applist=(${sysApps[*]})
         echo -e "\n\n# Disable System Components" >> "${SH_DISABLED}"
+        _retrieveAppNames=${MK_SYSAPPS_RETRIEVE_NAMES}
         ;;
     *) 
         oops "makeAppDoc" "${LINENO}" "We only know about user and system apps, but got asked for '$1'" 1
@@ -294,7 +298,7 @@ function _makeAppDoc() {
   local CUR_INSTALLER
   local APPNAME
   for app in ${applist[@]}; do
-    APPNAME=$(getAppname "$app")
+    APPNAME=$(getAppname "${app}" $_retrieveAppNames)
     if [[ -z "${PK_INSTALLER[$app]}" ]]; then # no installer
       if [[ "${APPNAME}" = "${app}" ]]; then
         tmpstring="+ $app\n"
