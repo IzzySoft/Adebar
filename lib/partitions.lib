@@ -49,11 +49,15 @@ _fsProcMtd() {
       MTD_DEV[${counter}]="/dev/block/${MTD_D[${counter}]//mtd/mtdblock}"
     elif [[ "${src}" = "/proc/emmc" ]]; then
       aret="$(adb ${ADBOPTS} shell "cat /proc/mounts" | grep "/emmc@${azeile[3]//\"/}")"
-      [[ -n "${aret}" ]] && MTD_DEV[${counter}]="/emmc@${azeile[3]}"
+      [[ -n "${aret}" ]] && MTD_DEV[${counter}]="/emmc@${azeile[3]//\"/}"
     else
       MTD_DEV[${counter}]=""
     fi
-    MTD_SIZE[${counter}]="$((0x${azeile[1]}/1024))"
+    if [[ "$src" = "/proc/mtd" ]]; then
+      MTD_SIZE[${counter}]="$((0x${azeile[1]}/1024))"
+    else
+      MTD_SIZE[${counter}]="$((512*0x${azeile[2]}/1024))" # size is in sectors here
+    fi
     MTD_NAME[${counter}]="${azeile[3]//\"/}"
     counter+=1
   done < "${tmp}"
@@ -163,7 +167,11 @@ _fsPartBackup() {
   echo >> "${PARTBACKUP_FILE}"
   echo "[[ ! -d \"${PARTBACKUPDIR}\" ]] && mkdir \"${PARTBACKUPDIR}\"" >> "${PARTBACKUP_FILE}"
   echo >> "${PARTBACKUP_FILE}"
-  while [[ -n "${MTD_DEV[${counter}]}" ]]; do
+  while [[ -n "${MTD_D[${counter}]}" ]]; do
+    [[ -z "${MTD_DEV[${counter}]}" ]] && {
+      counter+=1
+      continue
+    }
     if [[ -z "${MTD_NAME[${counter}]}" ]]; then
       if [[ -z "${MTD_D[${counter}]}" ]]; then
         pname="${MTD_DEV[${counter}]##*/}"
@@ -186,7 +194,11 @@ _fsPartDoc() {
   declare -i counter=0
   local pname
   echo "* Partitions (source: ${PARTITION_SRC^^})" >> "$1"
-  while [[ -n "${MTD_DEV[${counter}]}" ]]; do
+  while [[ -n "${MTD_D[${counter}]}" ]]; do
+    [[ -z "${MTD_DEV[${counter}]}" ]] && {
+      counter+=1
+      continue
+    }
     if [[ -z "${MTD_NAME[${counter}]}" ]]; then
       if [[ -z "${MTD_D[${counter}]}" ]]; then
         pname="(unknown)"
