@@ -19,6 +19,8 @@ DOCDIR="docs"
 CONFDIR="conf"
 # where Adebar stores information between runs, e.g. app names
 CACHEDIR=""
+# base dir for transfers (install, push files, etc.
+TRANSFER_DIR=""
 
 # -------------------=[ device specifics ]=--
 # Serial of the device. Useful when multiple devices are connected.

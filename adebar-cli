@@ -23,6 +23,7 @@ PARTBACKUPDIR="images"
 DOCDIR="docs"
 CONFDIR="conf"
 CACHEDIR=""
+TRANSFER_DIR=""
 
 # -------------------=[ device specifics ]=--
 SERIAL=""
@@ -177,6 +178,7 @@ fi
 [[ $((${MK_APPDISABLE} + ${MK_USERBACKUP} + ${MK_SYSBACKUP} + ${MK_INSTALLLOC})) -gt 0 ]] && . "${BINDIR}/lib/scriptgen.lib"
 [[ ${MK_DEVICEINFO} -gt 0 ]] && . "${BINDIR}/lib/deviceinfo.lib"
 [[ $((${MK_USERAPPS} + ${MK_SYSAPPS})) -ne 0 ]] && . "${BINDIR}/lib/packagedata.lib"
+[[ -n "${TRANSFER_DIR}" ]] && . "${BINDIR}/lib/transfer.lib"
 
 
 declare -a userApps # list of package names
@@ -360,6 +362,7 @@ initAppLists
 [[ ${MK_DEVICEINFO} -gt 0 ]] && getDeviceInfo
 [[ $PULL_SETTINGS -eq 1 ]] && getSettings
 [[ $MK_TIBU -eq 1 ]] && getTibu
+[[ -n "${TRANSFER_DIR}" ]] && doTransfer
 [[ $((${MK_USERAPPS} + ${MK_SYSAPPS})) -ne 0 ]] && getAppDetails
 postProcess
 doProgress "$(ansi_code "Adebar done." "bold")"

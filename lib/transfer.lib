@@ -1,0 +1,67 @@
+#!/bin/bash
+##############################################################################
+# Adebar © 2014, 2015 by Itzchak Rehberg
+# This is part of the Adebar project, see https://github.com/IzzySoft/Adebar
+# Protected by the GPLv2
+# ----------------------------------------------------------------------------
+# library to push stuff to the device
+##############################################################################
+
+
+#
+# Install APKs
+installApk() {
+  if [[ -z "${TRANSFER_DIR}" ]]; then
+    echo -e "$(ansi_code "installApk called without TRANSFER_DIR being set" "red")"
+    return
+  fi
+  case "$1" in
+    "install")
+      local instOpts='' ;;
+    "reinstall")
+      local instOpts='-r' ;;
+    *)
+      oops "installApk" "${LINENO}" "installApk() called without parameter" 4
+      return
+      ;;
+  esac
+  local instDir="${TRANSFER_DIR}/${1}"
+  local ret=""
+  if [[ ! -d "${instDir}" ]]; then
+    oops "installApk" "${LINENO}" "no directory for ${1} found, skipping." 4
+    return
+  fi
+  doProgress "- checking for packages to ${1}" 2
+  for apk in ${instDir}/*.apk; do
+    [[ "$apk" = "${instDir}/*.apk" ]] && continue # mask only means no files
+    msg="$((adb ${ADBOPTS} install ${instOpts} "$apk") 2>&1)"
+    if [[ "$msg" == *"INSTALL_FAILED"* ]]; then # Failure [INSTALL_FAILED_INVALID_APK] INSTALL_FAILED_ALREADY_EXISTS
+      ret=${msg//\]/}
+      ret=${ret##*[}
+      ret=$(ansi_code "Failed: ${ret}" "red")
+      doProgress "${msg}" 5
+    else
+      ret="Success"
+      rm -f "$apk"
+    fi
+    doProgress "  + $(basename "$apk"): $ret" 3
+  done
+}
+
+
+#
+# Main Loop
+#
+doTransfer() {
+  if [[ -z "${TRANSFER_DIR}" ]]; then
+    oops "doTransfer" "${LINENO}" "doTransfer() called without TRANSFER_DIR being set" 4
+    return
+  fi
+  doProgress "Dealing with Transfers"
+  if [[ ! -d "${TRANSFER_DIR}" ]]; then
+    oops "doTransfer" "${LINENO}" "-TRANSFER_DIR '${TRANSFER_DIR}' does not exist, skipping." 2
+    return
+  fi
+  installApk install
+  installApk reinstall
+}
