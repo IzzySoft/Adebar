@@ -44,7 +44,37 @@ installApk() {
       ret="Success"
       rm -f "$apk"
     fi
-    doProgress "  + $(basename "$apk"): $ret" 3
+    doProgress "  + $(basename "$apk"): ${ret}" 3
+  done
+}
+
+
+#
+# Push files
+pushFiles() {
+  if [[ -z "${TRANSFER_DIR}" ]]; then
+    echo -e "$(ansi_code "pushFiles called without TRANSFER_DIR being set" "red")"
+    return
+  fi
+  local src="${TRANSFER_DIR}/upload"
+  local ret=""
+  local msg=""
+  if [[ ! -d "$src" ]]; then
+    oops "pushFiles" "${LINENO}" "upload directory '${src}' does not exist, skipping." 4
+    return
+  fi
+  doProgress "- checking for files to push to the device" 2
+  for name in $src/*; do
+    [[ "$name" = "$src/*" ]] && continue # mask only means no files
+    msg="$((adb ${ADBOPTS} push $name $(basename $name)) 2>&1)"
+    if [[ $? -eq 0 ]]; then
+      rm -rf "${name}"
+      ret="Success"
+    else
+      echo -e $(ansi_code "$msg" "red")
+      ret="Failed"
+    fi
+    doProgress "  + $(basename $name): ${ret}" 3
   done
 }
 
@@ -59,9 +89,10 @@ doTransfer() {
   fi
   doProgress "Dealing with Transfers"
   if [[ ! -d "${TRANSFER_DIR}" ]]; then
-    oops "doTransfer" "${LINENO}" "-TRANSFER_DIR '${TRANSFER_DIR}' does not exist, skipping." 2
+    oops "doTransfer" "${LINENO}" "- TRANSFER_DIR '${TRANSFER_DIR}' does not exist, skipping transfers." 2
     return
   fi
   installApk install
   installApk reinstall
+  pushFiles
 }
