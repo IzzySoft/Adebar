@@ -13,7 +13,7 @@ digraph AdebarFiles {
     label = "files pulled from the device";
 
     conf [ shape = folder, label = "./conf" ];
-    conffiles [ shape = Mrecord, fontsize = 11, label = "build.prop|gps.conf|hosts|packages.xml|wpa_supplicant.conf" ];
+    conffiles [ shape = Mrecord, fontsize = 11, label = "build.prop|gps.conf|hosts|packages.xml|wpa_supplicant.conf|softap.conf" ];
     conf -> conffiles;
   }
 

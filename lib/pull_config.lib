@@ -20,6 +20,8 @@ getSettings() {
   # build.prop
   msg="$((adb ${ADBOPTS} pull /system/build.prop "${BUILDPROP}") 2>&1)"
   doProgress "- build.prop: $msg" 2
+
+  # wpa_supplicant.conf
   if [[ ${ROOT_COMPAT} -eq 1 ]]; then
     msg="$((adb ${ADBOPTS} shell "su -c 'cat /data/misc/wifi/wpa_supplicant.conf'" > "${CONFDIR}/wpa_supplicant.conf") 2>&1)"
   else
@@ -27,9 +29,19 @@ getSettings() {
   fi
   [[ $? -ne 0 ]] && msg=$(ansi_code "${msg}" "red")
   [[ -z "$msg" ]] && msg="OK"
-
-  # wpa_supplicant.conf, gps.conf, hosts
   doProgress "- wpa_supplicant.conf: $msg" 2
+
+  # softap.conf
+  if [[ ${ROOT_COMPAT} -eq 1 ]]; then
+    msg="$((adb ${ADBOPTS} shell "su -c 'cat /data/misc/wifi/softap.conf'" > "${CONFDIR}/softap.conf") 2>&1)"
+  else
+    msg="$((adb ${ADBOPTS} pull /data/misc/wifi/softap.conf "${CONFDIR}/softap.conf") 2>&1)"
+  fi
+  [[ $? -ne 0 ]] && msg=$(ansi_code "${msg}" "red")
+  [[ -z "$msg" ]] && msg="OK"
+  doProgress "- softap.conf: $msg" 2
+
+  # gps.conf, hosts
   msg="$((adb ${ADBOPTS} pull /system/etc/gps.conf "${CONFDIR}/gps.conf") 2>&1)"
   doProgress "- gps.conf: $msg" 2
   msg="$((adb ${ADBOPTS} pull /system/etc/hosts "${CONFDIR}/hosts") 2>&1)"
