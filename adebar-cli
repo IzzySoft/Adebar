@@ -53,10 +53,12 @@ APP_INSTALL_SRC[org.fdroid.fdroid]="F-Droid"
 APP_INSTALL_SRC[cm.aptoide.pt]="Aptoide"
 APP_INSTALL_SRC[com.android.vending]="Google Play"
 APP_INSTALL_SRC[com.google.android.feedback]="Google Play (Feedback)"
+APP_INSTALL_SRC[de.robv.android.xposed.installer]="Xposed"
 APP_MARKET_URL[org.fdroid.fdroid]="https://f-droid.org/repository/browse/?fdid=%s"
 APP_MARKET_URL[cm.aptoide.pt]=""
 APP_MARKET_URL[com.android.vending]="https://play.google.com/store/apps/details?id=%s"
 APP_MARKET_URL[com.google.android.feedback]="https://play.google.com/store/apps/details?id=%s"
+APP_MARKET_URL[de.robv.android.xposed.installer]="http://repo.xposed.info/module/%s"
 
 # Misc
 PROGRESS=1
