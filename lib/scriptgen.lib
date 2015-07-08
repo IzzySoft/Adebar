@@ -47,6 +47,11 @@ getUserAppBackup() {
   echo  >> "$backupscript"
   echo "[ ! -d \"${USERDIR}\" ] && mkdir \"${USERDIR}\"" >> "$backupscript"
   echo >> "$backupscript"
+  echo "function doBackup() {" >> "$backupscript"
+  echo -e "  adb ${ADBOPTS} backup -f \"${USERDIR}/\${1}.ab\" -apk \${1}" >> "$backupscript"
+  echo  "  sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
+  echo "}" >> "$backupscript"
+  echo >> "$backupscript"
 
   echo "#!/bin/bash" > "$restorescript"
   echo "# Restore script from ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "$restorescript"
@@ -54,8 +59,7 @@ getUserAppBackup() {
   echo  >> "$restorescript"
 
   for app in "${userApps[@]}"; do
-    echo -e "adb ${ADBOPTS} backup -f \"${USERDIR}/${app}.ab\" -apk $app" >> "$backupscript"
-    echo "sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
+    echo "doBackup ${app}" >> "$backupscript"
     echo -e "adb ${ADBOPTS} restore \"${USERDIR}/${app}.ab\"" >> "$restorescript"
   done
 
@@ -80,6 +84,11 @@ getSystemAppBackup() {
   echo  >> "$backupscript"
   echo "[ ! -d \"${SYSDIR}\" ] && mkdir \"${SYSDIR}\"" >> "$backupscript"
   echo >> "$backupscript"
+  echo "function doBackup() {" >> "$backupscript"
+  echo -e "  adb ${ADBOPTS} backup -f \"${USERDIR}/\${1}.ab\" -apk \${1}" >> "$backupscript"
+  echo  "  sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
+  echo "}" >> "$backupscript"
+  echo >> "$backupscript"
 
   echo "#!/bin/bash" > "$restorescript"
   echo "# Restore script from ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "$restorescript"
@@ -99,12 +108,11 @@ getSystemAppBackup() {
     else
       prep=""
     fi
-    echo -e "${prep}adb ${ADBOPTS} backup -f \"${SYSDIR}/${app}.ab\" -noapk $app" >> "$backupscript"
-    echo "${prep}sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
+    echo "${prep}doBackup ${app}" >> "$backupscript"
     echo -e "${prep}adb ${ADBOPTS} restore \"${SYSDIR}/${app}.ab\"" >> "$restorescript"
     if [ "$app" = "com.android.sharedstoragebackup" ]; then
-      echo -e "else\n echo \"Skipping shared storage\"\nfi" >> "$backupscript"
-      echo -e "else\n echo \"Skipping shared storage\"\nfi" >> "$restorescript"
+      echo -e "else\n  echo \"Skipping shared storage\"\nfi" >> "$backupscript"
+      echo -e "else\n  echo \"Skipping shared storage\"\nfi" >> "$restorescript"
       echo >> "$backupscript"
       echo  >> "$restorescript"
     fi
