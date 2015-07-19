@@ -10,9 +10,20 @@
 #
 # Get app names by package names (if possible)
 # $1: package name
-# $2: whether to retrieve the app name if not found in cache
+# $2: path to apk file (for aapt)
+# $3: whether to retrieve the app name if not found in cache
 #
 getAppname() {
+  if [[ $HAVE_AAPT -eq 1 ]]; then
+    local str="$(adb ${ADBOPTS} shell "aapt d badging $2 2>/dev/null | grep 'application: label' | sed -n \"s/.*label\='\([^']*\)'.*/\1/p\"")" # label='Some App'"
+    str=${str//[$'\t\r\n']} # stupid ^M
+    if [[ -n "${str}" ]]; then
+      [[ -n "${CACHEDIR}" && -e "${CACHEDIR}/appnames" && ! -f "${CACHEDIR}/appnames/$1" ]] && echo -n $str > "${CACHEDIR}/appnames/$1"
+      echo "${str}"
+      return
+    fi
+  fi
+
   if [[ -z "${CACHEDIR}" ]]; then # not even cache available
     echo "$1"
     return
@@ -29,7 +40,7 @@ getAppname() {
     return
   fi
   # not found in cache: optionally call user script/function here
-  if [[ ${2} -gt 0 && -n "${APPNAME_CMD}" ]]; then
+  if [[ ${3} -gt 0 && -n "${APPNAME_CMD}" ]]; then
     name="$(${APPNAME_CMD} $1)"
     if [[ "${name}" != "$1" ]]; then
       echo "${name}" > "${CACHEDIR}/appnames/$1"
@@ -284,6 +295,15 @@ function _makeAppDoc() {
         ;;
   esac
 
+  # check if aapt is available on the device, so we can use it to retrieve e.g. app names
+  local str="$(adb shell "ls /system/bin/aapt")"
+  str=${str//[$'\t\r\n']} # stupid ^M
+  if [[ "${str}" = "/system/bin/aapt" ]]; then
+    local HAVE_AAPT=1
+  else
+    local HAVE_AAPT=0
+  fi
+
   echo "# Installed ${apptype} on ${DEVICE_NAME}" > "${mdfile}"
   echo "(As of $(date '+%Y-%m-%d %H:%M'))" >> "${mdfile}"
   declare -A PK_INFO
@@ -293,7 +313,7 @@ function _makeAppDoc() {
   local CUR_INSTALLER
   local APPNAME
   for app in ${applist[@]}; do
-    APPNAME=$(getAppname "${app}" $_retrieveAppNames)
+    APPNAME=$(getAppname "${app}" "${PK_CODEPATH[$app]}" $_retrieveAppNames)
     if [[ -z "${PK_INSTALLER[$app]}" ]]; then # no installer
       if [[ "${APPNAME}" = "${app}" ]]; then
         tmpstring="+ $app\n"
