@@ -14,6 +14,18 @@
 # $3: whether to retrieve the app name if not found in cache
 #
 getAppname() {
+  # Check cache first (fastest if we have it)
+  if [[ -n "${CACHEDIR}" && -f "${CACHEDIR}/appnames/$1" ]]; then
+    local name="$(cat "${CACHEDIR}/appnames/$1")"
+    name="${name%"${name##*[![:space:]]}"}" # remove trailing spaces
+    name="${name#"${name%%[![:space:]]*}"}" # remove leading spaces
+    if [[ -n "${name}" ]]; then
+      echo "${name}"
+      return
+    fi
+  fi
+
+  # still here, so not found in cache. Try AAPT (if we have it)
   if [[ $HAVE_AAPT -eq 1 ]]; then
     local str="$(adb ${ADBOPTS} shell "aapt d badging $2 2>/dev/null | grep 'application: label' | sed -n \"s/.*label\='\([^']*\)'.*/\1/p\"")" # label='Some App'"
     str=${str//[$'\t\r\n']} # stupid ^M
@@ -24,22 +36,7 @@ getAppname() {
     fi
   fi
 
-  if [[ -z "${CACHEDIR}" ]]; then # not even cache available
-    echo "$1"
-    return
-  fi
-  if [[ -f "${CACHEDIR}/appnames/$1" ]]; then
-    local name="$(cat "${CACHEDIR}/appnames/$1")"
-    name="${name%"${name##*[![:space:]]}"}" # remove trailing spaces
-    name="${name#"${name%%[![:space:]]*}"}" # remove leading spaces
-    if [[ -z "${name}" ]]; then
-      echo "$1"
-    else
-      echo "${name}"
-    fi
-    return
-  fi
-  # not found in cache: optionally call user script/function here
+  # not found in cache nor by AAPT: optionally call user script/function here (if defined)
   if [[ ${3} -gt 0 && -n "${APPNAME_CMD}" ]]; then
     name="$(${APPNAME_CMD} $1)"
     if [[ "${name}" != "$1" ]]; then
@@ -48,6 +45,8 @@ getAppname() {
     echo "${name}"
     return
   fi
+
+  # still here? So we found nothing. Return package_name then.
   echo "$1"
 }
 
