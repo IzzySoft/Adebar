@@ -52,6 +52,51 @@ getAppname() {
 
 
 #
+# Helpers for app usage stats
+# credits to:
+# - http://stackoverflow.com/questions/893585/how-to-parse-xml-in-bash
+# - http://android.stackexchange.com/questions/116625/how-do-i-know-when-an-app-was-used-in-android
+#
+read_dom () {
+    local IFS=\>
+    read -d \< ENTITY CONTENT
+    local RET=$?
+    TAG_NAME=${ENTITY%% *}
+    ATTRIBUTES=${ENTITY#* }
+    return $RET
+}
+# Android JB + KK (verified: 4.1.2 on Cat SG2)
+parse_dom_u4stat () {
+    if [[ $TAG_NAME = "pkg" ]] ; then
+        eval local $ATTRIBUTES
+        currpkg="$name"
+    elif [[ $TAG_NAME = "comp" ]] ; then
+        eval local $ATTRIBUTES 2>/dev/null
+        if [[ -z ${PK_LASTUSED[$currpkg]} || ${PK_LASTUSED[$currpkg]} -lt $lrt ]]; then
+          PK_LASTUSED[$currpkg]=$lrt
+        fi
+    fi
+}
+#
+# Now for the real thing
+getAppUsage() {
+  [[ ! -f "${CONFDIR}/usage-history.xml" ]] && return
+  doProgress "- collecting app usage stats" 2
+  currpkg=
+  while read_dom; do
+    parse_dom_u4stat
+  done < "${CONFDIR}/usage-history.xml"
+
+  for i in "${!PK_LASTUSED[@]}"; do
+    ts=$((${PK_LASTUSED[$i]} / 1000)) # time is in ms
+    if [[ "$(date -d @${ts} +"%Y")" = "1970" ]]; then PK_LASTUSED[$i]=
+    else PK_LASTUSED[$i]="$(date -d @${ts} +"%Y-%m-%d %H:%M:%S")"
+    fi
+  done
+}
+
+
+#
 # Collect app details via dumpsys
 #
 getAppDetails() {
@@ -71,6 +116,7 @@ getAppDetails() {
   declare -A PK_DISABLED      # list of components separated by spaces
   declare -A PK_FLAGS         # flags=[ SYSTEM HAS_CODE ALLOW_TASK_REPARENTING ALLOW_CLEAR_USER_DATA ALLOW_BACKUP LARGE_HEAP ]
   declare -A PK_USERS         # User 0:  installed=true stopped=false notLaunched=false enabled=0
+  declare -A PK_LASTUSED      # Usage stats
   local PKGDUMP=$(tempfile)
   trap "rm -f -- '$PKGDUMP'" RETURN
   local SH_DISABLED="${OUTDIR}/deadReceivers.sh"
@@ -252,6 +298,7 @@ getAppDetails() {
 
   done < "${PKGDUMP}"
 
+  getAppUsage
   echo -e "#!/bin/bash" > "${SH_DISABLED}"
 
   [[ ${MK_USERAPPS} -ne 0 ]] && _makeAppDoc "user"
@@ -260,6 +307,7 @@ getAppDetails() {
   doProgress "- removing temporary dumpfile" 2
   rm -f "${PKGDUMP}"
 }
+
 
 
 #
@@ -330,6 +378,7 @@ function _makeAppDoc() {
     fi
     [[ -n "${PK_FIRSTINSTALL[$app]}" ]] && tmpstring+="    + first installed: ${PK_FIRSTINSTALL[$app]}\n"
     [[ -n "${PK_LASTUPDATE[$app]}" ]]   && tmpstring+="    + last updated: ${PK_LASTUPDATE[$app]}\n"
+    [[ -n "${PK_LASTUSED[$app]}" ]]     && tmpstring+="    + last used: ${PK_LASTUSED[$app]}\n"
     [[ -n "${PK_VERSION[$app]}" ]]      && tmpstring+="    + installed version: ${PK_VERSION[$app]}\n"
     [[ -n "${PK_CODEPATH[$app]}" ]]     && tmpstring+="    + CodePath: \`${PK_CODEPATH[$app]}\`\n"
     [[ -n "${PK_DATADIR[$app]}" ]]      && tmpstring+="    + App data: \`${PK_DATADIR[$app]}\`\n"
