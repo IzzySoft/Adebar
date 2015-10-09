@@ -28,7 +28,7 @@ _fsProcMtd() {
       local src="/proc/mtd"
       ;;
   esac
-  local tmp=$(tempfile)
+  local tmp=$(mktemp)
   local azeile
   local aret
   declare -i counter=-1
@@ -72,7 +72,7 @@ _fsProcDumchar() {
   local aret=$(adb ${ADBOPTS} shell ls /proc/dumchar_info)
   [[ "${aret//[$'\r']}" = "/proc/dumchar_info" ]] && {
     # echo -e "$(ansi_code "Your device seems to have detailed partition info at /proc/dumchar_info. Please get in contact with the dev!" "green")"
-    local tmp=$(tempfile)
+    local tmp=$(mktemp)
     local azeile
     local aret
     declare -i counter=-1
@@ -96,9 +96,9 @@ _fsProcDumchar() {
 # Match them against /proc/partitions and /proc/mounts for names
 _fsProcByName() {
   [[ $((${MK_PARTINFO} + ${MK_PARTBACKUP})) -eq 0 ]] && return
-  local tmp=$(tempfile)
-  local tmp2=$(tempfile)
-  local tmp3=$(tempfile)
+  local tmp=$(mktemp)
+  local tmp2=$(mktemp)
+  local tmp3=$(mktemp)
   adb ${ADBOPTS} shell ls -al /dev/block/platform/*/by-name > "${tmp}"
   adb ${ADBOPTS} shell cat /proc/partitions > "${tmp2}"
   adb ${ADBOPTS} shell cat /proc/mounts > "${tmp3}"
@@ -128,8 +128,8 @@ _fsProcByName() {
 # Last resort: get partition info from /proc/partitions and match against /proc/mounts for names
 _fsProcPart() {
   [[ $((${MK_PARTINFO} + ${MK_PARTBACKUP})) -eq 0 ]] && return
-  local tmp=$(tempfile)
-  local tmp2=$(tempfile)
+  local tmp=$(mktemp)
+  local tmp2=$(mktemp)
   adb ${ADBOPTS} shell cat /proc/partitions > "${tmp}"
   adb ${ADBOPTS} shell cat /proc/mounts > "${tmp2}"
   local azeile

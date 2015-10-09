@@ -117,7 +117,7 @@ getAppDetails() {
   declare -A PK_FLAGS         # flags=[ SYSTEM HAS_CODE ALLOW_TASK_REPARENTING ALLOW_CLEAR_USER_DATA ALLOW_BACKUP LARGE_HEAP ]
   declare -A PK_USERS         # User 0:  installed=true stopped=false notLaunched=false enabled=0
   declare -A PK_LASTUSED      # Usage stats
-  local PKGDUMP=$(tempfile)
+  local PKGDUMP=$(mktemp)
   trap "rm -f -- '$PKGDUMP'" RETURN
   local SH_DISABLED="${OUTDIR}/deadReceivers.sh"
 

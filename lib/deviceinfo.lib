@@ -18,7 +18,7 @@ getDeviceInfo() {
   local msg=""
   local left
   local right
-  local tmp=$(tempfile)
+  local tmp=$(mktemp)
   trap "rm -f -- '$tmp'" RETURN
 
   echo "# ${DEVICE_NAME} Device Information" > "$devicedoc"
