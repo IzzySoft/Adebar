@@ -67,6 +67,9 @@ _fsProcMtd() {
 #
 # Get partition info from /proc/dumchar_info
 # Not yet implemented – just to lure in possible testers :)
+# /proc/dumchar_info : MTK (MediaTek) based devices – we have no device to test this with
+#   ^Part_Name    Size               StartAddr         Type   MapTo
+#   ^preloader    0x0000000000040000 0x0000000000000000   2   /dev/misc-sd
 _fsProcDumchar() {
   [[ $((${MK_PARTINFO} + ${MK_PARTBACKUP})) -eq 0 ]] && return
   local aret=$(adb ${ADBOPTS} shell ls /proc/dumchar_info)
@@ -218,6 +221,7 @@ _fsPartDoc() {
 # this does not create/write-to any files (neither docu nor scripts), just collects information
 getPartInfo() {
   [[ $((${MK_PARTINFO} + ${MK_PARTBACKUP})) -eq 0 ]] && return
+  doProgress "Collecting partition details"
   _fsProcDumchar # check for possible testers :)
   if [[ ${#MTD_D[*]} -gt 0 ]]; then
     PARTITION_SRC="dumchar"
@@ -245,9 +249,6 @@ getPartInfo() {
   fi
   # still here? So we've got nothing from the sources set up currently.
   # more candidates:
-  # - /proc/dumchar_info : MTK (MediaTek) based devices – we have no device to test this with
-  #     ^Part_Name    Size               StartAddr         Type   MapTo
-  #     ^preloader    0x0000000000040000 0x0000000000000000   2   /dev/misc-sd
   # - fdisk -l ?
 }
 
