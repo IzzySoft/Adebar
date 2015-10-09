@@ -90,7 +90,8 @@ _fsProcDumchar() {
       MTD_DEV[${counter}]="${azeile[4]}"
       MTD_NAME[${counter}]="${azeile[0]}"
       MTD_SIZE[${counter}]="$((${azeile[1]}/1024))"
-    done
+      counter+=1
+    done < "${tmp}"
   }
 }
 
