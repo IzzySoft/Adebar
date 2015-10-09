@@ -79,11 +79,17 @@ declare -A OOPSES    # array to store which lines where already reported
 BINDIR="${0%/*}"
 
 # check parameters
-if [ -z "$1" ]; then
+if [[ -z "$1" || "$1" = "-h" || "$1" = "--help" ]]; then
   echo
   echo "Syntax: $0 <config|target_directory> [suffix]"
-  if [[ -d "${BINDIR}/config" ]]; then
+  echo
+  if [[ ! -d "${BINDIR}/config" || "$1" = "-h" || "$1" = "--help" ]]; then
+    echo "There are no more command-line parameters currently, everything is"
+    echo "controlled via config files. For details, please see the project's"
+    echo "wiki at https://github.com/IzzySoft/Adebar/wiki/Configuration"
     echo
+  fi
+  if [[ -d "${BINDIR}/config" ]]; then
     echo "Available config files:"
     for con in "${BINDIR}"/config/*; do
       [[ -f "${con}" ]] && echo "- $(basename ${con})"
