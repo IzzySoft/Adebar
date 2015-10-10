@@ -66,15 +66,13 @@ _fsProcMtd() {
 
 #
 # Get partition info from /proc/dumchar_info
-# Not yet implemented – just to lure in possible testers :)
-# /proc/dumchar_info : MTK (MediaTek) based devices – we have no device to test this with
+# /proc/dumchar_info : MTK (MediaTek) based devices
 #   ^Part_Name    Size               StartAddr         Type   MapTo
 #   ^preloader    0x0000000000040000 0x0000000000000000   2   /dev/misc-sd
 _fsProcDumchar() {
   [[ $((${MK_PARTINFO} + ${MK_PARTBACKUP})) -eq 0 ]] && return
   local aret=$(adb ${ADBOPTS} shell ls /proc/dumchar_info)
   [[ "${aret//[$'\r']}" = "/proc/dumchar_info" ]] && {
-    # echo -e "$(ansi_code "Your device seems to have detailed partition info at /proc/dumchar_info. Please get in contact with the dev!" "green")"
     local tmp=$(mktemp)
     local azeile
     local aret
