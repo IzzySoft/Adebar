@@ -284,21 +284,27 @@ initAppLists() {
 
   doProgress "- userApps" 2
   for app in $(adb ${ADBOPTS} shell pm list packages -3 2>/dev/null); do
-    app=${app//[$'\t\r\n']} # remove trailing CR (^M)
-    userApps+=(${app##*:})
+    if [[ "${app}" =~ ^package: ]]; then
+      app=${app//[$'\t\r\n']} # remove trailing CR (^M)
+      userApps+=(${app##*:})
+    fi
   done
   doProgress "- systemApps" 2
   for app in $(adb ${ADBOPTS} shell pm list packages -s 2>/dev/null); do
-    app=${app//[$'\t\r\n']}
-    sysApps+=(${app##*:})
+    if [[ "${app}" =~ ^package: ]]; then
+      app=${app//[$'\t\r\n']}
+      sysApps+=(${app##*:})
+    fi
   done
   doProgress "- checking for uninstalled apps remembered by the system" 2
   for app in $(adb ${ADBOPTS} shell pm list packages -u 2>/dev/null); do
-    app=${app//[$'\t\r\n']}
-    in_array "${app##*:}" ${sysApps[@]} && continue
-    in_array "${app##*:}" ${userApps[@]} && continue
-    dApps+=($app)
-    echo "Removed app: ${app##*:}"
+    if [[ "${app}" =~ ^package: ]]; then
+      app=${app//[$'\t\r\n']}
+      in_array "${app##*:}" ${sysApps[@]} && continue
+      in_array "${app##*:}" ${userApps[@]} && continue
+      dApps+=($app)
+      echo "Found removed app entry: ${app##*:}"
+    fi
   done
 }
 

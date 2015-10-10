@@ -22,8 +22,10 @@ getDisabled() {
   echo >> "${scriptname}"
 
   for app in $(adb ${ADBOPTS} shell "pm list packages -d 2>/dev/null"); do
-    app=${app//[$'\t\r\n']}
-    echo "adb ${ADBOPTS} shell \"pm disable ${app##*:}\"" >> "${scriptname}"
+    if [[ "${app}" =~ ^package: ]]; then
+      app=${app//[$'\t\r\n']}
+      echo "adb ${ADBOPTS} shell \"pm disable ${app##*:}\"" >> "${scriptname}"
+    fi
   done
 
   chmod u+x "${scriptname}"
