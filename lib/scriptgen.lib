@@ -21,7 +21,7 @@ getDisabled() {
   echo "# Disabled apps for ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "${scriptname}"
   echo >> "${scriptname}"
 
-  for app in $(adb ${ADBOPTS} shell "pm list packages -d"); do
+  for app in $(adb ${ADBOPTS} shell "pm list packages -d 2>/dev/null"); do
     app=${app//[$'\t\r\n']}
     echo "adb ${ADBOPTS} shell \"pm disable ${app##*:}\"" >> "${scriptname}"
   done

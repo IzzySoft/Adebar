@@ -283,17 +283,17 @@ initAppLists() {
   doProgress "Gathering lists of installed apps"
 
   doProgress "- userApps" 2
-  for app in $(adb ${ADBOPTS} shell pm list packages -3); do
+  for app in $(adb ${ADBOPTS} shell pm list packages -3 2>/dev/null); do
     app=${app//[$'\t\r\n']} # remove trailing CR (^M)
     userApps+=(${app##*:})
   done
   doProgress "- systemApps" 2
-  for app in $(adb ${ADBOPTS} shell pm list packages -s); do
+  for app in $(adb ${ADBOPTS} shell pm list packages -s 2>/dev/null); do
     app=${app//[$'\t\r\n']}
     sysApps+=(${app##*:})
   done
   doProgress "- checking for uninstalled apps remembered by the system" 2
-  for app in $(adb ${ADBOPTS} shell pm list packages -u); do
+  for app in $(adb ${ADBOPTS} shell pm list packages -u 2>/dev/null); do
     app=${app//[$'\t\r\n']}
     in_array "${app##*:}" ${sysApps[@]} && continue
     in_array "${app##*:}" ${userApps[@]} && continue
