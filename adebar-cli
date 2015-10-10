@@ -303,7 +303,7 @@ initAppLists() {
       in_array "${app##*:}" ${sysApps[@]} && continue
       in_array "${app##*:}" ${userApps[@]} && continue
       dApps+=($app)
-      echo "Found removed app entry: ${app##*:}"
+      doProgress "  + ${app##*:}" 4
     fi
   done
 }
