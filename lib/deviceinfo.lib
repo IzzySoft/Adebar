@@ -202,11 +202,25 @@ getDeviceInfo() {
   if [[ -n "${DEVPROP[gsm.operator.alpha]}" ]]; then # Provider info
     doProgress "  + Provider info" 3
     echo >> "$devicedoc"
-    echo "### Provider info" >> "$devicedoc"
+    if [[ -n "${DEVPROP[gsm.operator.alpha.2]}" ]]; then # Dual-SIM device
+      echo "### Provider info (SIM1)" >> "$devicedoc"
+    else
+      echo "### Provider info" >> "$devicedoc"
+    fi
     echo "* Mobile provider: ${DEVPROP[gsm.operator.alpha]}" >> "$devicedoc"
     [[ -n "${DEVPROP[gsm.operator.iso-country]}" ]] && echo "* Provider country: ${DEVPROP[gsm.operator.iso-country]}" >> "$devicedoc"
     [[ -n "${DEVPROP[gsm.operator.numeric]}" ]] && echo "* Provider code: ${DEVPROP[gsm.operator.numeric]}" >> "$devicedoc"
     [[ -n "${DEVPROP[gsm.sim.state]}" ]] && echo "* SIM state: ${DEVPROP[gsm.sim.state]}" >> "$devicedoc"
+  fi
+
+  if [[ -n "${DEVPROP[gsm.operator.alpha.2]}" ]]; then # Provider info 2nd SIM (Dual-SIM devices)
+    doProgress "  + Provider info (SIM2)" 3
+    echo >> "$devicedoc"
+    echo "### Provider info (SIM2)" >> "$devicedoc"
+    echo "* Mobile provider: ${DEVPROP[gsm.operator.alpha]}" >> "$devicedoc"
+    [[ -n "${DEVPROP[gsm.operator.iso-country.2]}" ]] && echo "* Provider country: ${DEVPROP[gsm.operator.iso-country.2]}" >> "$devicedoc"
+    [[ -n "${DEVPROP[gsm.operator.numeric.2]}" ]] && echo "* Provider code: ${DEVPROP[gsm.operator.numeric.2]}" >> "$devicedoc"
+    [[ -n "${DEVPROP[gsm.sim.state.2]}" ]] && echo "* SIM state: ${DEVPROP[gsm.sim.state.2]}" >> "$devicedoc"
   fi
 
 
