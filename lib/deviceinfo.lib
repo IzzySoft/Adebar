@@ -217,7 +217,7 @@ getDeviceInfo() {
     doProgress "  + Provider info (SIM2)" 3
     echo >> "$devicedoc"
     echo "### Provider info (SIM2)" >> "$devicedoc"
-    echo "* Mobile provider: ${DEVPROP[gsm.operator.alpha]}" >> "$devicedoc"
+    echo "* Mobile provider: ${DEVPROP[gsm.operator.alpha.2]}" >> "$devicedoc"
     [[ -n "${DEVPROP[gsm.operator.iso-country.2]}" ]] && echo "* Provider country: ${DEVPROP[gsm.operator.iso-country.2]}" >> "$devicedoc"
     [[ -n "${DEVPROP[gsm.operator.numeric.2]}" ]] && echo "* Provider code: ${DEVPROP[gsm.operator.numeric.2]}" >> "$devicedoc"
     [[ -n "${DEVPROP[gsm.sim.state.2]}" ]] && echo "* SIM state: ${DEVPROP[gsm.sim.state.2]}" >> "$devicedoc"
