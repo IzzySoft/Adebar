@@ -150,8 +150,11 @@ getAppDetails() {
       pkg)
         tmpstring="${zeile%%=*}"
         tmpstring="${tmpstring##*[[:space:]]}"
+        # we skip some details here. Later we might decide to integrate them.
         in_array $tmpstring "${P_SKIP[@]}" && continue
         [[ "$zeile" = "    grantedPermissions:" ]] && continue
+        [[ "$zeile" = "    usesOptionalLibraries:" ]] && continue
+        [[ "$zeile" = "    usesLibraryFiles:" ]] && continue
         [[ "${zeile:0:6}" = "      " ]] && continue
         [[ -z "${zeile%%* }" ]] && break # end of package list is an empty line, sometimes with spaces
         case "$tmpstring" in
