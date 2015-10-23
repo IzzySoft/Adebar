@@ -45,6 +45,9 @@ MK_APPDISABLE=1
 # create the script to backup user apps+data / system app-data
 MK_USERBACKUP=1
 MK_SYSBACKUP=1
+# on running the restore scripts for apps, what delay should be between two apps?
+# p = "prompt", 0..99 = delay in seconds
+MK_APPRESTORE_DELAY=p
 # pull settings/configs from the device
 PULL_SETTINGS=1
 # create the script to pull stuff from the TiBu web server

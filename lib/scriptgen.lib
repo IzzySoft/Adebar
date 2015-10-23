@@ -59,10 +59,27 @@ getUserAppBackup() {
   echo "# Restore script from ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "$restorescript"
   echo "# Restores all app backups. Comment out (or delete) those you do not wish to restore." >> "$restorescript"
   echo  >> "$restorescript"
+  echo "function doRestore() {" >> "$restorescript"
+  if [[ "${MK_APPRESTORE_DELAY,,}" = "p" ]]; then
+    echo "  read -n 1 -p \"Do you wish to restore \${1#*/} now? (Y/n) \" res" >> "$restorescript"
+    echo "  echo" >> "$restorescript"
+    echo "  if [ \"\${res,,}\" = \"y\" ]; then" >> "$restorescript"
+    echo "    adb ${ADBOPTS} restore \${1}" >> "$restorescript"
+    echo "  else" >> "$restorescript"
+    echo "    echo \"Skipping \${1#*/}\"" >> "$restorescript"
+    echo "  fi" >> "$restorescript"
+  elif [[ ${MK_APPRESTORE_DELAY} =~ ^-?[0-9]+$ ]]; then
+    echo "  sleep ${MK_APPRESTORE_DELAY}" >> "$restorescript"
+    echo "  adb ${ADBOPTS} restore \$1" >> "$restorescript"
+  else # fallback for invalid setting
+    echo "  adb ${ADBOPTS} restore \$1" >> "$restorescript"
+  fi
+  echo "}" >> "$restorescript"
+  echo  >> "$restorescript"
 
   for app in "${userApps[@]}"; do
     echo "doBackup ${app}" >> "$backupscript"
-    echo -e "adb ${ADBOPTS} restore \"${USERDIR}/${app}.ab\"" >> "$restorescript"
+    echo -e "doRestore \"${USERDIR}/${app}.ab\"" >> "$restorescript"
   done
 
   chmod u+x "$backupscript" "$restorescript"
@@ -96,6 +113,23 @@ getSystemAppBackup() {
   echo "# Restore script from ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "$restorescript"
   echo -e "# Restores all system app data backups.\n# DRAGONS HERE: this might fail if you restore to a different\n# device/Android version/ROM, so be careful!\n# Comment out/delete what you do not wish to restore." >> "$restorescript"
   echo  >> "$restorescript"
+  echo "function doRestore() {" >> "$restorescript"
+  if [[ "${MK_APPRESTORE_DELAY,,}" = "p" ]]; then
+    echo "  read -n 1 -p \"Do you wish to restore \${1#*/} now? (Y/n) \" res" >> "$restorescript"
+    echo "  echo" >> "$restorescript"
+    echo "  if [ \"\${res,,}\" = \"y\" ]; then" >> "$restorescript"
+    echo "    adb ${ADBOPTS} restore \$1" >> "$restorescript"
+    echo "  else" >> "$restorescript"
+    echo "    echo \"Skipping \${1#*/}\"" >> "$restorescript"
+    echo "  fi" >> "$restorescript"
+  elif [[ ${MK_APPRESTORE_DELAY} =~ ^-?[0-9]+$ ]]; then
+    echo "  sleep ${MK_APPRESTORE_DELAY}" >> "$restorescript"
+    echo "  adb ${ADBOPTS} restore \$1" >> "$restorescript"
+  else # fallback for invalid setting
+    echo "  adb ${ADBOPTS} restore \$1" >> "$restorescript"
+  fi
+  echo "}" >> "$restorescript"
+  echo  >> "$restorescript"
 
   for app in "${sysApps[@]}"; do
     prep=""
@@ -111,7 +145,7 @@ getSystemAppBackup() {
       prep=""
     fi
     echo "${prep}doBackup ${app}" >> "$backupscript"
-    echo -e "${prep}adb ${ADBOPTS} restore \"${SYSDIR}/${app}.ab\"" >> "$restorescript"
+    echo -e "${prep}doRestore \"${SYSDIR}/${app}.ab\"" >> "$restorescript"
     if [ "$app" = "com.android.sharedstoragebackup" ]; then
       echo -e "else\n  echo \"Skipping shared storage\"\nfi" >> "$backupscript"
       echo -e "else\n  echo \"Skipping shared storage\"\nfi" >> "$restorescript"
