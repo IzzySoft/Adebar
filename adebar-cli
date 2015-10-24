@@ -33,8 +33,8 @@ MK_APPDISABLE=1
 MK_USERBACKUP=1
 MK_SYSBACKUP=1
 MK_APPRESTORE_DELAY=p
-MK_XPOSED_EXPORT=0
-MK_XPOSED_PULL=0
+MK_XPRIVACY_EXPORT=0
+MK_XPRIVACY_PULL=0
 PULL_SETTINGS=1
 MK_TIBU=0
 MK_USERAPPS=1
@@ -387,7 +387,7 @@ initAppLists
 [[ ${MK_PARTBACKUP} -gt 0 ]] && writePartDumpScript
 [[ ${MK_DEVICEINFO} -gt 0 ]] && getDeviceInfo
 [[ $PULL_SETTINGS -eq 1 ]] && getSettings
-[[ $(($MK_XPOSED_EXPORT + $MK_XPOSED_PULL)) -gt 0 ]] && getXPrivacy
+[[ $(($MK_XPRIVACY_EXPORT + $MK_XPRIVACY_PULL)) -gt 0 ]] && getXPrivacy
 [[ $MK_TIBU -eq 1 ]] && getTibu
 [[ -n "${TRANSFER_DIR}" ]] && doTransfer
 [[ $((${MK_USERAPPS} + ${MK_SYSAPPS})) -ne 0 ]] && getAppDetails

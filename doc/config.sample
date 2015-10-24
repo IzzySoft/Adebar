@@ -49,9 +49,9 @@ MK_SYSBACKUP=1
 # p = "prompt", 0..99 = delay in seconds
 MK_APPRESTORE_DELAY=p
 # trigger an export from XPosed and pull it. Requires XPrivacy PRO key.
-MK_XPOSED_EXPORT=0
+MK_XPRIVACY_EXPORT=0
 # pull the XPrivacy databases when found (not contained in adb backup; root required)
-MK_XPOSED_PULL=0
+MK_XPRIVACY_PULL=0
 # pull settings/configs from the device
 PULL_SETTINGS=1
 # create the script to pull stuff from the TiBu web server

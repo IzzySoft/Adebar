@@ -78,10 +78,10 @@ getSettings() {
 # Get XPrivacy data
 #
 getXPrivacy() {
-  [[ $MK_XPOSED_EXPORT -lt 1 && $MK_XPOSED_PULL -lt 1 ]] && return
+  [[ $MK_XPRIVACY_EXPORT -lt 1 && $MK_XPRIVACY_PULL -lt 1 ]] && return
   doProgress "Looking for XPrivacy data"
 
-  [[ $MK_XPOSED_EXPORT -gt 0 ]] && {
+  [[ $MK_XPRIVACY_EXPORT -gt 0 ]] && {
     doProgress "- triggering XPrivacy export" 2
     local filename="/sdcard/xprivacy_$(date +"%Y%m%d_%H%M%S").xml"
     local msg="$((adb ${ADBOPTS} shell "am start -a biz.bokhorst.xprivacy.action.EXPORT -e FileName ${filename}") 2>&1)"
@@ -102,7 +102,7 @@ getXPrivacy() {
     fi
   }
 
-  [[ $MK_XPOSED_PULL -gt 0 ]] && {
+  [[ $MK_XPRIVACY_PULL -gt 0 ]] && {
     [[ -n "$(adb ${ADBOPTS} shell 'su -c "ls /data/system/xprivacy 2>/dev/null"')" ]] && {
       doProgress "- pulling XPrivacy databases" 2
       mkdir "${CONFDIR}/xprivacy_dbs"
