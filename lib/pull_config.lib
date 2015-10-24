@@ -74,3 +74,53 @@ getSettings() {
   # ?
 }
 
+#
+# Get XPrivacy data
+#
+getXPrivacy() {
+  [[ $MK_XPOSED_EXPORT -lt 1 && $MK_XPOSED_PULL -lt 1 ]] && return
+  doProgress "Looking for XPrivacy data"
+
+  [[ $MK_XPOSED_EXPORT -gt 0 ]] && {
+    doProgress "- triggering XPrivacy export" 2
+    local filename="/sdcard/xprivacy_$(date +"%Y%m%d_%H%M%S").xml"
+    local msg="$((adb ${ADBOPTS} shell "am start -a biz.bokhorst.xprivacy.action.EXPORT -e FileName ${filename}") 2>&1)"
+    local -i sleepcount=0
+    while [[ $sleepcount -lt 10 ]] # 20s should be sufficient, else something went wrong
+    do
+      sleep 2 # give it some time to complete
+      sleepcount+=1
+      [[ -n "$(adb ${ADBOPTS} shell ls ${filename%/*}/ | grep ${filename##*/})" ]] && break
+    done
+    if [[ -n "$(adb ${ADBOPTS} shell ls ${filename%/*}/ | grep ${filename##*/})" ]]; then
+      sleep 2 # just another safeguard to ensure export is complete
+      local msg="$((adb ${ADBOPTS} pull ${filename} "${CONFDIR}/xprivacy.xml") 2>&1)"
+      adb ${ADBOPTS} shell rm ${filename}
+      [[ -f "${CONFDIR}/xprivacy.xml" ]] && gzip -9 "${CONFDIR}/xprivacy.xml"
+    else
+      echo -e "$(ansi_code "failed to pull export from XPrivacy. Are you sure you're running its PRO version?" "red")"
+    fi
+  }
+
+  [[ $MK_XPOSED_PULL -gt 0 ]] && {
+    [[ -n "$(adb ${ADBOPTS} shell 'su -c "ls /data/system/xprivacy 2>/dev/null"')" ]] && {
+      doProgress "- pulling XPrivacy databases" 2
+      mkdir "${CONFDIR}/xprivacy_dbs"
+      if [[ ${ROOT_COMPAT} -eq 1 ]]; then
+        local tmpdir="/sdcard/xprivacy_$(date +"%Y%m%d_%H%M%S")"
+        local msg="$((adb ${ADBOPTS} shell "su -c \"cp -a /data/system/xprivacy $tmpdir\"") 2>&1)"
+        if [[ "$msg" =~ "Permission denied" ]]; then
+          echo -e "$(ansi_code "$msg" "red")"
+        else # empty = OK (so maybe we need another check here)
+          msg="$((adb ${ADBOPTS} pull $tmpdir "${CONFDIR}/xprivacy_dbs") 2>&1)" # if OK, starts with "pull: building file list..."
+        fi
+        local msg2="$((adb ${ADBOPTS} shell rm -rf $tmpdir) 2>&1)" # empty $msg2 should mean success
+      else
+        local msg="$((adb ${ADBOPTS} pull /data/system/xprivacy "${CONFDIR}/xprivacy_dbs") 2>&1)"
+      fi
+      cd "${CONFDIR}"
+      tar czf "xprivacy_dbs.tar.gz" "xprivacy_dbs" && rm -rf "xprivacy_dbs"
+      cd - >/dev/null 2>&1
+    }
+  }
+}
