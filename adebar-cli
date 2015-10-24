@@ -193,13 +193,12 @@ fi
 
 # Load libraries if needed
 [[ $((${MK_PARTINFO} + ${MK_PARTBACKUP})) -gt 0 ]] && . "${BINDIR}/lib/partitions.lib"
-[[ $PULL_SETTINGS -eq 1 ]] && . "${BINDIR}/lib/pull_config.lib"
+[[ $(($PULL_SETTINGS + $MK_XPRIVACY_EXPORT + $MK_XPRIVACY_PULL)) -gt 0 ]] && . "${BINDIR}/lib/pull_config.lib"
 [[ $MK_TIBU -eq 1 ]] && . "${BINDIR}/lib/tibu.lib"
 [[ $((${MK_APPDISABLE} + ${MK_USERBACKUP} + ${MK_SYSBACKUP} + ${MK_INSTALLLOC})) -gt 0 ]] && . "${BINDIR}/lib/scriptgen.lib"
 [[ ${MK_DEVICEINFO} -gt 0 ]] && . "${BINDIR}/lib/deviceinfo.lib"
 [[ $((${MK_USERAPPS} + ${MK_SYSAPPS})) -ne 0 ]] && . "${BINDIR}/lib/packagedata.lib"
 [[ -n "${TRANSFER_DIR}" ]] && . "${BINDIR}/lib/transfer.lib"
-
 
 declare -a userApps # list of package names
 declare -a sysApps
