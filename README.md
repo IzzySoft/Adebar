@@ -18,8 +18,8 @@ As a side-effect, *Adebar* generates a „report“ (or „short documentation�
 * a shell script to create disk images of your device's partitions
 * a shell script to download contents of your internal/external SDCards and Backups via Titanium Backup's built-in web server
 * a shell script to disable (freeze) all apps you had disabled/frozen on your device
-* it pulls the `wpa_supplicant.conf` from your device, which holds information on all WiFi APs you've configured (requires the ADB daemon to run in root mode) – and also some more configuration files.
-* it pulls the `packages.xml` from your device, which holds all information about apps installed on your device (with Android 4.1 and above, this again requires the ADB daemon to run in root mode)
+* it pulls the `wpa_supplicant.conf` from your device, which holds information on all WiFi APs you've configured (root required) – and also some more configuration files.
+* it pulls the `packages.xml` from your device, which holds all information about apps installed on your device (with Android 4.1 and above, this again requires root)
 * a shell script to disable all broadcast receivers (aka "auto-starts") which were disabled on the given device
 * a [Markdown][2] file listing all user-installed apps with their sources you've installed them from (e.g. *Google Play*, *F-Droid*, *Aptoide*), date of first install/last update, installed version, and more (see [example `userApps.md` in the Wiki](https://github.com/IzzySoft/Adebar/wiki/example-userApps.md)).
 * a [Markdown][2] file with some general device documentation (see above – and the [example `deviceInfo.md` in the wiki](https://github.com/IzzySoft/Adebar/wiki/example-deviceInfo.md)).
@@ -37,6 +37,7 @@ Most of them should already be obvious from above description. Nevertheless, all
 * **ADB** installed (and configured for your device) on your computer. This can either be the [complete Android SDK](https://developer.android.com/sdk/index.html "Android SDK at Android Developers"), or a [minimal installation of ADB](http://android.stackexchange.com/q/42474/16575 "Android.SE: Is there a minimal installation of ADB?").
 * **Bash** (version 4 or higher). As this is a very common shell environment, it's available by default on most Linux distributions. If you're a Windows user: sorry, the only windows I have are for light and fresh air.
 * **Android 4.0+**: As the `adb backup` and `adb restore` commands have not been present before Android 4.0, *Adebar* will not be of much use with devices running older versions – except for, maybe, creating a „device documentation“ as outlined above.
+* some features require root on the Android device
 
 
 ## More details
