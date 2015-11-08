@@ -20,6 +20,7 @@ TRANSFER_DIR=""
 # -------------------=[ device specifics ]=--
 SERIAL=""
 DEVICE_NAME="MyDroid"
+BACKUP_PASSWORD=""
 
 # ---------------------=[ TiBu specifics ]=--
 DEVICE_IP=
@@ -72,6 +73,7 @@ KEEP_SUBDIR_GENERATIONS=0
 POSTRUN_CMD=""
 APPNAME_CMD=""
 ROOT_COMPAT=0
+AUTO_CONFIRM=0
 
 # Internal use / debugging
 _OOPS_LEVEL_ADJUST=0 # 0=no_adjust; increase to "hide" oopses, decrease to force them to be revealed even on lower levels
