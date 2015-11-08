@@ -27,9 +27,8 @@ TRANSFER_DIR=""
 #SERIAL="1234567890ABCDEF"
 # Give you device a name you can understand
 DEVICE_NAME="MyDroid"
-# If you set up encryption for backups enter it here, so
-# automatically confirmed backups will work.
-# Remember, this is plain text!!!
+# If you set up encryption for backups enter your password here, so
+# automatically confirmed backups will work. Remember, this is plain text!!!
 BACKUP_PASSWORD=""
 
 # ---------------------=[ TiBu specifics ]=--
@@ -110,7 +109,8 @@ POSTRUN_CMD=""
 APPNAME_CMD=""
 # If your device is rooted, but the ADB daemon does not run in root mode, set this to 1
 ROOT_COMPAT=0
-# Wether backups should be automatically confirmed via keypresses send with adb (set to 1 to enable)
+# Wether backups should be automatically confirmed via keypresses send with adb
+# (set to 1 to enable)
 AUTO_CONFIRM=1
 
 # ------------=[ Example postrun function ]=--
