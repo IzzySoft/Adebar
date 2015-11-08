@@ -28,7 +28,8 @@ TRANSFER_DIR=""
 # Give you device a name you can understand
 DEVICE_NAME="MyDroid"
 # If you set up encryption for backups enter your password here, so
-# automatically confirmed backups will work. Remember, this is plain text!!!
+# automatically confirmed backups will work.
+# Remember, this is plain text!!! Also: spaces in passwords currently don't work
 BACKUP_PASSWORD=""
 
 # ---------------------=[ TiBu specifics ]=--
