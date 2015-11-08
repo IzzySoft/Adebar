@@ -50,6 +50,7 @@ getUserAppBackup() {
   echo "[ ! -d \"${USERDIR}\" ] && mkdir \"${USERDIR}\"" >> "$backupscript"
   echo >> "$backupscript"
   echo "function doBackup() {" >> "$backupscript"
+  echo -e "  echo \"backing up: \${1}\"" >> "$backupscript"
   echo -e "  adb ${ADBOPTS} backup -f \"${USERDIR}/\${1}.ab\" -apk \${1}" >> "$backupscript"
   echo  "  sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
   echo "}" >> "$backupscript"
@@ -134,6 +135,7 @@ getSystemAppBackup() {
   echo "[ ! -d \"${SYSDIR}\" ] && mkdir \"${SYSDIR}\"" >> "$backupscript"
   echo >> "$backupscript"
   echo "function doBackup() {" >> "$backupscript"
+  echo -e "  echo \"backing up: \${1}\"" >> "$backupscript"
   echo -e "  adb ${ADBOPTS} backup -f \"${SYSDIR}/\${1}.ab\" -noapk \${1}" >> "$backupscript"
   echo  "  sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
   echo "}" >> "$backupscript"
