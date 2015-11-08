@@ -50,10 +50,35 @@ getUserAppBackup() {
   echo "[ ! -d \"${USERDIR}\" ] && mkdir \"${USERDIR}\"" >> "$backupscript"
   echo >> "$backupscript"
   echo "function doBackup() {" >> "$backupscript"
+  echo -e "  echo \"backing up: \${1}\"" >> "$backupscript"
   echo -e "  adb ${ADBOPTS} backup -f \"${USERDIR}/\${1}.ab\" -apk \${1}" >> "$backupscript"
   echo  "  sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
   echo "}" >> "$backupscript"
   echo >> "$backupscript"
+
+  if [[ "${AUTO_CONFIRM}" -eq 1 ]]; then
+      echo "function autoConfirm() {" >> "$backupscript"
+      if [[ ! -z "${BACKUP_PASSWORD}" ]]; then
+          echo -e "    adb ${ADBOPTS} shell input text \"${BACKUP_PASSWORD}\" \\" >> "$backupscript"
+          echo    "    && sleep 1" >> "$backupscript" # wait between sending text and keycodes
+      fi
+      echo -e "    adb ${ADBOPTS} shell input keyevent 22 \\" >> "$backupscript"
+      echo    "    && sleep 1 \\" >> "$backupscript" # wait between keycodes
+      echo -e "    && adb ${ADBOPTS} shell input keyevent 23" >> "$backupscript"
+      echo "}" >> "$backupscript"
+      echo >> "$backupscript"
+      echo    "function autoConfirmedBackup() {" >> "$backupscript"
+      echo -e "    doBackup \"\${1}\" &" >> "$backupscript"
+      echo -e "    JOB=\$!" >> "$backupscript"
+      echo -e "    sleep 1" >> "$backupscript"
+      echo -e "    autoConfirm" >> "$backupscript"
+      echo -e "    while [[ \$? == 0 ]]; do" >> "$backupscript"
+      echo -e "        sleep 1" >> "$backupscript"
+      echo -e "        ps -p \${JOB} &>/dev/null" >> "$backupscript"
+      echo -e "    done" >> "$backupscript"
+      echo -e "}" >> "$backupscript"
+      echo >> "$backupscript"
+  fi
 
   echo "#!/bin/bash" > "$restorescript"
   echo "# Restore script from ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "$restorescript"
@@ -80,7 +105,11 @@ getUserAppBackup() {
   echo  >> "$restorescript"
 
   for app in "${userApps[@]}"; do
-    echo "doBackup ${app}" >> "$backupscript"
+    if [[ "${AUTO_CONFIRM}" -eq 1 ]]; then
+        echo "autoConfirmedBackup ${app}" >> "$backupscript"
+    else
+        echo "doBackup ${app}" >> "$backupscript"
+    fi
     echo -e "doRestore \"${USERDIR}/${app}.ab\"" >> "$restorescript"
   done
 
@@ -106,10 +135,36 @@ getSystemAppBackup() {
   echo "[ ! -d \"${SYSDIR}\" ] && mkdir \"${SYSDIR}\"" >> "$backupscript"
   echo >> "$backupscript"
   echo "function doBackup() {" >> "$backupscript"
+  echo -e "  echo \"backing up: \${1}\"" >> "$backupscript"
   echo -e "  adb ${ADBOPTS} backup -f \"${SYSDIR}/\${1}.ab\" -noapk \${1}" >> "$backupscript"
   echo  "  sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
   echo "}" >> "$backupscript"
   echo >> "$backupscript"
+
+  if [[ "${AUTO_CONFIRM}" -eq 1 ]]; then
+      echo "function autoConfirm() {" >> "$backupscript"
+          if [[ ! -z "${BACKUP_PASSWORD}" ]]; then
+              echo -e "    adb ${ADBOPTS} shell input text \"${BACKUP_PASSWORD}\" \\" >> "$backupscript"
+              echo    "    && sleep 1" >> "$backupscript" # wait between sending text and keycodes
+          fi
+          echo -e "    adb ${ADBOPTS} shell input keyevent 22 \\" >> "$backupscript"
+          echo    "    && sleep 1 \\" >> "$backupscript" # wait between keycodes
+          echo -e "    && adb ${ADBOPTS} shell input keyevent 23" >> "$backupscript"
+      echo "}" >> "$backupscript"
+      echo >> "$backupscript"
+      echo    "function autoConfirmedBackup() {" >> "$backupscript"
+      echo -e "    doBackup \"\${1}\" &" >> "$backupscript"
+      echo -e "    JOB=\$!" >> "$backupscript"
+      echo -e "    sleep 1" >> "$backupscript"
+      echo -e "    autoConfirm" >> "$backupscript"
+      echo -e "    while [[ \$? == 0 ]]; do" >> "$backupscript"
+      echo -e "        sleep 1" >> "$backupscript"
+      echo -e "        ps -p \${JOB} &>/dev/null" >> "$backupscript"
+      echo -e "    done" >> "$backupscript"
+      echo -e "}" >> "$backupscript"
+      echo >> "$backupscript"
+  fi
+
 
   echo "#!/bin/bash" > "$restorescript"
   echo "# Restore script from ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "$restorescript"
@@ -148,7 +203,13 @@ getSystemAppBackup() {
     else
       prep=""
     fi
-    echo "${prep}doBackup ${app}" >> "$backupscript"
+
+    if [[ "${AUTO_CONFIRM}" -eq 1 ]]; then
+        echo "${prep}autoConfirmedBackup ${app}" >> "$backupscript"
+    else
+        echo "${prep}doBackup ${app}" >> "$backupscript"
+    fi
+
     echo -e "${prep}doRestore \"${SYSDIR}/${app}.ab\"" >> "$restorescript"
     if [ "$app" = "com.android.sharedstoragebackup" ]; then
       echo -e "else\n  echo \"Skipping shared storage\"\nfi" >> "$backupscript"
