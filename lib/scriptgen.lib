@@ -89,28 +89,57 @@ getUserAppBackup() {
     echo "  read -n 1 -p \"Do you wish to restore \${1#*/} now? (Y/n) \" res" >> "$restorescript"
     echo "  echo" >> "$restorescript"
     echo "  if [ \"\${res,,}\" = \"y\" ]; then" >> "$restorescript"
+    echo -e "  echo \"restoring: \${1}\"" >> "$restorescript"
     echo "    adb ${ADBOPTS} restore \${1}" >> "$restorescript"
     echo "  else" >> "$restorescript"
     echo "    echo \"Skipping \${1#*/}\"" >> "$restorescript"
     echo "  fi" >> "$restorescript"
   elif [[ "${MK_APPRESTORE_DELAY}" = "0" ]]; then
+    echo -e "  echo \"restoring: \${1}\"" >> "$restorescript"
     echo "  adb ${ADBOPTS} restore \$1" >> "$restorescript"
   elif [[ ${MK_APPRESTORE_DELAY} =~ ^[0-9]+$ ]]; then
     echo "  sleep ${MK_APPRESTORE_DELAY}" >> "$restorescript"
+    echo -e "  echo \"restoring: \${1}\"" >> "$restorescript"
     echo "  adb ${ADBOPTS} restore \$1" >> "$restorescript"
   else # fallback for invalid setting
+    echo -e "  echo \"restoring: \${1}\"" >> "$restorescript"
     echo "  adb ${ADBOPTS} restore \$1" >> "$restorescript"
   fi
   echo "}" >> "$restorescript"
   echo  >> "$restorescript"
 
+  if [[ "${AUTO_CONFIRM}" -eq 1 ]]; then
+      echo "function autoConfirm() {" >> "$restorescript"
+      if [[ ! -z "${BACKUP_PASSWORD}" ]]; then
+          echo -e "    adb ${ADBOPTS} shell input text \"${BACKUP_PASSWORD}\" \\" >> "$restorescript"
+          echo    "    && sleep 1" >> "$restorescript" # wait between sending text and keycodes
+      fi
+      echo -e "    adb ${ADBOPTS} shell input keyevent 22 \\" >> "$restorescript"
+      echo    "    && sleep 1 \\" >> "$restorescript" # wait between keycodes
+      echo -e "    && adb ${ADBOPTS} shell input keyevent 23" >> "$restorescript"
+      echo "}" >> "$restorescript"
+      echo >> "$restorescript"
+      echo    "function autoConfirmedRestore() {" >> "$restorescript"
+      echo -e "    doRestore \"\${1}\" &" >> "$restorescript"
+      echo -e "    JOB=\$!" >> "$restorescript"
+      echo -e "    sleep 1" >> "$restorescript"
+      echo -e "    autoConfirm" >> "$restorescript"
+      echo -e "    while [[ \$? == 0 ]]; do" >> "$restorescript"
+      echo -e "        sleep 1" >> "$restorescript"
+      echo -e "        ps -p \${JOB} &>/dev/null" >> "$restorescript"
+      echo -e "    done" >> "$restorescript"
+      echo -e "}" >> "$restorescript"
+      echo >> "$restorescript"
+  fi
+
   for app in "${userApps[@]}"; do
     if [[ "${AUTO_CONFIRM}" -eq 1 ]]; then
         echo "autoConfirmedBackup ${app}" >> "$backupscript"
+        echo "autoConfirmedRestore ${app}" >> "$restorescript"
     else
         echo "doBackup ${app}" >> "$backupscript"
+        echo -e "doRestore \"${USERDIR}/${app}.ab\"" >> "$restorescript"
     fi
-    echo -e "doRestore \"${USERDIR}/${app}.ab\"" >> "$restorescript"
   done
 
   chmod u+x "$backupscript" "$restorescript"
@@ -165,7 +194,6 @@ getSystemAppBackup() {
       echo >> "$backupscript"
   fi
 
-
   echo "#!/bin/bash" > "$restorescript"
   echo "# Restore script from ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "$restorescript"
   echo -e "# Restores all system app data backups.\n# DRAGONS HERE: this might fail if you restore to a different\n# device/Android version/ROM, so be careful!\n# Comment out/delete what you do not wish to restore." >> "$restorescript"
@@ -175,20 +203,48 @@ getSystemAppBackup() {
     echo "  read -n 1 -p \"Do you wish to restore \${1#*/} now? (Y/n) \" res" >> "$restorescript"
     echo "  echo" >> "$restorescript"
     echo "  if [ \"\${res,,}\" = \"y\" ]; then" >> "$restorescript"
-    echo "    adb ${ADBOPTS} restore \$1" >> "$restorescript"
+    echo -e "  echo \"restoring: \${1}\"" >> "$restorescript"
+    echo "    adb ${ADBOPTS} restore \${1}" >> "$restorescript"
     echo "  else" >> "$restorescript"
     echo "    echo \"Skipping \${1#*/}\"" >> "$restorescript"
     echo "  fi" >> "$restorescript"
   elif [[ "${MK_APPRESTORE_DELAY}" = "0" ]]; then
+    echo -e "  echo \"restoring: \${1}\"" >> "$restorescript"
     echo "  adb ${ADBOPTS} restore \$1" >> "$restorescript"
   elif [[ ${MK_APPRESTORE_DELAY} =~ ^[0-9]+$ ]]; then
     echo "  sleep ${MK_APPRESTORE_DELAY}" >> "$restorescript"
+    echo -e "  echo \"restoring: \${1}\"" >> "$restorescript"
     echo "  adb ${ADBOPTS} restore \$1" >> "$restorescript"
   else # fallback for invalid setting
+    echo -e "  echo \"restoring: \${1}\"" >> "$restorescript"
     echo "  adb ${ADBOPTS} restore \$1" >> "$restorescript"
   fi
   echo "}" >> "$restorescript"
   echo  >> "$restorescript"
+
+  if [[ "${AUTO_CONFIRM}" -eq 1 ]]; then
+      echo "function autoConfirm() {" >> "$restorescript"
+          if [[ ! -z "${BACKUP_PASSWORD}" ]]; then
+              echo -e "    adb ${ADBOPTS} shell input text \"${BACKUP_PASSWORD}\" \\" >> "$restorescript"
+              echo    "    && sleep 1" >> "$restorescript" # wait between sending text and keycodes
+          fi
+          echo -e "    adb ${ADBOPTS} shell input keyevent 22 \\" >> "$restorescript"
+          echo    "    && sleep 1 \\" >> "$restorescript" # wait between keycodes
+          echo -e "    && adb ${ADBOPTS} shell input keyevent 23" >> "$restorescript"
+      echo "}" >> "$restorescript"
+      echo >> "$restorescript"
+      echo    "function autoConfirmedRestore() {" >> "$restorescript"
+      echo -e "    doRestore \"\${1}\" &" >> "$restorescript"
+      echo -e "    JOB=\$!" >> "$restorescript"
+      echo -e "    sleep 1" >> "$restorescript"
+      echo -e "    autoConfirm" >> "$restorescript"
+      echo -e "    while [[ \$? == 0 ]]; do" >> "$restorescript"
+      echo -e "        sleep 1" >> "$restorescript"
+      echo -e "        ps -p \${JOB} &>/dev/null" >> "$restorescript"
+      echo -e "    done" >> "$restorescript"
+      echo -e "}" >> "$restorescript"
+      echo >> "$restorescript"
+  fi
 
   for app in "${sysApps[@]}"; do
     prep=""
@@ -206,11 +262,12 @@ getSystemAppBackup() {
 
     if [[ "${AUTO_CONFIRM}" -eq 1 ]]; then
         echo "${prep}autoConfirmedBackup ${app}" >> "$backupscript"
+        echo -e "${prep}autoConfirmedRestore \"${SYSDIR}/${app}.ab\"" >> "$restorescript"
     else
         echo "${prep}doBackup ${app}" >> "$backupscript"
+        echo -e "${prep}doRestore \"${SYSDIR}/${app}.ab\"" >> "$restorescript"
     fi
 
-    echo -e "${prep}doRestore \"${SYSDIR}/${app}.ab\"" >> "$restorescript"
     if [ "$app" = "com.android.sharedstoragebackup" ]; then
       echo -e "else\n  echo \"Skipping shared storage\"\nfi" >> "$backupscript"
       echo -e "else\n  echo \"Skipping shared storage\"\nfi" >> "$restorescript"
