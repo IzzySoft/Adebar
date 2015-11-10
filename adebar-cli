@@ -74,6 +74,7 @@ POSTRUN_CMD=""
 APPNAME_CMD=""
 ROOT_COMPAT=0
 AUTO_CONFIRM=0
+AUTO_UNLOCK=0
 
 # Internal use / debugging
 _OOPS_LEVEL_ADJUST=0 # 0=no_adjust; increase to "hide" oopses, decrease to force them to be revealed even on lower levels

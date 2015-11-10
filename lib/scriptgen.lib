@@ -132,6 +132,17 @@ getUserAppBackup() {
       echo >> "$restorescript"
   fi
 
+  if [[ ${AUTO_UNLOCK} -eq 1 ]]; then
+    echo "echo \"Trying to unlock your screen...\"" >> "$backupscript"
+    echo "echo \"Trying to unlock your screen...\"" >> "$restorescript"
+    echo "adb ${ADBOPTS} shell input keyevent 82" >> "$backupscript"
+    echo "adb ${ADBOPTS} shell input keyevent 82" >> "$restorescript"
+    echo "sleep 2" >> "$backupscript"
+    echo "sleep 2" >> "$restorescript"
+    echo  >> "$backupscript"
+    echo  >> "$restorescript"
+  fi
+
   for app in "${userApps[@]}"; do
     if [[ "${AUTO_CONFIRM}" -eq 1 ]]; then
         echo "autoConfirmedBackup ${app}" >> "$backupscript"

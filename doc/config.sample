@@ -113,6 +113,10 @@ ROOT_COMPAT=0
 # Wether backups should be automatically confirmed via keypresses send with adb
 # (set to 1 to enable)
 AUTO_CONFIRM=1
+# Shall Adebar try to automatically unlock your device when running your
+# backup/restore script? Doesn't work with all devices/ROMs, and requires
+# that no password/pin/pattern is set.
+AUTO_UNLOCK=1
 
 # ------------=[ Example postrun function ]=--
 # to avoid possible collisions with functions defined by Adebar itself, use
