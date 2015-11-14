@@ -78,6 +78,8 @@ getUserAppBackup() {
       echo -e "    done" >> "$backupscript"
       echo -e "}" >> "$backupscript"
       echo >> "$backupscript"
+      echo -e "echo \"NOTICE: Do not interact with your device while performing automated backups!\"" >> "$backupscript"
+      echo >> "$backupscript"
   fi
 
   echo "#!/bin/bash" > "$restorescript"
@@ -129,6 +131,8 @@ getUserAppBackup() {
       echo -e "        ps -p \${JOB} &>/dev/null" >> "$restorescript"
       echo -e "    done" >> "$restorescript"
       echo -e "}" >> "$restorescript"
+      echo >> "$restorescript"
+      echo -e "echo \"NOTICE: Do not interact with your device while performing automated restores!\"" >> "$restorescript"
       echo >> "$restorescript"
   fi
 
