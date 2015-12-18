@@ -51,7 +51,9 @@ getUserAppBackup() {
   echo >> "$backupscript"
   echo "function doBackup() {" >> "$backupscript"
   echo -e "  echo \"backing up: \${1}\"" >> "$backupscript"
-  echo -e "  adb ${ADBOPTS} backup -f \"${USERDIR}/\${1}.ab\" -apk \${1}" >> "$backupscript"
+  echo -e "  cd \"${USERDIR}\"" >> "$backupscript"
+  echo -e "  adb ${ADBOPTS} backup -f \"\${1}.ab\" -apk \${1}" >> "$backupscript"
+  echo -e "  cd .." >> "$backupscript"
   echo  "  sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
   echo "}" >> "$backupscript"
   echo >> "$backupscript"
@@ -180,7 +182,9 @@ getSystemAppBackup() {
   echo >> "$backupscript"
   echo "function doBackup() {" >> "$backupscript"
   echo -e "  echo \"backing up: \${1}\"" >> "$backupscript"
-  echo -e "  adb ${ADBOPTS} backup -f \"${SYSDIR}/\${1}.ab\" -noapk \${1}" >> "$backupscript"
+  echo -e "  cd \"${SYSDIR}\"" >> "$backupscript"
+  echo -e "  adb ${ADBOPTS} backup -f \"\${1}.ab\" -noapk \${1}" >> "$backupscript"
+  echo -e "  cd .." >> "$backupscript"
   echo  "  sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
   echo "}" >> "$backupscript"
   echo >> "$backupscript"
