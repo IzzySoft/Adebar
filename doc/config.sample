@@ -52,6 +52,8 @@ MK_SYSBACKUP=1
 # on running the restore scripts for apps, what delay should be between two apps?
 # p = "prompt", 0..99 = delay in seconds
 MK_APPRESTORE_DELAY=p
+# Similarly, when using AUTO_CONFIRM, specify the delay in seconds
+MK_AUTOCONFIRM_DELAY=3
 # trigger an export from XPosed and pull it. Requires XPrivacy PRO key.
 MK_XPRIVACY_EXPORT=0
 # pull the XPrivacy databases when found (not contained in adb backup; root required)
