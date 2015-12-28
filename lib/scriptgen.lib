@@ -48,10 +48,11 @@ getUserAppBackup() {
   echo "# Feel free to comment out/remove apps you don't want/need to be backed up." >> "$backupscript"
   echo  >> "$backupscript"
   echo "[ ! -d \"${USERDIR}\" ] && mkdir \"${USERDIR}\"" >> "$backupscript"
+  echo "cd \"${USERDIR}\"" >> "$backupscript"
   echo >> "$backupscript"
   echo "function doBackup() {" >> "$backupscript"
   echo -e "  echo \"backing up: \${1}\"" >> "$backupscript"
-  echo -e "  adb ${ADBOPTS} backup -f \"${USERDIR}/\${1}.ab\" -apk \${1}" >> "$backupscript"
+  echo -e "  adb ${ADBOPTS} backup -f \"\${1}.ab\" -apk \${1}" >> "$backupscript"
   echo  "  sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
   echo "}" >> "$backupscript"
   echo >> "$backupscript"
@@ -85,6 +86,8 @@ getUserAppBackup() {
   echo "#!/bin/bash" > "$restorescript"
   echo "# Restore script from ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "$restorescript"
   echo "# Restores all app backups. Comment out (or delete) those you do not wish to restore." >> "$restorescript"
+  echo  >> "$restorescript"
+  echo "cd \"${USERDIR}\"" >> "$restorescript"
   echo  >> "$restorescript"
   echo "function doRestore() {" >> "$restorescript"
   if [[ "${MK_APPRESTORE_DELAY,,}" = "p" ]]; then
@@ -153,9 +156,16 @@ getUserAppBackup() {
         echo "autoConfirmedRestore ${app}" >> "$restorescript"
     else
         echo "doBackup ${app}" >> "$backupscript"
-        echo -e "doRestore \"${USERDIR}/${app}.ab\"" >> "$restorescript"
+        echo -e "doRestore \"${app}.ab\"" >> "$restorescript"
     fi
   done
+
+  echo >> "$backupscript"
+  echo "cd - > /dev/null" >> "$backupscript"
+  echo >> "$backupscript"
+  echo >> "$restorescript"
+  echo "cd - > /dev/null" >> "$restorescript"
+  echo >> "$restorescript"
 
   chmod u+x "$backupscript" "$restorescript"
 }
@@ -177,10 +187,11 @@ getSystemAppBackup() {
   echo "# Feel free to comment out/remove apps you don't want/need to be backed up." >> "$backupscript"
   echo  >> "$backupscript"
   echo "[ ! -d \"${SYSDIR}\" ] && mkdir \"${SYSDIR}\"" >> "$backupscript"
+  echo "cd \"${SYSDIR}\"" >> "$backupscript"
   echo >> "$backupscript"
   echo "function doBackup() {" >> "$backupscript"
   echo -e "  echo \"backing up: \${1}\"" >> "$backupscript"
-  echo -e "  adb ${ADBOPTS} backup -f \"${SYSDIR}/\${1}.ab\" -noapk \${1}" >> "$backupscript"
+  echo -e "  adb ${ADBOPTS} backup -f \"\${1}.ab\" -noapk \${1}" >> "$backupscript"
   echo  "  sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
   echo "}" >> "$backupscript"
   echo >> "$backupscript"
@@ -213,6 +224,8 @@ getSystemAppBackup() {
   echo "# Restore script from ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "$restorescript"
   echo -e "# Restores all system app data backups.\n# DRAGONS HERE: this might fail if you restore to a different\n# device/Android version/ROM, so be careful!\n# Comment out/delete what you do not wish to restore." >> "$restorescript"
   echo  >> "$restorescript"
+  echo "cd \"${SYSDIR}\"" >> "$restorescript"
+  echo >> "$restorescript"
   echo "function doRestore() {" >> "$restorescript"
   if [[ "${MK_APPRESTORE_DELAY,,}" = "p" ]]; then
     echo "  read -n 1 -p \"Do you wish to restore \${1#*/} now? (Y/n) \" res" >> "$restorescript"
@@ -277,10 +290,10 @@ getSystemAppBackup() {
 
     if [[ "${AUTO_CONFIRM}" -eq 1 ]]; then
         echo "${prep}autoConfirmedBackup ${app}" >> "$backupscript"
-        echo -e "${prep}autoConfirmedRestore \"${SYSDIR}/${app}.ab\"" >> "$restorescript"
+        echo -e "${prep}autoConfirmedRestore \"${app}.ab\"" >> "$restorescript"
     else
         echo "${prep}doBackup ${app}" >> "$backupscript"
-        echo -e "${prep}doRestore \"${SYSDIR}/${app}.ab\"" >> "$restorescript"
+        echo -e "${prep}doRestore \"${app}.ab\"" >> "$restorescript"
     fi
 
     if [ "$app" = "com.android.sharedstoragebackup" ]; then
@@ -290,6 +303,13 @@ getSystemAppBackup() {
       echo  >> "$restorescript"
     fi
   done
+
+  echo >> "$backupscript"
+  echo "cd - > /dev/null" >> "$backupscript"
+  echo >> "$backupscript"
+  echo >> "$restorescript"
+  echo "cd - > /dev/null" >> "$restorescript"
+  echo >> "$restorescript"
 
   chmod u+x "$backupscript" "$restorescript"
 }
