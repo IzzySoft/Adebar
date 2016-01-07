@@ -101,7 +101,6 @@ if [[ "$1" = "-a" || "$1" = "--auto" ]]; then
     confi=${confi##*/}
     $0 $confi
     trc+=$?
-    # $0 $confi # run adebar for this device
   done
   exit $trc
 elif [[ -z "$1" || "$1" = "-h" || "$1" = "--help" ]]; then
