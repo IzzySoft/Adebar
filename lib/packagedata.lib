@@ -355,7 +355,7 @@ function _makeAppDoc() {
   esac
 
   # check if aapt is available on the device, so we can use it to retrieve e.g. app names
-  local str="$(adb shell "ls /system/bin/aapt")"
+  local str="$(adb ${ADBOPTS} shell "ls /system/bin/aapt")"
   str=${str//[$'\t\r\n']} # stupid ^M
   if [[ "${str}" = "/system/bin/aapt" ]]; then
     local HAVE_AAPT=1
