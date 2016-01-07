@@ -86,9 +86,28 @@ declare -A OOPSES    # array to store which lines where already reported
 BINDIR="${0%/*}"
 
 # check parameters
-if [[ -z "$1" || "$1" = "-h" || "$1" = "--help" ]]; then
+if [[ "$1" = "-a" || "$1" = "--auto" ]]; then
+  if [[ ! -d "${BINDIR}/config" ]]; then
+    echo
+    echo "Sorry, but you can't use automatic config detection with no config directory"
+    echo "created. Please create it first, and have your config files placed there."
+    echo
+    exit 1
+  fi
+  declare -i trc=0
+  for serial in $(adb devices|tail -n +2|awk '{print $1}'); do
+    confi=$(egrep "^\s*SERIAL=.${serial}.\s*$" "${BINDIR}/config/"*  |head -n 1|awk -F ':' '{print $1}')
+    [[ -z "${confi}" ]] && continue # unknown device, i.e. serial not found in any config
+    confi=${confi##*/}
+    $0 $confi
+    trc+=$?
+    # $0 $confi # run adebar for this device
+  done
+  exit $trc
+elif [[ -z "$1" || "$1" = "-h" || "$1" = "--help" ]]; then
   echo
   echo "Syntax: $0 <config|target_directory> [suffix]"
+  echo "Syntax: $0 <-a|--auto|-h|--help>"
   echo
   if [[ ! -d "${BINDIR}/config" || "$1" = "-h" || "$1" = "--help" ]]; then
     echo "There are no more command-line parameters currently, everything is"
