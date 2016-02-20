@@ -93,7 +93,7 @@ getUserAppBackup() {
   if [[ "${MK_APPRESTORE_DELAY,,}" = "p" ]]; then
     echo "  read -n 1 -p \"Do you wish to restore \${1#*/} now? (Y/n) \" res" >> "$restorescript"
     echo "  echo" >> "$restorescript"
-    echo "  if [ \"\${res,,}\" = \"y\" ]; then" >> "$restorescript"
+    echo "  if [[ \"\${res,,}\" = \"y\" || -z \"\${res}\" ]]; then" >> "$restorescript"
     echo -e "  echo \"restoring: \${1}\"" >> "$restorescript"
     echo "    adb ${ADBOPTS} restore \${1}" >> "$restorescript"
     echo "  else" >> "$restorescript"
@@ -230,7 +230,7 @@ getSystemAppBackup() {
   if [[ "${MK_APPRESTORE_DELAY,,}" = "p" ]]; then
     echo "  read -n 1 -p \"Do you wish to restore \${1#*/} now? (Y/n) \" res" >> "$restorescript"
     echo "  echo" >> "$restorescript"
-    echo "  if [ \"\${res,,}\" = \"y\" ]; then" >> "$restorescript"
+    echo "  if [[ \"\${res,,}\" = \"y\" || -z \"\${res}\" ]]; then" >> "$restorescript"
     echo -e "  echo \"restoring: \${1}\"" >> "$restorescript"
     echo "    adb ${ADBOPTS} restore \${1}" >> "$restorescript"
     echo "  else" >> "$restorescript"
