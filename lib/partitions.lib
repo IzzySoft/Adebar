@@ -101,7 +101,11 @@ _fsProcByName() {
   local tmp=$(mktemp)
   local tmp2=$(mktemp)
   local tmp3=$(mktemp)
-  adb ${ADBOPTS} shell ls -al /dev/block/platform/*/by-name > "${tmp}"
+  if [[ ${ROOT_COMPAT} -eq 1 ]]; then # some devices give "permission denied" here w/o root
+    adb ${ADBOPTS} shell "su -c 'ls -al /dev/block/platform/*/by-name'" > "${tmp}"
+  else
+    adb ${ADBOPTS} shell ls -al /dev/block/platform/*/by-name > "${tmp}"
+  fi
   adb ${ADBOPTS} shell cat /proc/partitions > "${tmp2}"
   adb ${ADBOPTS} shell cat /proc/mounts > "${tmp3}"
   local azeile
