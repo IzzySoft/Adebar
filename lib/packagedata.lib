@@ -107,6 +107,8 @@ getAppDetails() {
   declare -A PK_CODEPATH
   declare -A PK_VERSION
   declare -A PK_DATADIR
+  declare -A PK_PRIMARYCPU
+  declare -A PK_SECONDARYCPU
   declare -A PK_SCREENSIZE
   declare -A PK_FIRSTINSTALL
   declare -A PK_LASTUPDATE
@@ -235,6 +237,28 @@ getAppDetails() {
               else
                 PK_USERS[$P_PKGNAME]+="\n    + ${zeile:4}"
               fi
+              continue
+            fi
+
+            ### NEW (ANDROID 5.1 / CyanogenOS / Wileyfox Swift) – need to evaluate?
+            if [[ "${zeile:0:17}" == "    primaryCpuAbi" ]]; then # primaryCpuAbi=armeabi-v7a
+              PK_PRIMARYCPU[$P_PKGNAME]="${zeile:18}"
+              doProgress "    +primaryCpuAbi: ${PK_PRIMARYCPU[$P_PKGNAME]}" 5
+              continue
+            fi
+            if [[ "${zeile:0:19}" == "    secondaryCpuAbi" ]]; then # secondaryCpuAbi=null
+              PK_SECONDARYCPU[$P_PKGNAME]="${zeile:20}"
+              doProgress "    +primaryCpuAbi: ${PK_SECONDARYCPU[$P_PKGNAME]}" 5
+              continue
+            fi
+            if [[ "${zeile:0:26}" == "    legacyNativeLibraryDir" ]]; then
+              # '    legacyNativeLibraryDir=/system/app/YouTube/lib'
+              oops "pkg" "${LINENO}" "found '${zeile:0:26}' set to '${zeile:27}', ignoring" 2
+              continue
+            fi
+            if [[ "${zeile:0:10}" == "    splits" ]]; then
+              # splits=[base]
+              oops "pkg" "${LINENO}" "found '${zeile:0:10}' set to '${zeile:11}', ignoring" 2
               continue
             fi
 
@@ -394,6 +418,8 @@ function _makeAppDoc() {
     [[ -n "${PK_VERSION[$app]}" ]]      && tmpstring+="    + installed version: ${PK_VERSION[$app]}\n"
     [[ -n "${PK_CODEPATH[$app]}" ]]     && tmpstring+="    + CodePath: \`${PK_CODEPATH[$app]}\`\n"
     [[ -n "${PK_DATADIR[$app]}" ]]      && tmpstring+="    + App data: \`${PK_DATADIR[$app]}\`\n"
+    [[ -n "${PK_PRIMARYCPU[$app]}" && "${PK_PRIMARYCPU[$app]}" != "null" ]]     && tmpstring+="    + Primary CPU ABI: \`${PK_PRIMARYCPU[$app]}\`\n"
+    [[ -n "${PK_SECONDARYCPU[$app]}" && "${PK_SECONDARYCPU[$app]}" != "null" ]] && tmpstring+="    + Primary CPU ABI: \`${PK_SECONDARYCPU[$app]}\`\n"
     [[ -n "${PK_SCREENSIZE[$app]}" ]]   && tmpstring+="    + supported screen sizes: ${PK_SCREENSIZE[$app]}\n"
     [[ -n "${PK_FLAGS[$app]}" ]]        && tmpstring+="    + flags: ${PK_FLAGS[$app]}\n"
     [[ -n "${PK_MTKFLAGS[$app]}" ]]     && tmpstring+="    + mtkFlags: ${PK_MTKFLAGS[$app]}\n"
