@@ -392,6 +392,8 @@ function _makeAppDoc() {
     if [[ -z "${PK_INSTALLER[$app]}" ]]; then # no installer
       if [[ "${APPNAME}" = "${app}" ]]; then
         tmpstring="+ $app\n"
+      elif [[ -n "${APP_MARKET_URL[unknown]}" ]]; then
+        tmpstring="+ [${APPNAME}](${APP_MARKET_URL[unknown]/\%s/$app})\n"
       else
         tmpstring="+ ${APPNAME} (${app})\n"
       fi

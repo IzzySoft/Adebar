@@ -93,6 +93,7 @@ APP_INSTALL_SRC[com.google.android.feedback]="Google Play (Feedback)"
 APP_MARKET_URL[org.fdroid.fdroid]="https://f-droid.org/repository/browse/?fdid=%s"
 APP_MARKET_URL[com.android.vending]="https://play.google.com/store/apps/details?id=%s"
 APP_MARKET_URL[com.google.android.feedback]="https://play.google.com/store/apps/details?id=%s"
+APP_MARKET_URL[unknown]=""
 
 
 # -------------------------------=[ Misc ]=--

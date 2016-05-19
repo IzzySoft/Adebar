@@ -64,6 +64,7 @@ APP_MARKET_URL[cm.aptoide.pt]=""
 APP_MARKET_URL[com.android.vending]="https://play.google.com/store/apps/details?id=%s"
 APP_MARKET_URL[com.google.android.feedback]="https://play.google.com/store/apps/details?id=%s"
 APP_MARKET_URL[de.robv.android.xposed.installer]="http://repo.xposed.info/module/%s"
+APP_MARKET_URL[unknown]=""
 
 # Misc
 PROGRESS=1
