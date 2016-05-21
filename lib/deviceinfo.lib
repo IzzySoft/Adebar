@@ -7,6 +7,33 @@
 # library to get device info
 ##############################################################################
 
+# RadioStat helper (MultiSIM)
+print_radiostat() {
+    declare -A mradio
+    case $1 in
+      0) for key in "${!radio[@]}"; do mradio["$key"]=${radio["$key"]}; done ;;
+      1) for key in "${!radio1[@]}"; do mradio["$key"]=${radio1["$key"]}; done ;;
+    esac
+    echo "* Signal strength: [${mradio[mSignalStrength]}](http://android.stackexchange.com/a/74954/16575)" >> "$devicedoc"
+    echo "* Service state: ${mradio[mServiceState]:0:1} (${servicestate[${radio[mServiceState]:0:1}]})" >> "$devicedoc"
+    echo "* Call state: ${mradio[mCallState]} (${callstate[${mradio[mCallState]}]})" >> "$devicedoc"
+    echo "* Call forwarding active: ${mradio[mCallForwarding]}" >> "$devicedoc"
+    [[ -n "${mradio[mMessageWaiting]}" ]] && echo "* Message waiting: ${mradio[mMessageWaiting]}" >> "$devicedoc"
+    if [[ "${mradio[mDataConnectionPossible]}" = "false" ]]; then
+      echo "* Data connection possible: ${mradio[mDataConnectionPossible]} (${mradio[mDataConnectionReason]})" >> "$devicedoc"
+    else
+      echo "* Data connection possible: ${mradio[mDataConnectionPossible]}" >> "$devicedoc"
+      left="${mradio[mDataActivity]}"
+      echo "* Data activity: ${mradio[mDataActivity]} (${dataactivity[${mradio[mDataActivity]}]})" >> "$devicedoc"
+      if [[ -n "${mradio[mDataConnectionState]}" ]]; then
+        echo "* Data connection state: ${mradio[mDataConnectionState]} (${dataconnectionstate[${mradio[mDataConnectionState]}]})" >> "$devicedoc"
+      elif [[ -n "${mradio[mActiveDataConnectionState]}" ]]; then
+        echo "* Data connection state: ${mradio[mActiveDataConnectionState]} (${dataconnectionstate[${mradio[mActiveDataConnectionState]}]})" >> "$devicedoc"
+      fi
+      [[ -n "${mradio[mDataConnectionApn]}" ]] && echo "* Current APN: ${mradio[mDataConnectionApn]}" >> "$devicedoc"
+    fi
+}
+
 #
 # Get device info
 #
@@ -144,33 +171,59 @@ getDeviceInfo() {
     echo >> "$devicedoc"
     echo "### Radio Status" >> "$devicedoc"
     declare -A radio
+    declare -A radio1
     adb ${ADBOPTS} shell dumpsys telephony.registry|grep "=" > $tmp
     local callstate=(idle ringing off-hook)
     local servicestate=(service "out of service" "emergency only" "powered off")
     local dataactivity=(none in out inout)
     local dataconnectionstate=(disconnected connecting connected suspended)
+    local phoneid=0
+    local vname
     while IFS='' read zeile; do
       zeile="${zeile//[$'\t\r\n']}"
-      zeile="${zeile#"${zeile%%[![:space:]]*}"}"
-      radio[${zeile%%=*}]="${zeile#*=}"
-    done < "${tmp}"
-    echo "* Signal strength: [${radio[mSignalStrength]}](http://android.stackexchange.com/a/74954/16575)" >> "$devicedoc"
-    echo "* Service state: ${radio[mServiceState]:0:1} (${servicestate[${radio[mServiceState]:0:1}]})" >> "$devicedoc"
-    echo "* Call state: ${radio[mCallState]} (${callstate[${radio[mCallState]}]})" >> "$devicedoc"
-    echo "* Call forwarding active: ${radio[mCallForwarding]}" >> "$devicedoc"
-    if [[ "${radio[mDataConnectionPossible]}" = "false" ]]; then
-      echo "* Data connection possible: ${radio[mDataConnectionPossible]} (${radio[mDataConnectionReason]})" >> "$devicedoc"
-    else
-      echo "* Data connection possible: ${radio[mDataConnectionPossible]}" >> "$devicedoc"
-      left="${radio[mDataActivity]}"
-      echo "* Data activity: ${radio[mDataActivity]} (${dataactivity[${radio[mDataActivity]}]})" >> "$devicedoc"
-      if [[ -n "${radio[mDataConnectionState]}" ]]; then
-        echo "* Data connection state: ${radio[mDataConnectionState]} (${dataconnectionstate[${radio[mDataConnectionState]}]})" >> "$devicedoc"
-      elif [[ -n "${radio[mActiveDataConnectionState]}" ]]; then
-        echo "* Data connection state: ${radio[mActiveDataConnectionState]} (${dataconnectionstate[${radio[mActiveDataConnectionState]}]})" >> "$devicedoc"
+      zeile="${zeile#"${zeile%%[![:space:]]*}"}" #"
+      vname="${zeile%%=*}"
+      if [[ "$vname" = "Phone Id" ]]; then # MultiSIM
+        phoneid="${zeile#*=}"
+        continue
       fi
-      [[ -n "${radio[mDataConnectionApn]}" ]] && echo "* Current APN: ${radio[mDataConnectionApn]}" >> "$devicedoc"
+      [[ "${vname:0:1}" == "{" ]] && break # only registration history follows here
+      case $phoneid in
+        0) radio[${zeile%%=*}]="${zeile#*=}" ;;
+        1) radio1[${zeile%%=*}]="${zeile#*=}" ;;
+        *) oops "dev" "${LINENO}" "Unexpected phone id: '${zeile#*=}'" 2 ;;
+      esac
+    done < "${tmp}"
+    [[ $phoneid -gt 0 ]] && echo "#### SIM1" >> "$devicedoc"
+    print_radiostat 0
+    [[ $phoneid -gt 0 ]] && {
+      echo "#### SIM2" >> "$devicedoc"
+      print_radiostat 1
+    }
+  fi
+
+  if [[ -n "${DEVPROP[gsm.operator.alpha]}" ]]; then # Provider info
+    doProgress "  + Provider info" 3
+    echo >> "$devicedoc"
+    if [[ -n "${DEVPROP[gsm.operator.alpha.2]}" ]]; then # Dual-SIM device
+      echo "### Provider info (SIM1)" >> "$devicedoc"
+    else
+      echo "### Provider info" >> "$devicedoc"
     fi
+    echo "* Mobile provider: ${DEVPROP[gsm.operator.alpha]}" >> "$devicedoc"
+    [[ -n "${DEVPROP[gsm.operator.iso-country]}" ]] && echo "* Provider country: ${DEVPROP[gsm.operator.iso-country]}" >> "$devicedoc"
+    [[ -n "${DEVPROP[gsm.operator.numeric]}" ]] && echo "* Provider code: ${DEVPROP[gsm.operator.numeric]}" >> "$devicedoc"
+    [[ -n "${DEVPROP[gsm.sim.state]}" ]] && echo "* SIM state: ${DEVPROP[gsm.sim.state]}" >> "$devicedoc"
+  fi
+
+  if [[ -n "${DEVPROP[gsm.operator.alpha.2]}" ]]; then # Provider info 2nd SIM (Dual-SIM devices)
+    doProgress "  + Provider info (SIM2)" 3
+    echo >> "$devicedoc"
+    echo "### Provider info (SIM2)" >> "$devicedoc"
+    echo "* Mobile provider: ${DEVPROP[gsm.operator.alpha.2]}" >> "$devicedoc"
+    [[ -n "${DEVPROP[gsm.operator.iso-country.2]}" ]] && echo "* Provider country: ${DEVPROP[gsm.operator.iso-country.2]}" >> "$devicedoc"
+    [[ -n "${DEVPROP[gsm.operator.numeric.2]}" ]] && echo "* Provider code: ${DEVPROP[gsm.operator.numeric.2]}" >> "$devicedoc"
+    [[ -n "${DEVPROP[gsm.sim.state.2]}" ]] && echo "* SIM state: ${DEVPROP[gsm.sim.state.2]}" >> "$devicedoc"
   fi
 
   doProgress "  + networking details" 3
