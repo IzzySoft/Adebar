@@ -76,6 +76,7 @@ getDeviceInfo() {
   echo "### Product Info" >> "$devicedoc"
   echo "* Manufacturer: ${DEVPROP[ro.product.manufacturer]}" >> "$devicedoc"    # ro.product.manufacturer=Motorola
   echo "* Model: ${DEVPROP[ro.product.model]} (${DEVPROP[ro.product.device]})" >> "$devicedoc"  # ro.product.model=A953 (ro.product.device=milestone2)
+  [[ -n "${DEVPROP[ro.build.date]}" ]] && echo "* Manufatured on: ${DEVPROP[ro.build.date]}" >> "$devicedoc"
   local serial="${DEVPROP[ro.serialno]}"                                        # 015ECFC703028007
   [[ -z "$serial" ]] && {
     if [[ -n "${DEVPROP[ro.boot.serialno]}" ]]; then
@@ -93,8 +94,12 @@ getDeviceInfo() {
   [[ -n "${DEVPROP[ro.board.platform]}" ]] && echo "* Platform: ${DEVPROP[ro.board.platform]}" >> "$devicedoc" # omap3
   [[ -n "${DEVPROP[ro.radio.hw.version]}" ]] && echo "* Radio version: ${DEVPROP[ro.radio.hw.version]}" >> "$devicedoc" # SJUG5980AA
   [[ -n "${DEVPROP[gsm.baseband.version]}" ]] && echo "* Baseband: ${DEVPROP[gsm.baseband.version]}" >> "$devicedoc" # L6260_MODEM_SIC_02.1233.00
+  if [[ -n "${DEVPROP[ro.boot.bootloader]}" ]]; then echo "* Bootloader: ${DEVPROP[ro.boot.bootloader]}" >> "$devicedoc"
+  elif [[ -n "${DEVPROP[ro.bootloader]}" ]]; then echo "* Bootloader: ${DEVPROP[ro.bootloader]}" >> "$devicedoc"
+  fi
   [[ -n "${DEVPROP[wlan.chip.vendor]}${DEVPROP[wlan.chip.version]}" ]] && echo "* WiFi vendor / version: ${DEVPROP[wlan.chip.vendor]} / ${DEVPROP[wlan.chip.version]}" >> "$devicedoc" # brcm / bcm4330x
   echo "* CPU: ${DEVPROP[ro.product.cpu.abi]}" >> "$devicedoc"                  # ro.product.cpu.abi=armeabi-v7a
+  [[ -n "${DEVPROP[ro.product.cpu.abilist]}" ]] && echo "* CPU compatibility: ${DEVPROP[ro.product.cpu.abilist]}" >> "$devicedoc"
   echo "* Screen density: ${DEVPROP[ro.sf.lcd_density]}" >> "$devicedoc"        # ro.sf.lcd_density=240
   echo >> "$devicedoc"
 
@@ -173,6 +178,13 @@ getDeviceInfo() {
     doProgress "  + Radio status" 3
     echo >> "$devicedoc"
     echo "### Radio Status" >> "$devicedoc"
+    [[ -n "${DEVPROP[gsm.version.baseband]}" ]]  && echo "* Baseband: ${DEVPROP[gsm.version.baseband]}" >> "$devicedoc"
+    [[ -n "${DEVPROP[gsm.version.baseband1]}" ]] && echo "* Baseband (SIM2): ${DEVPROP[gsm.version.baseband1]}" >> "$devicedoc"
+    [[ -n "${DEVPROP[gsm.version.ril-impl]}" ]]  && {
+      if [[ -n "${DEVPROP[rild.libpath]}" ]]; then echo "* RIL: ${DEVPROP[gsm.version.ril-impl]} (\`${DEVPROP[rild.libpath]}\`)" >> "$devicedoc"
+      else echo "* RIL: ${DEVPROP[gsm.version.ril-impl]}" >> "$devicedoc"
+      fi
+    }
     declare -A radio
     declare -A radio1
     adb ${ADBOPTS} shell dumpsys telephony.registry|grep "=" > $tmp
@@ -231,7 +243,9 @@ getDeviceInfo() {
 
   doProgress "  + networking details" 3
   echo "### Networking details" >> "$devicedoc"
+  echo "* Hostname: ${DEVPROP[net.hostname]}" >> "$devicedoc"
   [[ -n "${DEVPROP[wifi.interface]}" ]] && echo "* WiFi Interface: ${DEVPROP[wifi.interface]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[wlan.driver.config]}" ]] && echo "* WiFi config: \`${DEVPROP[wlan.driver.config]}\`" >> "$devicedoc"
   [[ -n "${DEVPROP[net.dns1]}${DEVPROP[net.dns2]}" ]] && echo "* Default DNS server: ${DEVPROP[net.dns1]} / ${DEVPROP[net.dns2]}" >> "$devicedoc"
   echo "* WiFi driver status: ${DEVPROP[wlan.driver.status]}" >> "$devicedoc"
   echo "* WiFi scan interval: ${DEVPROP[wifi.supplicant_scan_interval]}" >> "$devicedoc"
@@ -255,29 +269,28 @@ getDeviceInfo() {
     echo -e "    * ${zeile/// }" >> "$devicedoc"
   done < ${tmp}
 
-  if [[ -n "${DEVPROP[gsm.operator.alpha]}" ]]; then # Provider info
-    doProgress "  + Provider info" 3
-    echo >> "$devicedoc"
-    if [[ -n "${DEVPROP[gsm.operator.alpha.2]}" ]]; then # Dual-SIM device
-      echo "### Provider info (SIM1)" >> "$devicedoc"
-    else
-      echo "### Provider info" >> "$devicedoc"
+  # Misc
+  doProgress "  + misc details" 3
+  echo "### Miscellaneous" >> "$devicedoc"
+  [[ -n "${DEVPROP[keyguard.no_require_sim]}" ]] && {
+    if [[ "${DEVPROP[keyguard.no_require_sim]}" = "true" ]]; then echo "* SIM required for operation: No" >> "$devicedoc"
+    else echo "* SIM required for operation: Yes" >> "$devicedoc"
     fi
-    echo "* Mobile provider: ${DEVPROP[gsm.operator.alpha]}" >> "$devicedoc"
-    [[ -n "${DEVPROP[gsm.operator.iso-country]}" ]] && echo "* Provider country: ${DEVPROP[gsm.operator.iso-country]}" >> "$devicedoc"
-    [[ -n "${DEVPROP[gsm.operator.numeric]}" ]] && echo "* Provider code: ${DEVPROP[gsm.operator.numeric]}" >> "$devicedoc"
-    [[ -n "${DEVPROP[gsm.sim.state]}" ]] && echo "* SIM state: ${DEVPROP[gsm.sim.state]}" >> "$devicedoc"
+  }
+  [[ -n "${DEVPROP[persist.sys.usb.config]}" ]] && echo "* persistent USB modules: ${DEVPROP[persist.sys.usb.config]}" >> "$devicedoc"
+  if [[ ${DEVPROP[ro.adb.secure]} -eq 1 || ${DEVPROP[ro.secure]} -eq 1 ]]; then echo "* ADB secured: Yes" >> "$devicedoc"
+  else echo "* ADB secured: No (running as root)" >> "$devicedoc"
   fi
-
-  if [[ -n "${DEVPROP[gsm.operator.alpha.2]}" ]]; then # Provider info 2nd SIM (Dual-SIM devices)
-    doProgress "  + Provider info (SIM2)" 3
-    echo >> "$devicedoc"
-    echo "### Provider info (SIM2)" >> "$devicedoc"
-    echo "* Mobile provider: ${DEVPROP[gsm.operator.alpha.2]}" >> "$devicedoc"
-    [[ -n "${DEVPROP[gsm.operator.iso-country.2]}" ]] && echo "* Provider country: ${DEVPROP[gsm.operator.iso-country.2]}" >> "$devicedoc"
-    [[ -n "${DEVPROP[gsm.operator.numeric.2]}" ]] && echo "* Provider code: ${DEVPROP[gsm.operator.numeric.2]}" >> "$devicedoc"
-    [[ -n "${DEVPROP[gsm.sim.state.2]}" ]] && echo "* SIM state: ${DEVPROP[gsm.sim.state.2]}" >> "$devicedoc"
-  fi
+  [[ -n "${DEVPROP[ro.build.selinux]}" ]] && {
+    if [[ ${DEVPROP[ro.build.selinux]} -eq 1 ]]; then echo "* SELinux enabled: Yes" >> "$devicedoc"
+    elif [[ ${DEVPROP[ro.build.selinux]} -eq 0 ]]; then echo "* SELinux enabled: No" >> "$devicedoc"
+    fi
+  }
+  [[ -n "${DEVPROP[ro.alarm_boot]}" ]] && {
+    if [[ "${DEVPROP[ro.alarm_boot]}" = "false" ]]; then echo "* Last boot triggered by RTC alarm: No" >> "$devicedoc"
+    else echo "* Last boot triggered by RTC alarm: Yes" >> "$devicedoc"
+    fi
+  }
 
 
   # ADB calls for the next two blocks must be made with default IFS or will fail
@@ -304,7 +317,7 @@ getDeviceInfo() {
   done
   echo "* $(grep 'Last backup pass' "$tmp")" >> "$devicedoc"
   echo "* $(grep 'Ever backed up:' "$tmp")" >> "$devicedoc"
-  echo "* $(grep 'Pending backup:' "$tmp")" >> "$devicedoc"
+  [[ -n "$(grep 'Pending backup:' "$tmp")" ]] && echo "* $(grep 'Pending backup:' "$tmp")" >> "$devicedoc"
   echo "* Participants:" >> "$devicedoc"
   for zeile in $(grep -A1 "uid:" "$tmp"|awk '{print $1}'); do
     case "$zeile" in
