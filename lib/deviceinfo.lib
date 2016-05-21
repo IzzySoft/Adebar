@@ -58,13 +58,16 @@ getDeviceInfo() {
 
   # Parse getprop into DEVPROP & HAVPROPS
   local prop
+  local propname
   while read zeile; do
     [[ -z "${zeile}" ]] && continue
     zeile="${zeile//[\[\]:]/ }"
     prop=($zeile)
     [[ -z "${prop[1]}" ]] && continue
+    propname="${prop[0]}"
     HAVPROPS[${prop[0]%%\.*}]="y"
-    DEVPROP[${prop[0]}]="${prop[1]}"
+    unset prop[0]
+    DEVPROP[${propname}]="${prop[*]}"
   done < "${tmp}"
 
   # Do something with the collected information (and collect more while on it)
