@@ -166,8 +166,9 @@ getDeviceInfo() {
       zeile="${zeile//[$'\t\r\n']}"
       right="${zeile#*:}"
       [[ "${right:0:1}" = " " ]] && right="${right:1}"
+      [[ -z "${right:1}" ]] && continue
       left="${zeile%:*}"
-      left="${left#"${left%%[![:space:]]*}"}" # remove leading spaces
+      left="${left#"${left%%[![:space:]]*}"}" # remove leading spaces"
       case "$left" in
         "status") echo "* ${left}: ${right} (${battstat[${right}]})"  >> "$devicedoc" ;;
         "health") echo "* ${left}: ${right} (${batthealth[${right}]})"  >> "$devicedoc" ;;
