@@ -153,7 +153,7 @@ getUserAppBackup() {
   for app in "${userApps[@]}"; do
     if [[ "${AUTO_CONFIRM}" -eq 1 ]]; then
         echo "autoConfirmedBackup ${app}" >> "$backupscript"
-        echo "autoConfirmedRestore ${app}" >> "$restorescript"
+        echo "autoConfirmedRestore ${app}.ab" >> "$restorescript"
     else
         echo "doBackup ${app}" >> "$backupscript"
         echo -e "doRestore \"${app}.ab\"" >> "$restorescript"
