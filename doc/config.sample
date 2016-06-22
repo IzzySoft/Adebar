@@ -113,6 +113,8 @@ POSTRUN_CMD=""
 APPNAME_CMD=""
 # If your device is rooted, but the ADB daemon does not run in root mode, set this to 1
 ROOT_COMPAT=0
+# Run "pm disable" and "pm enable" command as root?
+ROOT_PMDISABLE=0
 # Wether backups should be automatically confirmed via keypresses send with adb
 # (set to 1 to enable)
 AUTO_CONFIRM=1

@@ -24,7 +24,11 @@ getDisabled() {
   for app in $(adb ${ADBOPTS} shell "pm list packages -d 2>/dev/null"); do
     if [[ "${app}" =~ ^package: ]]; then
       app=${app//[$'\t\r\n']}
-      echo "adb ${ADBOPTS} shell \"pm disable ${app##*:}\"" >> "${scriptname}"
+      if [[ $ROOT_PMDISABLE -eq 0 ]]; then
+        echo "adb ${ADBOPTS} shell \"pm disable ${app##*:}\"" >> "${scriptname}"
+      else
+        echo "adb ${ADBOPTS} shell \"su -c 'pm disable ${app##*:}'\"" >> "${scriptname}"
+      fi
     fi
   done
 
