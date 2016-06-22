@@ -86,11 +86,30 @@ getXPrivacy() {
     local filename="/sdcard/xprivacy_$(date +"%Y%m%d_%H%M%S").xml"
     local msg="$((adb ${ADBOPTS} shell "am start -a biz.bokhorst.xprivacy.action.EXPORT -e FileName ${filename}") 2>&1)"
     local -i sleepcount=0
+    local -i oldsize=0
+    local -i newsize=0
+    local newsizestr
+    doProgress "- waiting for XPrivacy export to complete" 2
     while [[ $sleepcount -lt 10 ]] # 20s should be sufficient, else something went wrong
     do
       sleep 2 # give it some time to complete
-      sleepcount+=1
-      [[ -n "$(adb ${ADBOPTS} shell ls ${filename%/*}/ | grep ${filename##*/})" ]] && break
+      if [[ -n "$(adb ${ADBOPTS} shell ls ${filename%/*}/ | grep ${filename##*/})" ]]; then
+        newsizestr=$(adb ${ADBOPTS} shell "ls -l ${filename} |awk '{print \$4}'")
+        newsize=(${newsizestr//[$'\r']})
+        if [[ $newsize -eq 0 ]]; then
+          sleepcount+=1
+          doProgress "  + export started, file still empty" 4
+        elif [[ $newsize -eq $oldsize ]]; then  # not growing anymore
+          doProgress "  + export seems complete, final size: ${newsize} bytes" 4
+          break
+        else
+          oldsize=$newsize
+          doProgress "  + export running, current size: ${newsize} bytes" 4
+        fi
+      else
+        sleepcount+=1
+        doProgress "  + Loop ${sleepcount}, file not yet there" 4
+      fi
     done
     if [[ -n "$(adb ${ADBOPTS} shell ls ${filename%/*}/ | grep ${filename##*/})" ]]; then
       sleep 2 # just another safeguard to ensure export is complete
