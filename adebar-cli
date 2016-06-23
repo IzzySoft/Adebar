@@ -232,8 +232,8 @@ declare -a dApps
 
 #########################################[ Helpers ]###
 # Log progress (if enabled)
-# Call: doProgress "what to show" [level]"
-# level defaults to 1
+# Call: doProgress "what to show" [level [eparm]]"
+# level defaults to 1; eparm has optional additional params to echo
 doProgress() {
   [[ $PROGRESS -eq 0 ]] && return
   if [[ -z "$2" ]]; then
@@ -241,8 +241,13 @@ doProgress() {
   else
     local level=$2
   fi
+  if [[ -n "$3" ]]; then
+    local eparm="-e${3}"
+  else
+    local eparm="-e"
+  fi
   if [[ $PROGRESS -ge $level ]]; then
-    echo -e "$1"
+    echo ${eparm} "$1"
   fi
 }
 
