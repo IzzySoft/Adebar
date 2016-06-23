@@ -37,6 +37,36 @@ getDisabled() {
 
 
 #
+# Create script to enable ALL apps
+#
+getEnable() {
+  [[ $MK_APPENABLE -ne 1 ]] && return
+
+  doProgress "Creating script to enable ALL apps"
+
+  local scriptname="${OUTDIR}/enable"
+  echo "#!/bin/bash" > "${scriptname}"
+  echo "# Enable ALL apps on the device" >> "${scriptname}"
+  echo "#" >> "${scriptname}"
+  echo "# Use with care – some apps might be disabled for a good reason :)" >> "${scriptname}"
+  echo >> "${scriptname}"
+
+  for app in $(adb ${ADBOPTS} shell "pm list packages 2>/dev/null"); do
+    if [[ "${app}" =~ ^package: ]]; then
+      app=${app//[$'\t\r\n']}
+      if [[ $ROOT_PMDISABLE -eq 0 ]]; then
+        echo "adb ${ADBOPTS} shell \"pm enable ${app##*:}\"" >> "${scriptname}"
+      else
+        echo "adb ${ADBOPTS} shell \"su -c 'pm enable ${app##*:}'\"" >> "${scriptname}"
+      fi
+    fi
+  done
+
+  chmod u+x "${scriptname}"
+}
+
+
+#
 # Create script to backup all user-apps
 #
 getUserAppBackup() {

@@ -31,6 +31,7 @@ TIBU_BACKUPS="/TitaniumBackup-ALL.zip"
 
 # ---------------------------=[ Features ]=--
 MK_APPDISABLE=1
+MK_APPENABLE=1
 MK_USERBACKUP=1
 MK_SYSBACKUP=1
 MK_APPRESTORE_DELAY=p
@@ -219,7 +220,7 @@ fi
 [[ $((${MK_PARTINFO} + ${MK_PARTBACKUP})) -gt 0 ]] && . "${BINDIR}/lib/partitions.lib"
 [[ $(($PULL_SETTINGS + $MK_XPRIVACY_EXPORT + $MK_XPRIVACY_PULL)) -gt 0 ]] && . "${BINDIR}/lib/pull_config.lib"
 [[ $MK_TIBU -eq 1 ]] && . "${BINDIR}/lib/tibu.lib"
-[[ $((${MK_APPDISABLE} + ${MK_USERBACKUP} + ${MK_SYSBACKUP} + ${MK_INSTALLLOC})) -gt 0 ]] && . "${BINDIR}/lib/scriptgen.lib"
+[[ $((${MK_APPDISABLE} + ${MK_APPENABLE} + ${MK_USERBACKUP} + ${MK_SYSBACKUP} + ${MK_INSTALLLOC})) -gt 0 ]] && . "${BINDIR}/lib/scriptgen.lib"
 [[ ${MK_DEVICEINFO} -gt 0 ]] && . "${BINDIR}/lib/deviceinfo.lib"
 [[ $((${MK_USERAPPS} + ${MK_SYSAPPS})) -ne 0 ]] && . "${BINDIR}/lib/packagedata.lib"
 [[ -n "${TRANSFER_DIR}" ]] && . "${BINDIR}/lib/transfer.lib"
@@ -403,6 +404,7 @@ echo
 doProgress "$(ansi_code "Adebar running:" "bold")"
 initAppLists
 [[ ${MK_APPDISABLE} -gt 0 ]] && getDisabled
+[[ ${MK_APPENABLE} -gt 0 ]] && getEnable
 [[ ${MK_USERBACKUP} -gt 0 ]] && getUserAppBackup
 [[ ${MK_SYSBACKUP} -gt 0 ]] && getSystemAppBackup
 [[ ${MK_INSTALLLOC} -gt 0 ]] && getInstallLoc

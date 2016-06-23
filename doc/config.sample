@@ -44,8 +44,10 @@ TIBU_BACKUPS="/TitaniumBackup-ALL.zip"
 
 # ---------------------------=[ Features ]=--
 # 1=enabled, 0=disabled; whether to ...
-# the script to "freeze/disable" apps
+# create a script to "freeze/disable" apps
 MK_APPDISABLE=1
+# create a script to enable all apps
+MK_APPENABLE=1
 # create the script to backup user apps+data / system app-data
 MK_USERBACKUP=1
 MK_SYSBACKUP=1
