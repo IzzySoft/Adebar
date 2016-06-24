@@ -98,24 +98,24 @@ getXPrivacy() {
         newsize=(${newsizestr//[$'\r']})
         if [[ $newsize -eq 0 ]]; then
           sleepcount+=1
-          doProgress "  + export started, file still empty\r" 4 n
+          doProgress "  + export started, file still empty\r" 3 n
           nobreak=1
         elif [[ $newsize -eq $oldsize ]]; then  # not growing anymore
-          doProgress "  + export seems complete, final size: ${newsize} bytes" 4
+          doProgress "  + export seems complete, final size: ${newsize} bytes" 3
           nobreak=0
           break
         else
           oldsize=$newsize
-          doProgress "  + export running, current size: ${newsize} bytes\r" 4 n
+          doProgress "  + export running, current size: ${newsize} bytes\r" 3 n
           nobreak=1
         fi
       else
         sleepcount+=1
-        doProgress "  + Loop ${sleepcount}, file not yet there\r" 4 n
+        doProgress "  + Loop ${sleepcount}, file not yet there\r" 3 n
         nobreak=1
       fi
     done
-    [[ $nobreak -ne 0 ]] && doProgress "" 4
+    [[ $nobreak -ne 0 ]] && doProgress "" 3
     if [[ -n "$(adb ${ADBOPTS} shell ls ${filename%/*}/ | grep ${filename##*/})" ]]; then
       sleep 2 # just another safeguard to ensure export is complete
       local msg="$((adb ${ADBOPTS} pull ${filename} "${CONFDIR}/xprivacy.xml") 2>&1)"
