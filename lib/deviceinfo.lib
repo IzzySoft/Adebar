@@ -133,6 +133,7 @@ getDeviceInfo() {
   [[ -n "${DEVPROP[ro.modversion]}" ]] && echo "* Mod: ${DEVPROP[ro.modversion]}" >> "$devicedoc" # ro.modversion=10-20121228-NIGHTLY-milestone2
   [[ -n "${DEVPROP[ro.build.id]}" ]] && echo "* BuildID: ${DEVPROP[ro.build.id]}" >> "$devicedoc" # JZO54K
   echo "* Fingerprint: ${DEVPROP[ro.build.fingerprint]}" >> "$devicedoc" # MOTO/A953_O2DE/milestone2:2.3.6/4.5.1-134_DFP-132/1317968148:user/release-keys
+  echo "* Kernel: $(adb ${ADBOPTS} shell uname -r)" >> "$devicedoc"
   echo "* Factory language: ${DEVPROP[ro.product.locale.language]}_${DEVPROP[ro.product.locale.region]}" >> "$devicedoc" # en_US
   echo "* Configured language: ${DEVPROP[persist.sys.language]}_${DEVPROP[persist.sys.country]}" >> "$devicedoc" # de_DE
   echo "* Configured timezone: ${DEVPROP[persist.sys.timezone]}" >> "$devicedoc" # Europe/Berlin
