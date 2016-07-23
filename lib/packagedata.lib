@@ -103,9 +103,10 @@ getAppDetails() {
   local P_BLOCK="none" # none|pkglist|pkg|disabled|enabled|perms
   local P_PKGNAME=""   # name of the currently processed package
   local tmpstring=""
-  local P_SKIP=(userId sharedUser pkg resourcePath nativeLibraryPath versionCode targetSdk timeStamp signatures permissionsFixed pkgFlags applicationInfo)
+  local P_SKIP=(sharedUser pkg resourcePath nativeLibraryPath versionCode targetSdk timeStamp signatures permissionsFixed pkgFlags applicationInfo)
   declare -A PK_CODEPATH
   declare -A PK_VERSION
+  declare -A PK_IDS           # UID/GID (from userId)
   declare -A PK_DATADIR
   declare -A PK_PRIMARYCPU
   declare -A PK_SECONDARYCPU
@@ -170,6 +171,11 @@ getAppDetails() {
           "versionName")
             PK_VERSION[$P_PKGNAME]="${zeile##*=}"
             doProgress "    +version: ${PK_VERSION[$P_PKGNAME]}" 5
+            continue
+            ;;
+          "userId")
+            PK_IDS[$P_PKGNAME]="${zeile}"
+            doProgress "    +IDs: ${PK_IDS[$P_PKGNAME]}" 5
             continue
             ;;
           "dataDir")
@@ -410,6 +416,7 @@ function _makeAppDoc() {
     [[ -n "${PK_LASTUPDATE[$app]}" ]]   && tmpstring+="    + last updated: ${PK_LASTUPDATE[$app]}\n"
     [[ -n "${PK_LASTUSED[$app]}" ]]     && tmpstring+="    + last used: ${PK_LASTUSED[$app]}\n"
     [[ -n "${PK_VERSION[$app]}" ]]      && tmpstring+="    + installed version: ${PK_VERSION[$app]}\n"
+    [[ -n "${PK_IDS[$app]}" ]]          && tmpstring+="    + IDs: ${PK_IDS[$app]}\n"
     [[ -n "${PK_CODEPATH[$app]}" ]]     && tmpstring+="    + CodePath: \`${PK_CODEPATH[$app]}\`\n"
     [[ -n "${PK_DATADIR[$app]}" ]]      && tmpstring+="    + App data: \`${PK_DATADIR[$app]}\`\n"
     [[ -n "${PK_PRIMARYCPU[$app]}" && "${PK_PRIMARYCPU[$app]}" != "null" ]]     && tmpstring+="    + Primary CPU ABI: \`${PK_PRIMARYCPU[$app]}\`\n"
