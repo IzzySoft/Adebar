@@ -103,7 +103,7 @@ getAppDetails() {
   local P_BLOCK="none" # none|pkglist|pkg|disabled|enabled|perms
   local P_PKGNAME=""   # name of the currently processed package
   local tmpstring=""
-  local P_SKIP=(sharedUser pkg resourcePath nativeLibraryPath versionCode targetSdk timeStamp signatures permissionsFixed pkgFlags applicationInfo)
+  local P_SKIP=(sharedUser pkg resourcePath nativeLibraryPath versionCode targetSdk timeStamp signatures permissionsFixed installPermissionsFixed pkgFlags applicationInfo privateFlags dexTimeStamp)
   declare -A PK_CODEPATH
   declare -A PK_VERSION
   declare -A PK_IDS           # UID/GID (from userId)
@@ -132,6 +132,7 @@ getAppDetails() {
   # Parsing dump
   doProgress "- parsing package dump" 2
   while IFS='' read zeile; do # no idea why, but some dump lines are terminated using CRLF
+    zeile="${zeile%"${zeile##*[![:space:]]}"}" #" rtrim (e.g. S7 Edge otherwise causes trouble)
     case ${P_BLOCK} in
       none)
         [[ "$zeile" != "Packages:" ]] && continue;
@@ -230,10 +231,12 @@ getAppDetails() {
             fi
             if [[ "${zeile}" = "    disabledComponents:" ]]; then
               P_BLOCK="disabled"
+              doProgress "    +disabledComponents" 5
               continue
             fi
             if [[ "${zeile}" = "    enabledComponents:" ]]; then
               P_BLOCK="enabled"
+              doProgress "    +enabledComponents" 5
               continue
             fi
             if [[ "${zeile:0:8}" = "    User" ]]; then  # Android 4.2+ MultiUser info
@@ -252,11 +255,11 @@ getAppDetails() {
             fi
             if [[ "${zeile:0:19}" == "    secondaryCpuAbi" ]]; then # secondaryCpuAbi=null
               PK_SECONDARYCPU[$P_PKGNAME]="${zeile:20}"
-              doProgress "    +primaryCpuAbi: ${PK_SECONDARYCPU[$P_PKGNAME]}" 5
+              doProgress "    +secondaryCpuAbi: ${PK_SECONDARYCPU[$P_PKGNAME]}" 5
               continue
             fi
             # silently skip some stuff:
-            if [[ "${zeile:0:26}" == "    legacyNativeLibraryDir" || "${zeile:0:10}" == "    splits" ]]; then
+            if [[ "${zeile:0:24}" == "    install permissions:" || "${zeile:0:25}" == "    declared permissions:" || "${zeile:0:11}" == "    dexMode" || "${zeile:0:32}" == "    nativeLibraryRootRequiresIsa" || "${zeile:0:29}" == "    secondaryNativeLibraryDir" || "${zeile:0:20}" == "    nativeLibraryDir" || "${zeile:0:24}" == "    nativeLibraryRootDir" || "${zeile:0:26}" == "    legacyNativeLibraryDir" || "${zeile:0:10}" == "    splits" ]]; then
               continue
             fi
 
@@ -276,10 +279,12 @@ getAppDetails() {
         fi
         if [[ "${zeile}" = "    grantedPermissions:" ]]; then
           P_BLOCK="perms"
+              doProgress "    +perms" 5
           continue
         fi
         if [[ "${zeile}" = "    enabledComponents:" ]]; then
           P_BLOCK="enabled"
+          doProgress "    +enabledComponents" 5
           continue
         fi
         if [[ "${zeile:0:11}" = "  Package [" ]]; then  # "  Package [com.google.android.location] (40e85638):"
@@ -299,6 +304,7 @@ getAppDetails() {
         fi
         if [[ "${zeile}" = "    grantedPermissions:" ]]; then
           P_BLOCK="perms"
+          doProgress "    +perms" 5
           continue
         fi
         if [[ "${zeile:0:11}" = "  Package [" ]]; then  # "  Package [com.google.android.location] (40e85638):"
