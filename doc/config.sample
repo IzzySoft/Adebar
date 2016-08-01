@@ -19,6 +19,10 @@ DOCDIR="docs"
 CONFDIR="conf"
 # where Adebar stores information between runs, e.g. app names
 CACHEDIR=""
+# additional cache dirs for Bloatware and other pre-installed stuff (space separated list
+# of directories relative to $CACHEDIR/appnames/ – directory names may NOT contain spaces
+# APPCACHESPLUS="sysApps/Android sysApps/Google sysApps"
+APPCACHESPLUS=""
 # base dir for transfers (install, push files, etc.
 TRANSFER_DIR=""
 

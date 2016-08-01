@@ -15,6 +15,7 @@ PARTBACKUPDIR="images"
 DOCDIR="docs"
 CONFDIR="conf"
 CACHEDIR=""
+APPCACHESPLUS=""
 TRANSFER_DIR=""
 
 # -------------------=[ device specifics ]=--

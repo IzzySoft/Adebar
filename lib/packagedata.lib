@@ -12,11 +12,25 @@
 # $1: package name
 # $2: path to apk file (for aapt)
 # $3: whether to retrieve the app name if not found in cache
+# $4: optional path to append to cache base dir. If set, only scan this (no AAPT, no update)
 #
 getAppname() {
+  # Special cache dir?
+  [[ -n "${CACHEDIR}" ]] && {
+    if [[ -n "$4" && -d "${CACHEDIR}/appnames/${4}" ]]; then
+      local CACHEDIR="${CACHEDIR}/appnames/${4}"
+      local SCANONLY=1
+    elif [[ -n "$4" ]]; then  # specified sub-cache doesn't exist
+      echo "$1"
+      return
+    else
+      local SCANONLY=0
+      local CACHEDIR="${CACHEDIR}/appnames"
+    fi
+  }
   # Check cache first (fastest if we have it)
-  if [[ -n "${CACHEDIR}" && -f "${CACHEDIR}/appnames/$1" ]]; then
-    local name="$(cat "${CACHEDIR}/appnames/$1")"
+  if [[ -n "${CACHEDIR}" && -f "${CACHEDIR}/$1" ]]; then
+    local name="$(cat "${CACHEDIR}/$1")"
     name="${name%"${name##*[![:space:]]}"}" # remove trailing spaces
     name="${name#"${name%%[![:space:]]*}"}" # remove leading spaces
     if [[ -n "${name}" ]]; then
@@ -25,12 +39,18 @@ getAppname() {
     fi
   fi
 
+  # ScanOnly mode (special cache dir found)?
+  if [[ $SCANONLY -ne 0 ]]; then
+    echo "$1"
+    return
+  fi
+
   # still here, so not found in cache. Try AAPT (if we have it)
   if [[ $HAVE_AAPT -eq 1 ]]; then
     local str="$(adb ${ADBOPTS} shell "aapt d badging $2 2>/dev/null | grep 'application: label' | sed -n \"s/.*label\='\([^']*\)'.*/\1/p\"")" # label='Some App'"
     str=${str//[$'\t\r\n']} # stupid ^M
     if [[ -n "${str}" ]]; then
-      [[ -n "${CACHEDIR}" && -e "${CACHEDIR}/appnames" && ! -f "${CACHEDIR}/appnames/$1" ]] && echo -n $str > "${CACHEDIR}/appnames/$1"
+      [[ -n "${CACHEDIR}" && -e "${CACHEDIR}" && ! -f "${CACHEDIR}/$1" ]] && echo -n $str > "${CACHEDIR}/$1"
       echo "${str}"
       return
     fi
@@ -40,7 +60,7 @@ getAppname() {
   if [[ ${3} -gt 0 && -n "${APPNAME_CMD}" ]]; then
     name="$(${APPNAME_CMD} $1)"
     if [[ "${name}" != "$1" ]]; then
-      echo "${name}" > "${CACHEDIR}/appnames/$1"
+      echo "${name}" > "${CACHEDIR}/$1"
     fi
     echo "${name}"
     return
@@ -400,7 +420,15 @@ function _makeAppDoc() {
   local CUR_INSTALLER
   local APPNAME
   for app in ${applist[@]}; do
-    APPNAME=$(getAppname "${app}" "${PK_CODEPATH[$app]}" $_retrieveAppNames)
+    if [[ "$1" = "system" && -n "${APPCACHESPLUS}" ]]; then
+      for appcache in ${APPCACHESPLUS}; do
+        APPNAME=$(getAppname "${app}" "${PK_CODEPATH[$app]}" $_retrieveAppNames "${appcache}")
+        [[ "${APPNAME}" != "${app}" ]] && break;
+      done
+      [[ "${APPNAME}" = "${app}" ]] && APPNAME=$(getAppname "${app}" "${PK_CODEPATH[$app]}" $_retrieveAppNames)
+    else
+      APPNAME=$(getAppname "${app}" "${PK_CODEPATH[$app]}" $_retrieveAppNames)
+    fi
     if [[ -z "${PK_INSTALLER[$app]}" ]]; then # no installer
       if [[ "${APPNAME}" = "${app}" ]]; then
         tmpstring="+ $app\n"
