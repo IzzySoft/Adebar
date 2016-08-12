@@ -38,7 +38,7 @@ $result = xml2array($contents,1,'attribute');
  */
 function disabledComponents($result,$mdfile,$adbfile) {
   $md = '';
-  $adb = "#!/bin/bash\n# Disable Components\n\n";
+  $adb = "#!/usr/bin/env bash\n# Disable Components\n\n";
   foreach($result['packages']['package'] as $key => $package) {
     if ( !isset($package['attr']['name']) ) continue;
     $name = $package['attr']['name'];
