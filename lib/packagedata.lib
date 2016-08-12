@@ -358,7 +358,7 @@ getAppDetails() {
   done < "${PKGDUMP}"
 
   getAppUsage
-  echo -e "#!/bin/bash" > "${SH_DISABLED}"
+  echo -e "#!${BASH_LOCATION}" > "${SH_DISABLED}"
 
   [[ ${MK_USERAPPS} -ne 0 ]] && _makeAppDoc "user"
   [[ ${MK_SYSAPPS}  -ne 0 ]] && _makeAppDoc "system"
