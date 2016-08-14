@@ -128,6 +128,8 @@ AUTO_CONFIRM=1
 # backup/restore script? Doesn't work with all devices/ROMs, and requires
 # that no password/pin/pattern is set.
 AUTO_UNLOCK=1
+# Use a fixed location for the Bash interpreter (instead of having it auto-evaluated)
+# BASH_LOCATION="/bin/bash"
 
 # ------------=[ Example postrun function ]=--
 # to avoid possible collisions with functions defined by Adebar itself, use
