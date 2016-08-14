@@ -1,4 +1,3 @@
-#!/bin/bash
 ##############################################################################
 # Adebar © 2014, 2015 by Itzchak Rehberg
 # This is part of the Adebar project, see https://github.com/IzzySoft/Adebar
@@ -165,7 +164,7 @@ _fsProcPart() {
 _fsPartBackup() {
   [[ ${MK_PARTBACKUP} -eq 0 ]] && return
   declare -i counter=0
-  echo "#!/bin/bash" > "${PARTBACKUP_FILE}"
+  echo "#!${BASH_LOCATION}" > "${PARTBACKUP_FILE}"
   echo "# extract images for ${DEVICE_NAME} (created at $(date '+%Y-%m-%d %H:%M'))" >> "${PARTBACKUP_FILE}"
   echo "# WARNING! Use those images at your own risk – especially when considering a restore." >> "${PARTBACKUP_FILE}"
   echo "# Some might contain a file system you could mount, others just 'raw data'." >> "${PARTBACKUP_FILE}"

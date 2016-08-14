@@ -1,4 +1,3 @@
-#!/bin/bash
 ##############################################################################
 # Adebar © 2014, 2015 by Itzchak Rehberg
 # This is part of the Adebar project, see https://github.com/IzzySoft/Adebar
@@ -17,7 +16,7 @@ getDisabled() {
   doProgress "Obtaining list of disabled apps"
 
   local scriptname="${OUTDIR}/disable"
-  echo "#!/bin/bash" > "${scriptname}"
+  echo "#!${BASH_LOCATION}" > "${scriptname}"
   echo "# Disabled apps for ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "${scriptname}"
   echo >> "${scriptname}"
 
@@ -45,7 +44,7 @@ getEnable() {
   doProgress "Creating script to enable ALL apps"
 
   local scriptname="${OUTDIR}/enable"
-  echo "#!/bin/bash" > "${scriptname}"
+  echo "#!${BASH_LOCATION}" > "${scriptname}"
   echo "# Enable ALL apps on the device" >> "${scriptname}"
   echo "#" >> "${scriptname}"
   echo "# Use with care – some apps might be disabled for a good reason :)" >> "${scriptname}"
@@ -76,7 +75,7 @@ getUserAppBackup() {
 
   local backupscript="$OUTDIR/userbackup"
   local restorescript="$OUTDIR/userrestore"
-  echo "#!/bin/bash" > "$backupscript"
+  echo "#!${BASH_LOCATION}" > "$backupscript"
   echo "# Backup script for ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "$backupscript"
   echo "# Backs up all user apps including their .apk files and data" >> "$backupscript"
   echo "# Feel free to comment out/remove apps you don't want/need to be backed up." >> "$backupscript"
@@ -117,7 +116,7 @@ getUserAppBackup() {
       echo >> "$backupscript"
   fi
 
-  echo "#!/bin/bash" > "$restorescript"
+  echo "#!${BASH_LOCATION}" > "$restorescript"
   echo "# Restore script from ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "$restorescript"
   echo "# Restores all app backups. Comment out (or delete) those you do not wish to restore." >> "$restorescript"
   echo  >> "$restorescript"
@@ -215,7 +214,7 @@ getSystemAppBackup() {
 
   local backupscript="$OUTDIR/sysbackup"
   local restorescript="$OUTDIR/sysrestore"
-  echo "#!/bin/bash" > "$backupscript"
+  echo "#!${BASH_LOCATION}" > "$backupscript"
   echo "# Backup script for ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "$backupscript"
   echo "# Backs up the data (not the .apk files) of all your system apps" >> "$backupscript"
   echo "# Feel free to comment out/remove apps you don't want/need to be backed up." >> "$backupscript"
@@ -254,7 +253,7 @@ getSystemAppBackup() {
       echo >> "$backupscript"
   fi
 
-  echo "#!/bin/bash" > "$restorescript"
+  echo "#!${BASH_LOCATION}" > "$restorescript"
   echo "# Restore script from ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "$restorescript"
   echo -e "# Restores all system app data backups.\n# DRAGONS HERE: this might fail if you restore to a different\n# device/Android version/ROM, so be careful!\n# Comment out/delete what you do not wish to restore." >> "$restorescript"
   echo  >> "$restorescript"
@@ -356,7 +355,7 @@ getInstallLoc() {
   [[ $MK_INSTALLLOC -ne 1 ]] && return
   doProgress "Checking default install-location"
   foo="$(adb ${ADBOPTS} shell pm get-install-location)"
-  echo "#!/bin/bash" > "$OUTDIR/defaultInstallLoc"
+  echo "#!${BASH_LOCATION}" > "$OUTDIR/defaultInstallLoc"
   echo "# Set default install location for apps (taken from ${DEVICE_NAME} at $(date '+%Y-%m-%d %H:%M'))" >> "$OUTDIR/defaultInstallLoc"
   echo "pm set-install-location ${foo//[^0-9]/}" >> "$OUTDIR/defaultInstallLoc"
   chmod u+x "$OUTDIR/defaultInstallLoc"
