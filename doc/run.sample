@@ -1,0 +1,16 @@
+#!/bin/bash
+# Example "run" script to transfer the lacells.db for the
+# [Local-GSM-Backend project by n76](https://github.com/n76/Local-GSM-Backend)
+# to be placed in the transfer/special directory for the device the file
+# should be placed on – together with the lacells.db file.
+BINDIR=$( dirname "$(readlink -f "$0")" )           # get the directory this script resides in"
+[[ ! -f "${BINDIR}/lacells.db" ]] && exit 5         # exit with a non-zero code if the lacells.db file is not found here
+
+# Now push the lacells.db, giving it a "temp name" so the app doesn't grab it before it's ready.
+# If the transfer succeeded, rename it so the app sees it, then remove the local file and
+# do a "clean exit". If something else goes wrong, exit with another non-zero return code.
+adb push "${BINDIR}/lacells.db" /sdcard/.nogapps/lacells.db.tx
+[[ $? -eq 0 ]] && adb shell "mv /sdcard/.nogapps/lacells.db.tx /sdcard/.nogapps/lacells.db.new"
+[[ $? -eq 0 ]] && rm -f "${BINDIR}/lacells.db"
+[[ $? -eq 0 ]] && exit 0
+exit 3
