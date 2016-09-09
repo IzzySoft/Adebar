@@ -79,6 +79,30 @@ pushFiles() {
 
 
 #
+# Special Transfer
+specialTrans() {
+  if [[ -z "${TRANSFER_DIR}" ]]; then
+    echo -e "$(ansi_code "specialTrans called without TRANSFER_DIR being set" "red")"
+    return
+  fi
+  doProgress "- checking special transfer directory" 2
+  [[ ! -d "${TRANSFER_DIR}/special" || ! -f "${TRANSFER_DIR}/special/run" ]] && return    # nothing to do
+  [[ ! -x "${TRANSFER_DIR}/special/run" ]] && {
+    doProgress "! found '${TRANSFER_DIR}/special/run', but it's not executable. Skipping." 2
+    return
+  }
+  doProgress "  + executing '${TRANSFER_DIR}/special/run'" 3
+  ${TRANSFER_DIR}/special/run
+  local rc=$?
+  if [[ $rc -eq 0 ]]; then
+    doProgress "  + '${TRANSFER_DIR}/special/run' terminated with return code $rc." 3
+  else
+    doProgress "$(ansi_code "  ! '${TRANSFER_DIR}/special/run' terminated with return code $rc." "red")" 2
+  fi
+}
+
+
+#
 # Main Loop
 #
 doTransfer() {
@@ -94,4 +118,5 @@ doTransfer() {
   installApk install
   installApk reinstall
   pushFiles
+  specialTrans
 }
