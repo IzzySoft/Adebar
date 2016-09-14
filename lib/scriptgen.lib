@@ -17,8 +17,9 @@ getDisabled() {
 
   local scriptname="${OUTDIR}/disable"
   echo "#!${BASH_LOCATION}" > "${scriptname}"
-  echo "# Disabled apps for ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "${scriptname}"
-  echo >> "${scriptname}"
+  echo "# Disabled apps and components for ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "${scriptname}"
+  echo -e "#\n# Check carefully before executing. Not all of those have been disabled by you :)\n#\n" >> "${scriptname}"
+  echo -e "#\n# Disabled apps\n#\n" >> "${scriptname}"
 
   for app in $(adb ${ADBOPTS} shell "pm list packages -d 2>/dev/null"); do
     if [[ "${app}" =~ ^package: ]]; then
@@ -31,7 +32,28 @@ getDisabled() {
     fi
   done
 
-  chmod u+x "${scriptname}"
+  doProgress "Obtaining list of disabled components"
+
+  local comps
+  local myline
+  echo -e "\n#\n# Disabled components\n#" >> "${scriptname}"
+  for pkg in $(adb ${ADBOPTS} shell "pm list packages 2>/dev/null"); do
+    pkg=${pkg//[$'\t\r\n']}
+    pkg=${pkg##*:}
+    [[ "${pkg}" = "android" ]] && continue
+    comps=$(adb ${ADBOPTS} shell "dumpsys package ${pkg}" | egrep -A99999 "disabledComponents:" |egrep -B99999 "enabledComponents:")
+    if [[ -n "${comps}" ]]; then
+      echo >> "${scriptname}"
+      echo "# ${pkg}" >> "${scriptname}"
+      for myline in $comps; do
+        myline=${myline//[$'\t\r\n']}
+        [[ "${myline}" = "disabledComponents:" || "${myline}" = "enabledComponents:" ]] && continue
+        echo "adb ${ADBOPTS} shell \"pm disable ${pkg}/${myline}\"" >> "${scriptname}"
+      done
+    fi
+  done
+
+  #chmod u+x "${scriptname}"
 }
 
 
