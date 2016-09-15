@@ -122,6 +122,7 @@ getAppDetails() {
   local P_BLOCK="none" # none|pkglist|pkg|disabled|enabled|perms
   local P_PKGNAME=""   # name of the currently processed package
   local tmpstring=""
+  local regex
   local P_SKIP=(sharedUser pkg resourcePath nativeLibraryPath versionCode targetSdk timeStamp signatures permissionsFixed installPermissionsFixed pkgFlags applicationInfo privateFlags dexTimeStamp)
   declare -A PK_CODEPATH
   declare -A PK_VERSION
@@ -180,7 +181,8 @@ getAppDetails() {
         [[ "$zeile" = "    usesLibraryFiles:" ]] && continue
         [[ "$zeile" = "    usesLibraries:" ]] && continue
         [[ "$zeile" = "    libraries:" ]] && continue
-        [[ "${zeile:0:6}" = "      " ]] && continue
+        regex='^\s+(dis|en)abledComponents:'
+        [[ "${zeile:0:6}" = "      " && ! "${zeile}" =~ $regex ]] && continue
         [[ -z "${zeile%%* }" ]] && break # end of package list is an empty line, sometimes with spaces
         case "$tmpstring" in
           "codePath")
@@ -248,12 +250,14 @@ getAppDetails() {
               doProgress "  - Package: $P_PKGNAME" 4
               continue
             fi
-            if [[ "${zeile}" = "    disabledComponents:" ]]; then
+            regex='^\s+disabledComponents:'
+            if [[ "${zeile}" =~ $regex ]]; then
               P_BLOCK="disabled"
               doProgress "    +disabledComponents" 5
               continue
             fi
-            if [[ "${zeile}" = "    enabledComponents:" ]]; then
+            regex='^\s+enabledComponents:'
+            if [[ "${zeile}" =~ $regex ]]; then
               P_BLOCK="enabled"
               doProgress "    +enabledComponents" 5
               continue
@@ -301,7 +305,8 @@ getAppDetails() {
               doProgress "    +perms" 5
           continue
         fi
-        if [[ "${zeile}" = "    enabledComponents:" ]]; then
+        regex='^\s+enabledComponents:'
+        if [[ "${zeile}" =~ $regex ]]; then
           P_BLOCK="enabled"
           doProgress "    +enabledComponents" 5
           continue
@@ -359,6 +364,8 @@ getAppDetails() {
 
   getAppUsage
   echo -e "#!${BASH_LOCATION}" > "${SH_DISABLED}"
+  echo -e "# Disabled components on ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "${SH_DISABLED}"
+  echo -e "#\n# Check carefully before executing. Not all of those have been disabled by you :)\n#\n" >> "${SH_DISABLED}"
 
   [[ ${MK_USERAPPS} -ne 0 ]] && _makeAppDoc "user"
   [[ ${MK_SYSAPPS}  -ne 0 ]] && _makeAppDoc "system"
@@ -384,7 +391,7 @@ function _makeAppDoc() {
         mdfile="${DOCDIR}/userApps.md"
         apptype="User-Apps"
         applist=(${userApps[*]})
-        echo -e "# Disable Components (${DEVICE_NAME})" >> "${SH_DISABLED}"
+        echo -e "#\n# Disable User Components\n#" >> "${SH_DISABLED}"
         _retrieveAppNames=1
         ;;
     "system")
@@ -392,7 +399,7 @@ function _makeAppDoc() {
         mdfile="${DOCDIR}/sysApps.md"
         apptype="System-Apps"
         applist=(${sysApps[*]})
-        echo -e "\n\n# Disable System Components" >> "${SH_DISABLED}"
+        echo -e "\n\n#\n# Disable System Components\n#" >> "${SH_DISABLED}"
         _retrieveAppNames=${MK_SYSAPPS_RETRIEVE_NAMES}
         ;;
     *) 

@@ -17,7 +17,7 @@ getDisabled() {
 
   local scriptname="${OUTDIR}/disable"
   echo "#!${BASH_LOCATION}" > "${scriptname}"
-  echo "# Disabled apps and components for ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "${scriptname}"
+  echo "# Disabled apps for ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "${scriptname}"
   echo -e "#\n# Check carefully before executing. Not all of those have been disabled by you :)\n#\n" >> "${scriptname}"
   echo -e "#\n# Disabled apps\n#\n" >> "${scriptname}"
 
@@ -32,11 +32,15 @@ getDisabled() {
     fi
   done
 
+  [[ $((${MK_USERAPPS} + ${MK_SYSAPPS})) -ne 0 ]] && return     # faster done over there :)
+
   doProgress "Obtaining list of disabled components"
 
   local comps
   local myline
-  echo -e "\n#\n# Disabled components\n#" >> "${scriptname}"
+  scriptname="${OUTDIR}/deadReceivers.sh"
+  echo "#!${BASH_LOCATION}" > "${scriptname}"
+  echo -e "\n#\n# Disabled components for ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')\n#" >> "${scriptname}"
   for pkg in $(adb ${ADBOPTS} shell "pm list packages 2>/dev/null"); do
     pkg=${pkg//[$'\t\r\n']}
     pkg=${pkg##*:}
