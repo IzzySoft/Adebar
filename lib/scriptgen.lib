@@ -1,5 +1,5 @@
 ##############################################################################
-# Adebar © 2014, 2015 by Itzchak Rehberg
+# Adebar © 2014-2016 by Itzchak Rehberg
 # This is part of the Adebar project, see https://github.com/IzzySoft/Adebar
 # Protected by the GPLv2
 # ----------------------------------------------------------------------------
@@ -15,6 +15,11 @@ getDisabled() {
 
   doProgress "Obtaining list of disabled apps"
 
+  if [[ $DEVICE_SDKVER -gt 20 ]]; then  # Android 5.0+
+    local disableCmd="hide"
+  else
+    local disableCmd="disable"
+  fi
   local scriptname="${OUTDIR}/disable"
   echo "#!${BASH_LOCATION}" > "${scriptname}"
   echo "# Disabled apps for ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "${scriptname}"
@@ -25,9 +30,9 @@ getDisabled() {
     if [[ "${app}" =~ ^package: ]]; then
       app=${app//[$'\t\r\n']}
       if [[ $ROOT_PMDISABLE -eq 0 ]]; then
-        echo "adb ${ADBOPTS} shell \"pm disable ${app##*:}\"" >> "${scriptname}"
+        echo "adb ${ADBOPTS} shell \"pm ${disableCmd} ${app##*:}\"" >> "${scriptname}"
       else
-        echo "adb ${ADBOPTS} shell \"su -c 'pm disable ${app##*:}'\"" >> "${scriptname}"
+        echo "adb ${ADBOPTS} shell \"su -c 'pm ${disableCmd} ${app##*:}'\"" >> "${scriptname}"
       fi
     fi
   done
@@ -69,6 +74,11 @@ getEnable() {
 
   doProgress "Creating script to enable ALL apps"
 
+  if [[ $DEVICE_SDKVER -gt 20 ]]; then  # Android 5.0+
+    local enableCmd="unhide"
+  else
+    local enableCmd="enable"
+  fi
   local scriptname="${OUTDIR}/enable"
   echo "#!${BASH_LOCATION}" > "${scriptname}"
   echo "# Enable ALL apps on the device" >> "${scriptname}"
@@ -80,9 +90,9 @@ getEnable() {
     if [[ "${app}" =~ ^package: ]]; then
       app=${app//[$'\t\r\n']}
       if [[ $ROOT_PMDISABLE -eq 0 ]]; then
-        echo "adb ${ADBOPTS} shell \"pm enable ${app##*:}\"" >> "${scriptname}"
+        echo "adb ${ADBOPTS} shell \"pm ${enableCmd} ${app##*:}\"" >> "${scriptname}"
       else
-        echo "adb ${ADBOPTS} shell \"su -c 'pm enable ${app##*:}'\"" >> "${scriptname}"
+        echo "adb ${ADBOPTS} shell \"su -c 'pm ${enableCmd} ${app##*:}'\"" >> "${scriptname}"
       fi
     fi
   done

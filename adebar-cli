@@ -2,7 +2,7 @@
 # Adebar
 # (Android DEvice Backup And Restore)
 # Creating scripts to backup and restore your apps, settings, and more
-# © 2014 by Andreas Itzchak Rehberg
+# © 2014-2016 by Andreas Itzchak Rehberg
 # Licensed using GPLv2 (see the file LICENSE which should have shipped with this)
 
 # #################################[ Configuration ]###
@@ -217,6 +217,11 @@ if [ ! -d "${DOCDIR}" ]; then
   }
   mkdir -p "${CONFDIR}"
 fi
+
+# What Android version shall we assume (for specific features)? Do not evaluate if user has configured an override.
+[[ -z "${DEVICE_SDKVER}" ]] && DEVICE_SDKVER=$(adb shell "getprop ro.build.version.sdk")
+DEVICE_SDKVER=${DEVICE_SDKVER//[$'\t\r\n']}
+
 
 # Load libraries if needed
 [[ $((${MK_PARTINFO} + ${MK_PARTBACKUP})) -gt 0 ]] && . "${BINDIR}/lib/partitions.lib"
