@@ -18,7 +18,7 @@ getSettings() {
   local msg
   # build.prop
   msg="$((adb ${ADBOPTS} pull /system/build.prop "${BUILDPROP}") 2>&1)"
-  doProgress "- build.prop: $msg" 2
+  doProgress "- build.prop: $(trim "${msg##*]}")" 2
 
   # wpa_supplicant.conf
   if [[ ${ROOT_COMPAT} -eq 1 ]]; then
@@ -42,9 +42,9 @@ getSettings() {
 
   # gps.conf, hosts
   msg="$((adb ${ADBOPTS} pull /system/etc/gps.conf "${CONFDIR}/gps.conf") 2>&1)"
-  doProgress "- gps.conf: $msg" 2
+  doProgress "- gps.conf: $(trim "${msg##*]}")" 2
   msg="$((adb ${ADBOPTS} pull /system/etc/hosts "${CONFDIR}/hosts") 2>&1)"
-  doProgress "- hosts: $msg" 2
+  doProgress "- hosts: $(trim "${msg##*]}")" 2
 
   # packages.xml
   if [[ ${ROOT_COMPAT} -eq 1 ]]; then
