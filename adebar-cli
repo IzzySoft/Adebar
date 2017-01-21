@@ -154,14 +154,14 @@ fi
 # No device connected:
 ADBOPTS=""
 
-if [ -z "$(adb devices|grep -E "^[0-9A-Za-z]+[^ ]+device"|awk '{print $1}')" ]; then
+if [ -z "$(adb devices|grep -E "^[0-9A-Za-z.:]+[[:blank:]]+device"|awk '{print $1}')" ]; then
   echo "No device found. Make sure you have connected your device with"
   echo "USB debugging enabled, and try again."
   echo
   exit 2
 fi
 
-serials=($(adb devices|grep -E "^[0-9A-Za-z]+[^ ]+device"|awk '{print $1}'))
+serials=($(adb devices|grep -E "^[0-9A-Za-z.:]+[[:blank:]]+device"|awk '{print $1}'))
 # Multiple devices connected but no serial defined:
 if [ -z "${SERIAL}" -a ${#serials[*]} -ne 1 ]; then
   echo "There are currently multiple devices connected, and we don't know"
@@ -222,7 +222,6 @@ fi
 # What Android version shall we assume (for specific features)? Do not evaluate if user has configured an override.
 [[ -z "${DEVICE_SDKVER}" ]] && DEVICE_SDKVER=$(adb shell "getprop ro.build.version.sdk")
 DEVICE_SDKVER=${DEVICE_SDKVER//[$'\t\r\n']}
-#DEVICE_SDKVER=23
 
 # Load libraries if needed
 . "${BINDIR}/lib/common.lib"
