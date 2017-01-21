@@ -146,7 +146,7 @@ getAppDetails() {
 
   doProgress "Generating app detail info"
   doProgress "- collecting data via dumpsys" 2
-  adb ${ADBOPTS} shell "dumpsys package" |egrep -A99999 "^Packages:" |egrep -B99999 "^Shared users:" > "${PKGDUMP}"
+  adb ${ADBOPTS} shell "dumpsys package" |grep -E -A99999 "^Packages:" |grep -E -B99999 "^Shared users:" > "${PKGDUMP}"
 
   # Parsing dump
   doProgress "- parsing package dump" 2
