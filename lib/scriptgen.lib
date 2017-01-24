@@ -50,7 +50,7 @@ getDisabled() {
     pkg=${pkg//[$'\t\r\n']}
     pkg=${pkg##*:}
     [[ "${pkg}" = "android" ]] && continue
-    comps=$(adb ${ADBOPTS} shell "dumpsys package ${pkg}" | egrep -A99999 "disabledComponents:" |egrep -B99999 "enabledComponents:")
+    comps=$(adb ${ADBOPTS} shell "dumpsys package ${pkg}" | grep -E -A99999 "disabledComponents:" |grep -E -B99999 "enabledComponents:")
     if [[ -n "${comps}" ]]; then
       echo >> "${scriptname}"
       echo "# ${pkg}" >> "${scriptname}"
