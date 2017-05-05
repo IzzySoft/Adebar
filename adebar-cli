@@ -53,6 +53,15 @@ MK_PARTINFO=1
 MK_PARTBACKUP=0
 PARTITION_SRC="auto"
 
+# Making the verification of bash version here before any error could be triggered
+if [ x$BASH = x ] || [ ! $BASH_VERSINFO ] || [ $BASH_VERSINFO -lt 4 ]; then
+  echo
+  echo "Sorry, but you need Bash version 4 at least, you currently have version $BASH_VERSION."
+  echo "Please update it and relaunch your terminal."
+  echo
+  exit 6
+fi
+
 # -------------------=[ UserApp Specials ]=--
 declare -A APP_INSTALL_SRC
 declare -A APP_MARKET_URL
@@ -101,7 +110,7 @@ if [[ "$1" = "-a" || "$1" = "--auto" ]]; then
   fi
   declare -i trc=0
   for serial in $(adb devices|tail -n +2|awk '{print $1}'); do
-    confi=$(egrep "^\s*SERIAL=.${serial}.\s*$" "${BINDIR}/config/"*  |head -n 1|awk -F ':' '{print $1}')
+    confi=$(grep -E "^\s*SERIAL=.${serial}.\s*$" "${BINDIR}/config/"*  |head -n 1|awk -F ':' '{print $1}')
     [[ -z "${confi}" ]] && continue # unknown device, i.e. serial not found in any config
     confi=${confi##*/}
     $0 $confi
@@ -153,14 +162,15 @@ fi
 # Check whether a device is connected at all and, if configured, the serial matches
 # No device connected:
 ADBOPTS=""
-if [ -z "$(adb devices|egrep "^[0-9A-Za-z.:]+\s+device$"|awk '{print $1}')" ]; then
+
+if [ -z "$(adb devices|grep -E "^[0-9A-Za-z.:]+[[:space:]]+device[[:space:]]*$"|awk '{print $1}')" ]; then
   echo "No device found. Make sure you have connected your device with"
   echo "USB debugging enabled, and try again."
   echo
   exit 2
 fi
 
-serials=($(adb devices|egrep "^[0-9A-Za-z.:]+\s+device$"|awk '{print $1}'))
+serials=($(adb devices|grep -E "^[0-9A-Za-z.:]+[[:space:]]+device[[:space:]]*$"|awk '{print $1}'))
 # Multiple devices connected but no serial defined:
 if [ -z "${SERIAL}" -a ${#serials[*]} -ne 1 ]; then
   echo "There are currently multiple devices connected, and we don't know"
@@ -221,7 +231,6 @@ fi
 # What Android version shall we assume (for specific features)? Do not evaluate if user has configured an override.
 [[ -z "${DEVICE_SDKVER}" ]] && DEVICE_SDKVER=$(adb shell "getprop ro.build.version.sdk")
 DEVICE_SDKVER=${DEVICE_SDKVER//[$'\t\r\n']}
-
 
 # Load libraries if needed
 . "${BINDIR}/lib/common.lib"
