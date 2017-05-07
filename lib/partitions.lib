@@ -186,7 +186,7 @@ _fsPartBackup() {
     else
       pname="${MTD_NAME[${counter}]}"
     fi
-    echo "adb ${ADBOPTS} shell \"su -c 'stty raw; cat ${MTD_DEV[${counter}]}'\" > \"${PARTBACKUPDIR}/${pname}.img\"" >> "${PARTBACKUP_FILE}"
+    echo "adb ${ADBOPTS} exec-out \"su -c 'cat ${MTD_DEV[${counter}]}'\" > \"${PARTBACKUPDIR}/${pname}.img\"" >> "${PARTBACKUP_FILE}"
     counter+=1
   done
 }
