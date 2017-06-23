@@ -100,6 +100,74 @@ getEnable() {
   chmod u+x "${scriptname}"
 }
 
+#
+# Prompt for retry to backup 41-byte backup files or delete
+#
+RETRY41() {
+  echo >> "$backupscript"
+  echo "NOT_BACKED_UP=(\$(find -maxdepth 1 -type f -size -42c | xargs))" >> "$backupscript"
+  echo "while [[ \"\${#NOT_BACKED_UP[@]}\" -gt 0 ]]; do" >> "$backupscript"
+  echo "  echo -e \"\\Some of the apps are not backed up properly (\"\${#NOT_BACKED_UP[@]}\"):\\n\"" >> "$backupscript"
+  echo "  for i in \"\${NOT_BACKED_UP[@]}\"; do" >> "$backupscript"
+  echo "    i=\"\${i%.ab}\"" >> "$backupscript"
+  echo "    echo \"\${i##*/}\"" >> "$backupscript"
+  echo "  done" >> "$backupscript"
+  echo "  echo" >> "$backupscript"
+  echo "  validbackres=0" >> "$backupscript"
+  echo "  backres=n" >> "$backupscript"
+  echo "  while ! ((\$validbackres)); do" >> "$backupscript"
+  echo "    read -n 1 -p \"Try to backup them again? (y/N): \" backres" >> "$backupscript"
+  echo "    if [[ \"\${backres,,}\" == [Nn] || -z \"\${backres}\" ]]; then" >> "$backupscript"
+  echo "      validbackres=1" >> "$backupscript"
+  echo "      break=1" >> "$backupscript"
+  echo "      validrmres=0" >> "$backupscript"
+  echo "      rmres=n" >> "$backupscript"
+  echo "      while ! ((\$validrmres)); do" >> "$backupscript"
+  echo "        echo" >> "$backupscript"
+  echo "        read -n 1 -p \"Delete these backup files? (y/N): \" rmres" >> "$backupscript"
+  echo "        if [[ \"\${rmres,,}\" == [Nn] || -z \"\${rmres}\" ]]; then" >> "$backupscript"
+  echo "          validrmres=1" >> "$backupscript"
+  echo "        elif [[ \"\${rmres,,}\" == [Yy] || -z \"\${rmres}\" ]]; then" >> "$backupscript"
+  echo "          validrmres=1" >> "$backupscript"
+  echo "          for i in \"\${NOT_BACKED_UP[@]}\"; do" >> "$backupscript"
+  echo "            rm \"\${i}\"" >> "$backupscript"
+  echo "          done" >> "$backupscript"
+  echo "          echo" >> "$backupscript"
+  echo "        else" >> "$backupscript"
+  echo "          validrmres=0" >> "$backupscript"
+  echo -n "          echo -e \"" >> "$backupscript"
+  (($USE_ANSI)) && echo -n "\\e[0;31m" >> "$backupscript"
+  echo -n "\\nResponse not valid, please answer y or n\\n" >> "$backupscript"
+  (($USE_ANSI)) && echo -n "\\e[m" >> "$backupscript"
+  echo "\"" >> "$backupscript"
+  echo "        fi" >> "$backupscript"
+  echo "      done" >> "$backupscript"
+  echo "    elif [[ \"\${backres,,}\" == [Yy] || -z \"\${backres}\" ]]; then" >> "$backupscript"
+  echo "      validbackres=1" >> "$backupscript"
+  echo "      echo" >> "$backupscript"
+  echo "      for i in \"\${NOT_BACKED_UP[@]}\"; do" >> "$backupscript"
+  echo "        rm \"\${i}\"" >> "$backupscript"
+  echo "        i=\"\${i%.ab}\"" >> "$backupscript"
+  if (($AUTO_CONFIRM)); then
+    echo "        autoConfirmedBackup \"\${i##*/}\"" >> "$backupscript"
+  else
+    echo "        doBackup \"\${i##*/}\"" >> "$backupscript"
+  fi
+  echo "      done" >> "$backupscript"
+  echo "      NOT_BACKED_UP=()" >> "$backupscript"
+  echo "      NOT_BACKED_UP=(\$(find -maxdepth 1 -type f -size -42c | xargs))" >> "$backupscript"
+  echo "    else" >> "$backupscript"
+  echo "      validbackres=0" >> "$backupscript"
+  echo -n "      echo -e \"" >> "$backupscript"
+  (($USE_ANSI)) && echo -n "\\e[0;31m" >> "$backupscript"
+  echo -n "\\nResponse not valid, please answer y or n\\n" >> "$backupscript"
+  (($USE_ANSI)) && echo -n "\\e[m" >> "$backupscript"
+  echo "\"" >> "$backupscript"
+  echo "    fi" >> "$backupscript"
+  echo "  done" >> "$backupscript"
+  echo "  ((\$break)) && break" >> "$backupscript"
+  echo "done" >> "$backupscript"
+}
 
 #
 # Create script to backup all user-apps
@@ -120,8 +188,20 @@ getUserAppBackup() {
   echo "cd \"${USERDIR}\"" >> "$backupscript"
   echo >> "$backupscript"
   echo "function doBackup() {" >> "$backupscript"
-  echo -e "  echo \"backing up: \${1}\"" >> "$backupscript"
-  echo -e "  adb ${ADBOPTS} backup -f \"\${1}.ab\" -apk \${1}" >> "$backupscript"
+  prep=""
+  if (($SKIP_EXISTING_USERBACKUP)); then
+  prep="  "
+    echo -e "  if [ -f \"\${1}.ab\" ]; then" >> "$backupscript"
+    echo -e "    echo \"skiping: \${1}: already backed up.\"" >> "$backupscript"
+    echo -e "  else" >> "$backupscript"
+  fi
+  echo -e "  ${prep}echo \"backing up: \${1}\"" >> "$backupscript"
+  echo -e "  ${prep}adb ${ADBOPTS} backup -f \"\${1}.ab\" -apk \${1}" >> "$backupscript"
+  if (($SKIP_EXISTING_USERBACKUP)); then
+    echo -e "  fi" >> "$backupscript"
+  else
+    prep=""
+  fi
   echo  "  sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
   echo "}" >> "$backupscript"
   echo >> "$backupscript"
@@ -139,13 +219,23 @@ getUserAppBackup() {
       echo >> "$backupscript"
       echo    "function autoConfirmedBackup() {" >> "$backupscript"
       echo -e "    doBackup \"\${1}\" &" >> "$backupscript"
-      echo -e "    JOB=\$!" >> "$backupscript"
-      echo -e "    sleep ${MK_AUTOCONFIRM_DELAY}" >> "$backupscript"
-      echo -e "    autoConfirm" >> "$backupscript"
-      echo -e "    while [[ \$? == 0 ]]; do" >> "$backupscript"
-      echo -e "        sleep 1" >> "$backupscript"
-      echo -e "        ps -p \${JOB} &>/dev/null" >> "$backupscript"
-      echo -e "    done" >> "$backupscript"
+      prep=""
+      if (($SKIP_EXISTING_USERBACKUP)); then
+        prep="    "
+        echo -e "    if [ ! -f \"\${1}.ab\" ]; then" >> "$backupscript"
+      fi
+      echo -e "    ${prep}JOB=\$!" >> "$backupscript"
+      echo -e "    ${prep}sleep ${MK_AUTOCONFIRM_DELAY}" >> "$backupscript"
+      echo -e "    ${prep}autoConfirm" >> "$backupscript"
+      echo -e "    ${prep}while [[ \$? == 0 ]]; do" >> "$backupscript"
+      echo -e "        ${prep}sleep 1" >> "$backupscript"
+      echo -e "        ${prep}ps -p \${JOB} &>/dev/null" >> "$backupscript"
+      echo -e "    ${prep}done" >> "$backupscript"
+      if (($SKIP_EXISTING_USERBACKUP)); then
+        echo -e "    fi" >> "$backupscript"
+      else
+        prep=""
+      fi
       echo -e "}" >> "$backupscript"
       echo >> "$backupscript"
       echo -e "echo \"NOTICE: Do not interact with your device while performing automated backups!\"" >> "$backupscript"
@@ -229,6 +319,8 @@ getUserAppBackup() {
     fi
   done
 
+  RETRY41
+
   echo >> "$backupscript"
   echo "cd - > /dev/null" >> "$backupscript"
   echo >> "$backupscript"
@@ -259,8 +351,20 @@ getSystemAppBackup() {
   echo "cd \"${SYSDIR}\"" >> "$backupscript"
   echo >> "$backupscript"
   echo "function doBackup() {" >> "$backupscript"
-  echo -e "  echo \"backing up: \${1}\"" >> "$backupscript"
-  echo -e "  adb ${ADBOPTS} backup -f \"\${1}.ab\" -noapk \${1}" >> "$backupscript"
+  prep=""
+  if (($SKIP_EXISTING_SYSBACKUP)); then
+    prep="  "
+    echo -e "  if [ -f \"\${1}.ab\" ]; then" >> "$backupscript"
+    echo -e "    echo \"skiping: \${1}: already backed up.\"" >> "$backupscript"
+    echo -e "  else" >> "$backupscript"
+  fi
+  echo -e "  ${prep}echo \"backing up: \${1}\"" >> "$backupscript"
+  echo -e "  ${prep}adb ${ADBOPTS} backup -f \"\${1}.ab\" -noapk \${1}" >> "$backupscript"
+  if (($SKIP_EXISTING_SYSBACKUP)); then
+    echo -e "  fi" >> "$backupscript"
+  else
+    prep=""
+  fi
   echo  "  sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
   echo "}" >> "$backupscript"
   echo >> "$backupscript"
@@ -278,13 +382,23 @@ getSystemAppBackup() {
       echo >> "$backupscript"
       echo    "function autoConfirmedBackup() {" >> "$backupscript"
       echo -e "    doBackup \"\${1}\" &" >> "$backupscript"
-      echo -e "    JOB=\$!" >> "$backupscript"
-      echo -e "    sleep ${MK_AUTOCONFIRM_DELAY}" >> "$backupscript"
-      echo -e "    autoConfirm" >> "$backupscript"
-      echo -e "    while [[ \$? == 0 ]]; do" >> "$backupscript"
-      echo -e "        sleep 1" >> "$backupscript"
-      echo -e "        ps -p \${JOB} &>/dev/null" >> "$backupscript"
-      echo -e "    done" >> "$backupscript"
+      prep=""
+      if (($SKIP_EXISTING_SYSBACKUP)); then
+      prep="    "
+        echo -e "    if [ ! -f \"\${1}.ab\" ]; then" >> "$backupscript"
+      fi
+      echo -e "    ${prep}JOB=\$!" >> "$backupscript"
+      echo -e "    ${prep}sleep ${MK_AUTOCONFIRM_DELAY}" >> "$backupscript"
+      echo -e "    ${prep}autoConfirm" >> "$backupscript"
+      echo -e "    ${prep}while [[ \$? == 0 ]]; do" >> "$backupscript"
+      echo -e "        ${prep}sleep 1" >> "$backupscript"
+      echo -e "        ${prep}ps -p \${JOB} &>/dev/null" >> "$backupscript"
+      echo -e "    ${prep}done" >> "$backupscript"
+      if (($SKIP_EXISTING_SYSBACKUP)); then
+        echo -e "    fi" >> "$backupscript"
+      else
+        prep=""
+      fi
       echo -e "}" >> "$backupscript"
       echo >> "$backupscript"
   fi
@@ -346,12 +460,14 @@ getSystemAppBackup() {
   for app in "${sysApps[@]}"; do
     prep=""
     if [ "$app" = "com.android.sharedstoragebackup" ]; then # shared storage
-      prep="  "
-      echo >> "$backupscript"
+      if ! (($AUTO_BACKUP_SHARED)); then
+        prep="  "
+        echo >> "$backupscript"
+      fi
       echo  >> "$restorescript"
-      echo -e "echo \"The following command will download 'shared storage' (i.e. contents of the SD card(s)).\"\necho \"This might take quite a while, depending on what you've stored there.\"" >> "$backupscript"
+      ! (($AUTO_BACKUP_SHARED)) && echo -e "echo \"The following command will download 'shared storage' (i.e. contents of the SD card(s)).\"\necho \"This might take quite a while, depending on what you've stored there.\"" >> "$backupscript"
       echo -e "echo \"The following command will restore 'shared storage' (i.e. contents of the SD card(s)).\"\necho \"This might take quite a while, depending on how big your backup from it was.\"" >> "$restorescript"
-      echo -e "read -n 1 -p \"Do you wish to run this command now? (Y/n) \" res\necho\nif [[ \"\${res,,}\" = \"y\" || -z \"\${res}\" ]]; then" >> "$backupscript"
+      ! (($AUTO_BACKUP_SHARED)) && echo -e "read -n 1 -p \"Do you wish to run this command now? (Y/n) \" res\necho\nif [[ \"\${res,,}\" = \"y\" || -z \"\${res}\" ]]; then" >> "$backupscript"
       echo -e "read -n 1 -p \"Do you wish to run this command now? (Y/n) \" res\necho\nif [[ \"\${res,,}\" = \"y\" || -z \"\${res}\" ]]; then" >> "$restorescript"
     else
       prep=""
@@ -366,12 +482,14 @@ getSystemAppBackup() {
     fi
 
     if [ "$app" = "com.android.sharedstoragebackup" ]; then
-      echo -e "else\n  echo \"Skipping shared storage\"\nfi" >> "$backupscript"
+      ! (($AUTO_BACKUP_SHARED)) && echo -e "else\n  echo \"Skipping shared storage\"\nfi" >> "$backupscript"
       echo -e "else\n  echo \"Skipping shared storage\"\nfi" >> "$restorescript"
-      echo >> "$backupscript"
+      ! (($AUTO_BACKUP_SHARED)) && echo >> "$backupscript"
       echo  >> "$restorescript"
     fi
   done
+
+  RETRY41
 
   echo >> "$backupscript"
   echo "cd - > /dev/null" >> "$backupscript"
