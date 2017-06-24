@@ -100,6 +100,74 @@ getEnable() {
   chmod u+x "${scriptname}"
 }
 
+#
+# Prompt for retry to backup 41-byte backup files or delete
+#
+RETRY41() {
+  echo >> "$backupscript"
+  echo "NOT_BACKED_UP=(\$(find -maxdepth 1 -type f -size -42c | xargs))" >> "$backupscript"
+  echo "while [[ \"\${#NOT_BACKED_UP[@]}\" -gt 0 ]]; do" >> "$backupscript"
+  echo "  echo -e \"\\Some of the apps are not backed up properly (\"\${#NOT_BACKED_UP[@]}\"):\\n\"" >> "$backupscript"
+  echo "  for i in \"\${NOT_BACKED_UP[@]}\"; do" >> "$backupscript"
+  echo "    i=\"\${i%.ab}\"" >> "$backupscript"
+  echo "    echo \"\${i##*/}\"" >> "$backupscript"
+  echo "  done" >> "$backupscript"
+  echo "  echo" >> "$backupscript"
+  echo "  validbackres=0" >> "$backupscript"
+  echo "  backres=n" >> "$backupscript"
+  echo "  while ! ((\$validbackres)); do" >> "$backupscript"
+  echo "    read -n 1 -p \"Try to backup them again? (y/N): \" backres" >> "$backupscript"
+  echo "    if [[ \"\${backres,,}\" == [Nn] || -z \"\${backres}\" ]]; then" >> "$backupscript"
+  echo "      validbackres=1" >> "$backupscript"
+  echo "      break=1" >> "$backupscript"
+  echo "      validrmres=0" >> "$backupscript"
+  echo "      rmres=n" >> "$backupscript"
+  echo "      while ! ((\$validrmres)); do" >> "$backupscript"
+  echo "        echo" >> "$backupscript"
+  echo "        read -n 1 -p \"Delete these backup files? (y/N): \" rmres" >> "$backupscript"
+  echo "        if [[ \"\${rmres,,}\" == [Nn] || -z \"\${rmres}\" ]]; then" >> "$backupscript"
+  echo "          validrmres=1" >> "$backupscript"
+  echo "        elif [[ \"\${rmres,,}\" == [Yy] ]]; then" >> "$backupscript"
+  echo "          validrmres=1" >> "$backupscript"
+  echo "          for i in \"\${NOT_BACKED_UP[@]}\"; do" >> "$backupscript"
+  echo "            rm \"\${i}\"" >> "$backupscript"
+  echo "          done" >> "$backupscript"
+  echo "          echo" >> "$backupscript"
+  echo "        else" >> "$backupscript"
+  echo "          validrmres=0" >> "$backupscript"
+  echo -n "          echo -e \"" >> "$backupscript"
+  (($USE_ANSI)) && echo -n "\\e[0;31m" >> "$backupscript"
+  echo -n "\\nResponse not valid, please answer y or n\\n" >> "$backupscript"
+  (($USE_ANSI)) && echo -n "\\e[m" >> "$backupscript"
+  echo "\"" >> "$backupscript"
+  echo "        fi" >> "$backupscript"
+  echo "      done" >> "$backupscript"
+  echo "    elif [[ \"\${backres,,}\" == [Yy] ]]; then" >> "$backupscript"
+  echo "      validbackres=1" >> "$backupscript"
+  echo "      echo" >> "$backupscript"
+  echo "      for i in \"\${NOT_BACKED_UP[@]}\"; do" >> "$backupscript"
+  echo "        rm \"\${i}\"" >> "$backupscript"
+  echo "        i=\"\${i%.ab}\"" >> "$backupscript"
+  if (($AUTO_CONFIRM)); then
+    echo "        autoConfirmedBackup \"\${i##*/}\"" >> "$backupscript"
+  else
+    echo "        doBackup \"\${i##*/}\"" >> "$backupscript"
+  fi
+  echo "      done" >> "$backupscript"
+  echo "      NOT_BACKED_UP=()" >> "$backupscript"
+  echo "      NOT_BACKED_UP=(\$(find -maxdepth 1 -type f -size -42c | xargs))" >> "$backupscript"
+  echo "    else" >> "$backupscript"
+  echo "      validbackres=0" >> "$backupscript"
+  echo -n "      echo -e \"" >> "$backupscript"
+  (($USE_ANSI)) && echo -n "\\e[0;31m" >> "$backupscript"
+  echo -n "\\nResponse not valid, please answer y or n\\n" >> "$backupscript"
+  (($USE_ANSI)) && echo -n "\\e[m" >> "$backupscript"
+  echo "\"" >> "$backupscript"
+  echo "    fi" >> "$backupscript"
+  echo "  done" >> "$backupscript"
+  echo "  ((\$break)) && break" >> "$backupscript"
+  echo "done" >> "$backupscript"
+}
 
 #
 # Create script to backup all user-apps
@@ -228,6 +296,8 @@ getUserAppBackup() {
         echo -e "doRestore \"${app}.ab\"" >> "$restorescript"
     fi
   done
+
+  RETRY41
 
   echo >> "$backupscript"
   echo "cd - > /dev/null" >> "$backupscript"
@@ -374,6 +444,8 @@ getSystemAppBackup() {
       echo  >> "$restorescript"
     fi
   done
+
+  RETRY41
 
   echo >> "$backupscript"
   echo "cd - > /dev/null" >> "$backupscript"
