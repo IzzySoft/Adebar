@@ -45,7 +45,7 @@ getAppname() {
 
   # still here, so not found in cache. Try AAPT (if we have it)
   if [[ $HAVE_AAPT -eq 1 ]]; then
-    local str="$(adb ${ADBOPTS} shell "aapt d badging $2 2>/dev/null | grep 'application: label' | sed -n \"s/.*label\='\([^']*\)'.*/\1/p\"")" # label='Some App'"
+    local str="$(adb ${ADBOPTS} shell "aapt d badging $2 2>/dev/null" | grep 'application: label' | sed -n "s/.*label\='\([^']*\)'.*/\1/p")" # label='Some App''
     str=${str//[$'\t\r\n']} # stupid ^M
     if [[ -n "${str}" ]]; then
       [[ -n "${CACHEDIR}" && -e "${CACHEDIR}" && ! -f "${CACHEDIR}/$1" ]] && echo -n $str > "${CACHEDIR}/$1"
@@ -150,7 +150,8 @@ getAppDetails() {
 
   # Parsing dump
   doProgress "- parsing package dump" 2
-  while IFS='' read zeile; do # no idea why, but some dump lines are terminated using CRLF
+  while IFS='
+' read zeile; do # no idea why, but some dump lines are terminated using CRLF
     zeile="${zeile%"${zeile##*[![:space:]]}"}" #" rtrim (e.g. S7 Edge otherwise causes trouble)
     case ${P_BLOCK} in
       none)

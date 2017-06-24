@@ -3,7 +3,7 @@
 
 [[ -z "$1" ]] && {
   echo -e "\n\033[1;37mab2tar\033[0;37m"
-  echo "Converting ADB Backup files into tar archives"
+  echo "Converting ADB Backup files into tar.gz archives"
   echo
   echo "Syntax:"
   echo -e "  $0 <ADB Backup File>\n"
@@ -12,4 +12,10 @@
   exit 1
 }
 
-dd if=$1 bs=24 skip=1 | openssl zlib -d >${1%%.ab}.tar && gzip -9 ${1%%.ab}.tar
+if [[ "$(ldd "$(which openssl)" | grep '^[[:space:]]*libz\.')" ]]; then
+    unzlib="openssl zlib -d"
+else
+    unzlib="zlib-flate -uncompress"
+fi
+
+dd if="$1" bs=24 skip=1 status=progress | $unzlib | gzip -9 -c > "${1%%.ab}".tar.gz
