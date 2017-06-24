@@ -55,6 +55,8 @@ MK_APPENABLE=1
 # create the script to backup user apps+data / system app-data
 MK_USERBACKUP=1
 MK_SYSBACKUP=1
+# Whether to backup 'shared storage' (i.e. contents of the SD card(s)) without prompt?
+AUTO_BACKUP_SHARED=0
 # on running the restore scripts for apps, what delay should be between two apps?
 # p = "prompt", 0..99 = delay in seconds
 MK_APPRESTORE_DELAY=p
