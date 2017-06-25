@@ -346,12 +346,14 @@ getSystemAppBackup() {
   for app in "${sysApps[@]}"; do
     prep=""
     if [ "$app" = "com.android.sharedstoragebackup" ]; then # shared storage
-      prep="  "
-      echo >> "$backupscript"
+      if ! (($AUTO_BACKUP_SHARED)); then
+        prep="  "
+        echo >> "$backupscript"
+      fi
       echo  >> "$restorescript"
-      echo -e "echo \"The following command will download 'shared storage' (i.e. contents of the SD card(s)).\"\necho \"This might take quite a while, depending on what you've stored there.\"" >> "$backupscript"
+      ! (($AUTO_BACKUP_SHARED)) && echo -e "echo \"The following command will download 'shared storage' (i.e. contents of the SD card(s)).\"\necho \"This might take quite a while, depending on what you've stored there.\"" >> "$backupscript"
       echo -e "echo \"The following command will restore 'shared storage' (i.e. contents of the SD card(s)).\"\necho \"This might take quite a while, depending on how big your backup from it was.\"" >> "$restorescript"
-      echo -e "read -n 1 -p \"Do you wish to run this command now? (Y/n) \" res\necho\nif [[ \"\${res,,}\" = \"y\" || -z \"\${res}\" ]]; then" >> "$backupscript"
+      ! (($AUTO_BACKUP_SHARED)) && echo -e "read -n 1 -p \"Do you wish to run this command now? (Y/n) \" res\necho\nif [[ \"\${res,,}\" = \"y\" || -z \"\${res}\" ]]; then" >> "$backupscript"
       echo -e "read -n 1 -p \"Do you wish to run this command now? (Y/n) \" res\necho\nif [[ \"\${res,,}\" = \"y\" || -z \"\${res}\" ]]; then" >> "$restorescript"
     else
       prep=""
@@ -366,9 +368,9 @@ getSystemAppBackup() {
     fi
 
     if [ "$app" = "com.android.sharedstoragebackup" ]; then
-      echo -e "else\n  echo \"Skipping shared storage\"\nfi" >> "$backupscript"
+      ! (($AUTO_BACKUP_SHARED)) && echo -e "else\n  echo \"Skipping shared storage\"\nfi" >> "$backupscript"
       echo -e "else\n  echo \"Skipping shared storage\"\nfi" >> "$restorescript"
-      echo >> "$backupscript"
+      ! (($AUTO_BACKUP_SHARED)) && echo >> "$backupscript"
       echo  >> "$restorescript"
     fi
   done
