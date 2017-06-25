@@ -55,6 +55,9 @@ MK_APPENABLE=1
 # create the script to backup user apps+data / system app-data
 MK_USERBACKUP=1
 MK_SYSBACKUP=1
+# in case the backup script was aborted and you are want to start backup at aborted point and keep already backed up files (not rewriting existing .ab files)
+SKIP_EXISTING_USERBACKUP=0
+SKIP_EXISTING_SYSBACKUP=0
 # Whether to backup 'shared storage' (i.e. contents of the SD card(s)) without prompt?
 AUTO_BACKUP_SHARED=0
 # on running the restore scripts for apps, what delay should be between two apps?

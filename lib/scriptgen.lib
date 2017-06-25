@@ -188,8 +188,20 @@ getUserAppBackup() {
   echo "cd \"${USERDIR}\"" >> "$backupscript"
   echo >> "$backupscript"
   echo "function doBackup() {" >> "$backupscript"
-  echo -e "  echo \"backing up: \${1}\"" >> "$backupscript"
-  echo -e "  adb ${ADBOPTS} backup -f \"\${1}.ab\" -apk \${1}" >> "$backupscript"
+  prep=""
+  if (($SKIP_EXISTING_USERBACKUP)); then
+  prep="  "
+    echo -e "  if [ -f \"\${1}.ab\" ]; then" >> "$backupscript"
+    echo -e "    echo \"skiping: \${1}: already backed up.\"" >> "$backupscript"
+    echo -e "  else" >> "$backupscript"
+  fi
+  echo -e "  ${prep}echo \"backing up: \${1}\"" >> "$backupscript"
+  echo -e "  ${prep}adb ${ADBOPTS} backup -f \"\${1}.ab\" -apk \${1}" >> "$backupscript"
+  if (($SKIP_EXISTING_USERBACKUP)); then
+    echo -e "  fi" >> "$backupscript"
+  else
+    prep=""
+  fi
   echo  "  sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
   echo "}" >> "$backupscript"
   echo >> "$backupscript"
@@ -207,13 +219,23 @@ getUserAppBackup() {
       echo >> "$backupscript"
       echo    "function autoConfirmedBackup() {" >> "$backupscript"
       echo -e "    doBackup \"\${1}\" &" >> "$backupscript"
-      echo -e "    JOB=\$!" >> "$backupscript"
-      echo -e "    sleep ${MK_AUTOCONFIRM_DELAY}" >> "$backupscript"
-      echo -e "    autoConfirm" >> "$backupscript"
-      echo -e "    while [[ \$? == 0 ]]; do" >> "$backupscript"
-      echo -e "        sleep 1" >> "$backupscript"
-      echo -e "        ps -p \${JOB} &>/dev/null" >> "$backupscript"
-      echo -e "    done" >> "$backupscript"
+      prep=""
+      if (($SKIP_EXISTING_USERBACKUP)); then
+        prep="    "
+        echo -e "    if [ ! -f \"\${1}.ab\" ]; then" >> "$backupscript"
+      fi
+      echo -e "    ${prep}JOB=\$!" >> "$backupscript"
+      echo -e "    ${prep}sleep ${MK_AUTOCONFIRM_DELAY}" >> "$backupscript"
+      echo -e "    ${prep}autoConfirm" >> "$backupscript"
+      echo -e "    ${prep}while [[ \$? == 0 ]]; do" >> "$backupscript"
+      echo -e "        ${prep}sleep 1" >> "$backupscript"
+      echo -e "        ${prep}ps -p \${JOB} &>/dev/null" >> "$backupscript"
+      echo -e "    ${prep}done" >> "$backupscript"
+      if (($SKIP_EXISTING_USERBACKUP)); then
+        echo -e "    fi" >> "$backupscript"
+      else
+        prep=""
+      fi
       echo -e "}" >> "$backupscript"
       echo >> "$backupscript"
       echo -e "echo \"NOTICE: Do not interact with your device while performing automated backups!\"" >> "$backupscript"
@@ -329,8 +351,20 @@ getSystemAppBackup() {
   echo "cd \"${SYSDIR}\"" >> "$backupscript"
   echo >> "$backupscript"
   echo "function doBackup() {" >> "$backupscript"
-  echo -e "  echo \"backing up: \${1}\"" >> "$backupscript"
-  echo -e "  adb ${ADBOPTS} backup -f \"\${1}.ab\" -noapk \${1}" >> "$backupscript"
+  prep=""
+  if (($SKIP_EXISTING_SYSBACKUP)); then
+    prep="  "
+    echo -e "  if [ -f \"\${1}.ab\" ]; then" >> "$backupscript"
+    echo -e "    echo \"skiping: \${1}: already backed up.\"" >> "$backupscript"
+    echo -e "  else" >> "$backupscript"
+  fi
+  echo -e "  ${prep}echo \"backing up: \${1}\"" >> "$backupscript"
+  echo -e "  ${prep}adb ${ADBOPTS} backup -f \"\${1}.ab\" -noapk \${1}" >> "$backupscript"
+  if (($SKIP_EXISTING_SYSBACKUP)); then
+    echo -e "  fi" >> "$backupscript"
+  else
+    prep=""
+  fi
   echo  "  sleep 1" >> "$backupscript" # prevent ADB daemon from being "blocked" (e.g. on LG P880)
   echo "}" >> "$backupscript"
   echo >> "$backupscript"
@@ -348,13 +382,23 @@ getSystemAppBackup() {
       echo >> "$backupscript"
       echo    "function autoConfirmedBackup() {" >> "$backupscript"
       echo -e "    doBackup \"\${1}\" &" >> "$backupscript"
-      echo -e "    JOB=\$!" >> "$backupscript"
-      echo -e "    sleep ${MK_AUTOCONFIRM_DELAY}" >> "$backupscript"
-      echo -e "    autoConfirm" >> "$backupscript"
-      echo -e "    while [[ \$? == 0 ]]; do" >> "$backupscript"
-      echo -e "        sleep 1" >> "$backupscript"
-      echo -e "        ps -p \${JOB} &>/dev/null" >> "$backupscript"
-      echo -e "    done" >> "$backupscript"
+      prep=""
+      if (($SKIP_EXISTING_SYSBACKUP)); then
+      prep="    "
+        echo -e "    if [ ! -f \"\${1}.ab\" ]; then" >> "$backupscript"
+      fi
+      echo -e "    ${prep}JOB=\$!" >> "$backupscript"
+      echo -e "    ${prep}sleep ${MK_AUTOCONFIRM_DELAY}" >> "$backupscript"
+      echo -e "    ${prep}autoConfirm" >> "$backupscript"
+      echo -e "    ${prep}while [[ \$? == 0 ]]; do" >> "$backupscript"
+      echo -e "        ${prep}sleep 1" >> "$backupscript"
+      echo -e "        ${prep}ps -p \${JOB} &>/dev/null" >> "$backupscript"
+      echo -e "    ${prep}done" >> "$backupscript"
+      if (($SKIP_EXISTING_SYSBACKUP)); then
+        echo -e "    fi" >> "$backupscript"
+      else
+        prep=""
+      fi
       echo -e "}" >> "$backupscript"
       echo >> "$backupscript"
   fi
