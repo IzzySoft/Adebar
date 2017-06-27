@@ -319,7 +319,7 @@ getUserAppBackup() {
     fi
   done
 
-  RETRY41
+  (($RETRY_FAILED_BACKUPS)) && RETRY41
 
   echo >> "$backupscript"
   echo "cd - > /dev/null" >> "$backupscript"
