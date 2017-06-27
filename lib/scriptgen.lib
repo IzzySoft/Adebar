@@ -191,7 +191,7 @@ getUserAppBackup() {
   prep=""
   if (($SKIP_EXISTING_USERBACKUP)); then
   prep="  "
-    echo -e "  if [ -f \"\${1}.ab\" ]; then" >> "$backupscript"
+    echo -e "  if [ -s \"\${1}.ab\" ]; then" >> "$backupscript"
     echo -e "    echo \"skiping: \${1}: already backed up.\"" >> "$backupscript"
     echo -e "  else" >> "$backupscript"
   fi
@@ -222,7 +222,7 @@ getUserAppBackup() {
       prep=""
       if (($SKIP_EXISTING_USERBACKUP)); then
         prep="    "
-        echo -e "    if [ ! -f \"\${1}.ab\" ]; then" >> "$backupscript"
+        echo -e "    if [ ! -s \"\${1}.ab\" ]; then" >> "$backupscript"
       fi
       echo -e "    ${prep}JOB=\$!" >> "$backupscript"
       echo -e "    ${prep}sleep ${MK_AUTOCONFIRM_DELAY}" >> "$backupscript"
@@ -385,7 +385,7 @@ getSystemAppBackup() {
       prep=""
       if (($SKIP_EXISTING_SYSBACKUP)); then
       prep="    "
-        echo -e "    if [ ! -f \"\${1}.ab\" ]; then" >> "$backupscript"
+        echo -e "    if [ ! -s \"\${1}.ab\" ]; then" >> "$backupscript"
       fi
       echo -e "    ${prep}JOB=\$!" >> "$backupscript"
       echo -e "    ${prep}sleep ${MK_AUTOCONFIRM_DELAY}" >> "$backupscript"
