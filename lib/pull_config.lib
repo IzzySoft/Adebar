@@ -58,15 +58,17 @@ getSettings() {
   doProgress "- packages.xml: $msg" 2
 
   # app usage history (JB + KK)
-  if [[ ${ROOT_COMPAT} -eq 1 ]]; then
-    local msg="$((adb ${ADBOPTS} shell "su -c 'cat /data/system/usagestats/usage-history.xml'" > "${CONFDIR}/usage-history.xml") 2>&1)"
-  else
-    local msg="$((adb ${ADBOPTS} pull /data/system/usagestats/usage-history.xml "${CONFDIR}/usage-history.xml") 2>&1)"
+  if [[ $DEVICE_SDKVER -lt 21 ]]; then
+    if [[ ${ROOT_COMPAT} -eq 1 ]]; then
+      local msg="$((adb ${ADBOPTS} shell "su -c 'cat /data/system/usagestats/usage-history.xml'" > "${CONFDIR}/usage-history.xml") 2>&1)"
+    else
+      local msg="$((adb ${ADBOPTS} pull /data/system/usagestats/usage-history.xml "${CONFDIR}/usage-history.xml") 2>&1)"
+    fi
+    # "adb pull" seems to "exit 0" also on "Permission denied" (but not on "does not exist")
+    [[ "$msg" =~ "Permission denied" ]] && msg=$(ansi_code "$msg" "red")
+    [[ -z "$msg" ]] && msg="OK"
+    doProgress "- usage-history.xml: $msg" 2
   fi
-  # "adb pull" seems to "exit 0" also on "Permission denied" (but not on "does not exist")
-  [[ "$msg" =~ "Permission denied" ]] && msg=$(ansi_code "$msg" "red")
-  [[ -z "$msg" ]] && msg="OK"
-  doProgress "- usage-history.xml: $msg" 2
 
   # SMS/MMS ?
   # CallLog ?
