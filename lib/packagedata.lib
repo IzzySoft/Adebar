@@ -294,6 +294,12 @@ getAppDetails() {
         if [[ -z "$zeile" ]]; then
           continue
         fi
+        regex='^\s+enabledComponents:'
+        if [[ "${zeile}" =~ $regex ]]; then
+          P_BLOCK="enabled"
+          doProgress "    +enabledComponents" 5
+          continue
+        fi
         if [[ "${zeile:0:6}" = "      " ]]; then
           if [[ -z "${PK_DISABLED[$P_PKGNAME]}" ]]; then
             PK_DISABLED[$P_PKGNAME]="${zeile:6}"
@@ -305,12 +311,6 @@ getAppDetails() {
         if [[ "${zeile}" = "    grantedPermissions:" ]]; then
           P_BLOCK="perms"
               doProgress "    +perms" 5
-          continue
-        fi
-        regex='^\s+enabledComponents:'
-        if [[ "${zeile}" =~ $regex ]]; then
-          P_BLOCK="enabled"
-          doProgress "    +enabledComponents" 5
           continue
         fi
         if [[ "${zeile:0:11}" = "  Package [" ]]; then  # "  Package [com.google.android.location] (40e85638):"
