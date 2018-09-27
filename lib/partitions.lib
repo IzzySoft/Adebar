@@ -31,7 +31,7 @@ _fsProcMtd() {
   local azeile
   local aret
   declare -i counter=-1
-  adb ${ADBOPTS} shell cat $src > "${tmp}"
+  adb ${ADBOPTS} shell "cat $src 2>/dev/null" > "${tmp}"
   while read zeile; do
     if [[ $counter -lt 0 ]]; then
       counter+=1
@@ -70,13 +70,13 @@ _fsProcMtd() {
 #   ^preloader    0x0000000000040000 0x0000000000000000   2   /dev/misc-sd
 _fsProcDumchar() {
   [[ $((${MK_PARTINFO} + ${MK_PARTBACKUP})) -eq 0 ]] && return
-  local aret=$(adb ${ADBOPTS} shell ls /proc/dumchar_info)
+  local aret=$(adb ${ADBOPTS} shell "ls /proc/dumchar_info 2>/dev/null")
   [[ "${aret//[$'\r']}" = "/proc/dumchar_info" ]] && {
     local tmp=$(mktemp)
     local azeile
     local aret
     declare -i counter=-1
-    adb ${ADBOPTS} shell cat /proc/dumchar_info > "${tmp}"
+    adb ${ADBOPTS} shell "cat /proc/dumchar_info 2>/dev/null" > "${tmp}"
     while read zeile; do
       if [[ $counter -lt 0 ]]; then
         counter+=1
