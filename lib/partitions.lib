@@ -101,9 +101,11 @@ _fsProcByName() {
   local tmp2=$(mktemp)
   local tmp3=$(mktemp)
   if [[ ${ROOT_COMPAT} -eq 1 ]]; then # some devices give "permission denied" here w/o root
-    adb ${ADBOPTS} shell "su -c 'ls -al /dev/block/platform/*/by-name'" > "${tmp}"
+    adb ${ADBOPTS} shell "su -c 'ls -al /dev/block/platform/*/by-name 2>/dev/null'" > "${tmp}"
+    [[ $? -ne 0 ]] && adb ${ADBOPTS} shell "su -c 'ls -al /dev/block/platform/*/*/by-name 2>/dev/null'" > "${tmp}"  # eg. BQ Aquaris X5 Plus
   else
-    adb ${ADBOPTS} shell ls -al /dev/block/platform/*/by-name > "${tmp}"
+    adb ${ADBOPTS} shell "ls -al /dev/block/platform/*/by-name 2>/dev/null" > "${tmp}"
+    [[ $? -ne 0 ]] && adb ${ADBOPTS} shell "ls -al /dev/block/platform/*/*/by-name 2>/dev/null" > "${tmp}"
   fi
   adb ${ADBOPTS} shell cat /proc/partitions > "${tmp2}"
   adb ${ADBOPTS} shell cat /proc/mounts > "${tmp3}"
@@ -111,11 +113,14 @@ _fsProcByName() {
   local aret
   declare -a aaret
   declare -i counter=0
+  local numfields
   while read zeile; do
-    [[ ${zeile:0:29} = "/dev/block/platform/*/by-name" || ${zeile:0:33} = "ls: /dev/block/platform/*/by-name" ]] && return # does not exist
+    [[ ${zeile:0:29} = "/dev/block/platform/*/by-name" || ${zeile:0:33} = "ls: /dev/block/platform/*/by-name" || ${zeile:0:31} = "/dev/block/platform/*/*/by-name" || ${zeile:0:35} = "ls: /dev/block/platform/*/*/by-name" ]] && return # does not exist
     azeile=(${zeile//[$'\r']})
-    MTD_D[${counter}]="${azeile[5]}"
-    MTD_DEV[${counter}]="${azeile[7]}"
+    numfields=${#azeile[@]}
+    [[ "${azeile[$numfields -1]:0:1}" != "/" ]] && continue
+    MTD_D[${counter}]="${azeile[$numfields -3]}"
+    MTD_DEV[${counter}]="${azeile[$numfields -1]}"
     aret=$(grep "${MTD_DEV[${counter}]##*/}" ${tmp2})
     aaret=(${aret})
     MTD_SIZE[${counter}]=${aaret[2]}
