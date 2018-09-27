@@ -321,8 +321,13 @@ getAppDetails() {
           continue
         fi
 
-        if [[ "$zeile" == "Renamed packages:" ]]; then   # temporary work-around to eliminate "oops" ###TODO###
+        if [[ "$zeile" == "Renamed packages:" ]]; then  # temporary work-around to eliminate "oops" ###TODO###
           # P_BLOCK="renamed" ...
+          break
+        fi
+
+        if [[ "$zeile" == "Shared users:" ]]; then      # temporary work-around to eliminate "oops" ###TODO###
+          # P_BLOCK="sharedusers" ...
           break
         fi
 
