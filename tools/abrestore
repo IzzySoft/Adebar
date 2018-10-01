@@ -28,5 +28,5 @@ mv base.apk ${pkgname}.apk
 rm -f "${pkgname}".tar
 
 # Running Install and Restore
-echo adb install ${pkgname}.apk
-echo adb restore $1
+adb install ${pkgname}.apk
+adb restore $1
