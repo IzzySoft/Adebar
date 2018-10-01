@@ -1,0 +1,32 @@
+#!/bin/bash
+# Fixing 'adb restore' for devices with Android 7 (Nougat) and above
+# Some of them don't restore a backup if the app itself isn't yet installed
+# This script works around that by extracting and installing the APK
+# before calling 'adb restore'
+[[ -z "$1" ]] && {
+  echo -e "\n\033[1;37mabrestore\033[0;37m"
+  echo "Working around 'adb restore' issues on Nougat and above"
+  echo
+  echo "Syntax:"
+  echo -e "  $0 <ADB Backup File>\n"
+  echo "Example:"
+  echo -e "  $0 com.foo.bar.ab\n"
+  exit 1
+}
+pkgname="${1%%.ab}"
+
+if [[ "$(ldd "$(which openssl)" | grep '^[[:space:]]*libz\.')" ]]; then #"
+    unzlib="openssl zlib -d"
+else
+    unzlib="zlib-flate -uncompress"
+fi
+
+# Getting the APK file
+dd if="${1}" bs=24 skip=1 2>/dev/null | $unzlib | gzip -9 -c > "${pkgname}".tar
+tar -xzf "${pkgname}.tar" --wildcards '*.apk' --strip-components=3
+mv base.apk ${pkgname}.apk
+rm -f "${pkgname}".tar
+
+# Running Install and Restore
+echo adb install ${pkgname}.apk
+echo adb restore $1
