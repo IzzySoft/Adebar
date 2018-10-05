@@ -277,6 +277,9 @@ getDeviceInfo() {
   echo "* Disk statistics:" >> "$devicedoc"
   adb ${ADBOPTS} shell dumpsys diskstats > ${tmp}
   while read zeile; do
+    [[ "${zeile:0:14}" = "Package Names:" ]] && continue    # these 3 come a.o. on LOS 14.1/Android 7.1.2
+    [[ "${zeile:0:10}" = "App Sizes:" ]] && continue
+    [[ "${zeile:0:12}" = "Cache Sizes:" ]] && continue
     echo -e "    * ${zeile/// }" >> "$devicedoc"
   done < ${tmp}
 
