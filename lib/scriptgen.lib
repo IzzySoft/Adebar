@@ -209,12 +209,12 @@ getUserAppBackup() {
   if [[ "${AUTO_CONFIRM}" -eq 1 ]]; then
       echo "function autoConfirm() {" >> "$backupscript"
       if [[ ! -z "${BACKUP_PASSWORD}" ]]; then
-          echo -e "    adb ${ADBOPTS} shell input text \"${BACKUP_PASSWORD}\" \\" >> "$backupscript"
-          echo    "    && sleep 1" >> "$backupscript" # wait between sending text and keycodes
+          echo -e "    adb ${ADBOPTS} shell input text \"${BACKUP_PASSWORD}\"" >> "$backupscript"
       fi
-      echo -e "    adb ${ADBOPTS} shell input keyevent 22 \\" >> "$backupscript"
-      echo    "    && sleep 1 \\" >> "$backupscript" # wait between keycodes
-      echo -e "    && adb ${ADBOPTS} shell input keyevent 23" >> "$backupscript"
+      echo -e "    adb ${ADBOPTS} shell input keyevent 61" >> "$backupscript"
+      echo -e "    adb ${ADBOPTS} shell input keyevent 61" >> "$backupscript"
+      echo -e "    adb ${ADBOPTS} shell input keyevent 61" >> "$backupscript"
+      echo -e "    adb ${ADBOPTS} shell input keyevent 66" >> "$backupscript"
       echo "}" >> "$backupscript"
       echo >> "$backupscript"
       echo    "function autoConfirmedBackup() {" >> "$backupscript"
