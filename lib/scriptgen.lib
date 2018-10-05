@@ -279,7 +279,6 @@ getUserAppBackup() {
       fi
       echo -e "    adb ${ADBOPTS} shell input keyevent 61" >> "$restorescript"
       echo -e "    adb ${ADBOPTS} shell input keyevent 61" >> "$restorescript"
-      echo -e "    adb ${ADBOPTS} shell input keyevent 61" >> "$restorescript"
       echo -e "    adb ${ADBOPTS} shell input keyevent 66" >> "$restorescript"
       echo "}" >> "$restorescript"
       echo >> "$restorescript"
@@ -438,7 +437,6 @@ getSystemAppBackup() {
       if [[ ! -z "${BACKUP_PASSWORD}" ]]; then
           echo -e "    adb ${ADBOPTS} shell input text \"${BACKUP_PASSWORD}\"" >> "$restorescript"
       fi
-      echo -e "    adb ${ADBOPTS} shell input keyevent 61" >> "$restorescript"
       echo -e "    adb ${ADBOPTS} shell input keyevent 61" >> "$restorescript"
       echo -e "    adb ${ADBOPTS} shell input keyevent 61" >> "$restorescript"
       echo -e "    adb ${ADBOPTS} shell input keyevent 66" >> "$restorescript"
