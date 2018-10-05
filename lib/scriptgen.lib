@@ -209,11 +209,11 @@ getUserAppBackup() {
   if [[ "${AUTO_CONFIRM}" -eq 1 ]]; then
       echo "function autoConfirm() {" >> "$backupscript"
       if [[ ! -z "${BACKUP_PASSWORD}" ]]; then
-          echo -e "    adb ${ADBOPTS} shell input text \"${BACKUP_PASSWORD}\"" >> "$backupscript"
+          echo -e "    adb ${ADBOPTS} shell input text \"${BACKUP_PASSWORD}\"; sleep 0.5" >> "$backupscript"
       fi
-      echo -e "    adb ${ADBOPTS} shell input keyevent 61" >> "$backupscript"
-      echo -e "    adb ${ADBOPTS} shell input keyevent 61" >> "$backupscript"
-      echo -e "    adb ${ADBOPTS} shell input keyevent 61" >> "$backupscript"
+      echo -e "    adb ${ADBOPTS} shell input keyevent 61; sleep 0.3" >> "$backupscript"
+      echo -e "    adb ${ADBOPTS} shell input keyevent 61; sleep 0.3" >> "$backupscript"
+      echo -e "    adb ${ADBOPTS} shell input keyevent 61; sleep 0.3" >> "$backupscript"
       echo -e "    adb ${ADBOPTS} shell input keyevent 66" >> "$backupscript"
       echo "}" >> "$backupscript"
       echo >> "$backupscript"
@@ -275,10 +275,10 @@ getUserAppBackup() {
   if [[ "${AUTO_CONFIRM}" -eq 1 ]]; then
       echo "function autoConfirm() {" >> "$restorescript"
       if [[ ! -z "${BACKUP_PASSWORD}" ]]; then
-          echo -e "    adb ${ADBOPTS} shell input text \"${BACKUP_PASSWORD}\"" >> "$restorescript"
+          echo -e "    adb ${ADBOPTS} shell input text \"${BACKUP_PASSWORD}\"; sleep 0.5" >> "$restorescript"
       fi
-      echo -e "    adb ${ADBOPTS} shell input keyevent 61" >> "$restorescript"
-      echo -e "    adb ${ADBOPTS} shell input keyevent 61" >> "$restorescript"
+      echo -e "    adb ${ADBOPTS} shell input keyevent 61; sleep 0.3" >> "$restorescript"
+      echo -e "    adb ${ADBOPTS} shell input keyevent 61; sleep 0.3" >> "$restorescript"
       echo -e "    adb ${ADBOPTS} shell input keyevent 66" >> "$restorescript"
       echo "}" >> "$restorescript"
       echo >> "$restorescript"
@@ -371,11 +371,11 @@ getSystemAppBackup() {
   if [[ "${AUTO_CONFIRM}" -eq 1 ]]; then
       echo "function autoConfirm() {" >> "$backupscript"
       if [[ ! -z "${BACKUP_PASSWORD}" ]]; then
-          echo -e "    adb ${ADBOPTS} shell input text \"${BACKUP_PASSWORD}\"" >> "$backupscript"
+          echo -e "    adb ${ADBOPTS} shell input text \"${BACKUP_PASSWORD}\"; sleep 0.5" >> "$backupscript"
       fi
-      echo -e "    adb ${ADBOPTS} shell input keyevent 61" >> "$backupscript"
-      echo -e "    adb ${ADBOPTS} shell input keyevent 61" >> "$backupscript"
-      echo -e "    adb ${ADBOPTS} shell input keyevent 61" >> "$backupscript"
+      echo -e "    adb ${ADBOPTS} shell input keyevent 61; sleep 0.3" >> "$backupscript"
+      echo -e "    adb ${ADBOPTS} shell input keyevent 61; sleep 0.3" >> "$backupscript"
+      echo -e "    adb ${ADBOPTS} shell input keyevent 61; sleep 0.3" >> "$backupscript"
       echo -e "    adb ${ADBOPTS} shell input keyevent 66" >> "$backupscript"
       echo "}" >> "$backupscript"
       echo >> "$backupscript"
@@ -435,10 +435,10 @@ getSystemAppBackup() {
   if [[ "${AUTO_CONFIRM}" -eq 1 ]]; then
       echo "function autoConfirm() {" >> "$restorescript"
       if [[ ! -z "${BACKUP_PASSWORD}" ]]; then
-          echo -e "    adb ${ADBOPTS} shell input text \"${BACKUP_PASSWORD}\"" >> "$restorescript"
+          echo -e "    adb ${ADBOPTS} shell input text \"${BACKUP_PASSWORD}\"; sleep 0.5" >> "$restorescript"
       fi
-      echo -e "    adb ${ADBOPTS} shell input keyevent 61" >> "$restorescript"
-      echo -e "    adb ${ADBOPTS} shell input keyevent 61" >> "$restorescript"
+      echo -e "    adb ${ADBOPTS} shell input keyevent 61; sleep 0.3" >> "$restorescript"
+      echo -e "    adb ${ADBOPTS} shell input keyevent 61; sleep 0.3" >> "$restorescript"
       echo -e "    adb ${ADBOPTS} shell input keyevent 66" >> "$restorescript"
       echo "}" >> "$restorescript"
       echo >> "$restorescript"
