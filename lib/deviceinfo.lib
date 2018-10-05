@@ -14,7 +14,17 @@ print_radiostat() {
       1) for key in "${!radio1[@]}"; do mradio["$key"]=${radio1["$key"]}; done ;;
     esac
     echo "* Signal strength: [${mradio[mSignalStrength]}](http://android.stackexchange.com/a/74954/16575)" >> "$devicedoc"
-    echo "* Service state: ${mradio[mServiceState]:0:1} (${servicestate[${radio[mServiceState]:0:1}]})" >> "$devicedoc"
+    local serv
+    if [[ "${mradio[mServiceState]:0:1}" = "{" ]]; then         # Android 8+?
+      mradio["mServiceState"]=${mradio["mServiceState"]:1:-1}   # get rid of the curly braces
+      serv=(${mradio["mServiceState"]//,/})                     # remove comma separator
+      echo "* Service state:"
+      for i in "${serv[@]}"; do
+        echo "    * ${i}"
+      done
+    else
+      echo "* Service state: ${mradio[mServiceState]:0:1} (${servicestate[${radio[mServiceState]:0:1}]})" >> "$devicedoc"
+    fi
     echo "* Call state: ${mradio[mCallState]} (${callstate[${mradio[mCallState]}]})" >> "$devicedoc"
     echo "* Call forwarding active: ${mradio[mCallForwarding]}" >> "$devicedoc"
     [[ -n "${mradio[mMessageWaiting]}" ]] && echo "* Message waiting: ${mradio[mMessageWaiting]}" >> "$devicedoc"
