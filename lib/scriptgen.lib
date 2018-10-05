@@ -275,13 +275,14 @@ getUserAppBackup() {
   echo  >> "$restorescript"
 
   if [[ "${AUTO_CONFIRM}" -eq 1 ]]; then
+      [[ -n "${MK_AUTOCONFIRM_SEQUENCE_2}" || ${#MK_AUTOCONFIRM_SEQUENCE_2[@]} -eq 0 ]] && MK_AUTOCONFIRM_SEQUENCE_2=${MK_AUTOCONFIRM_SEQUENCE[@]}
       echo "function autoConfirm() {" >> "$restorescript"
       if [[ ! -z "${BACKUP_PASSWORD}" ]]; then
           echo -e "    adb ${ADBOPTS} shell input text \"${BACKUP_PASSWORD}\" \\" >> "$restorescript"
           echo    "    && sleep 1" >> "$restorescript" # wait between sending text and keycodes
       fi
-      if [[ ${#MK_AUTOCONFIRM_SEQUENCE[@]} -gt 0 ]]; then      # run device-specific keycode sequence. Default: 22 23
-        for keyevent in ${MK_AUTOCONFIRM_SEQUENCE[@]}; do
+      if [[ ${#MK_AUTOCONFIRM_SEQUENCE_2[@]} -gt 0 ]]; then    # run device-specific keycode sequence. Default: 22 23
+        for keyevent in ${MK_AUTOCONFIRM_SEQUENCE_2[@]}; do
           echo -e "    adb ${ADBOPTS} shell input keyevent ${keyevent}; sleep ${MK_AUTOCONFIRM_DELAY}" >> "$restorescript"
         done
       fi
@@ -440,13 +441,14 @@ getSystemAppBackup() {
   echo  >> "$restorescript"
 
   if [[ "${AUTO_CONFIRM}" -eq 1 ]]; then
+      [[ -n "${MK_AUTOCONFIRM_SEQUENCE_2}" || ${#MK_AUTOCONFIRM_SEQUENCE_2[@]} -eq 0 ]] && MK_AUTOCONFIRM_SEQUENCE_2=${MK_AUTOCONFIRM_SEQUENCE[@]}
       echo "function autoConfirm() {" >> "$restorescript"
           if [[ ! -z "${BACKUP_PASSWORD}" ]]; then
               echo -e "    adb ${ADBOPTS} shell input text \"${BACKUP_PASSWORD}\" \\" >> "$restorescript"
               echo    "    && sleep 1" >> "$restorescript" # wait between sending text and keycodes
           fi
-          if [[ ${#MK_AUTOCONFIRM_SEQUENCE[@]} -gt 0 ]]; then      # run device-specific keycode sequence. Default: 22 23
-            for keyevent in ${MK_AUTOCONFIRM_SEQUENCE[@]}; do
+          if [[ ${#MK_AUTOCONFIRM_SEQUENCE_2[@]} -gt 0 ]]; then    # run device-specific keycode sequence. Default: 22 23
+            for keyevent in ${MK_AUTOCONFIRM_SEQUENCE_2[@]}; do
               echo -e "    adb ${ADBOPTS} shell input keyevent ${keyevent}; sleep ${MK_AUTOCONFIRM_DELAY}" >> "$restorescript"
             done
           fi

@@ -68,6 +68,8 @@ MK_APPRESTORE_DELAY=p
 MK_AUTOCONFIRM_DELAY=3
 # If the default auto-confirm sequence (22 23) doesn't work for you, specify a different one. Here's e.g. what the Xiaomi Mi8 wants:
 MK_AUTOCONFIRM_SEQUENCE=(61 61 61 66)
+# Optionally, if your device requires a different sequence for restore (again the Xiaomi Mi8) – leave empty/untouched otherwise:
+MK_AUTOCONFIRM_SEQUENCE_2=(61 61 66)
 # trigger an export from XPosed and pull it. Requires XPrivacy PRO key.
 MK_XPRIVACY_EXPORT=0
 # pull the XPrivacy databases when found (not contained in adb backup; root required)
