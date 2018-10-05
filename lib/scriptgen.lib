@@ -212,9 +212,11 @@ getUserAppBackup() {
           echo -e "    adb ${ADBOPTS} shell input text \"${BACKUP_PASSWORD}\" \\" >> "$backupscript"
           echo    "    && sleep 1" >> "$backupscript" # wait between sending text and keycodes
       fi
-      echo -e "    adb ${ADBOPTS} shell input keyevent 22 \\" >> "$backupscript"
-      echo    "    && sleep 1 \\" >> "$backupscript" # wait between keycodes
-      echo -e "    && adb ${ADBOPTS} shell input keyevent 23" >> "$backupscript"
+      if [[ ${#MK_AUTOCONFIRM_SEQUENCE[@]} -gt 0 ]]; then      # run device-specific keycode sequence. Default: 22 23
+        for keyevent in ${MK_AUTOCONFIRM_SEQUENCE[@]}; do
+          echo -e "    adb ${ADBOPTS} shell input keyevent ${keyevent}; sleep ${MK_AUTOCONFIRM_DELAY}" >> "$backupscript"
+        done
+      fi
       echo "}" >> "$backupscript"
       echo >> "$backupscript"
       echo    "function autoConfirmedBackup() {" >> "$backupscript"
@@ -278,9 +280,11 @@ getUserAppBackup() {
           echo -e "    adb ${ADBOPTS} shell input text \"${BACKUP_PASSWORD}\" \\" >> "$restorescript"
           echo    "    && sleep 1" >> "$restorescript" # wait between sending text and keycodes
       fi
-      echo -e "    adb ${ADBOPTS} shell input keyevent 22 \\" >> "$restorescript"
-      echo    "    && sleep 1 \\" >> "$restorescript" # wait between keycodes
-      echo -e "    && adb ${ADBOPTS} shell input keyevent 23" >> "$restorescript"
+      if [[ ${#MK_AUTOCONFIRM_SEQUENCE[@]} -gt 0 ]]; then      # run device-specific keycode sequence. Default: 22 23
+        for keyevent in ${MK_AUTOCONFIRM_SEQUENCE[@]}; do
+          echo -e "    adb ${ADBOPTS} shell input keyevent ${keyevent}; sleep ${MK_AUTOCONFIRM_DELAY}" >> "$restorescript"
+        done
+      fi
       echo "}" >> "$restorescript"
       echo >> "$restorescript"
       echo    "function autoConfirmedRestore() {" >> "$restorescript"
@@ -375,9 +379,11 @@ getSystemAppBackup() {
               echo -e "    adb ${ADBOPTS} shell input text \"${BACKUP_PASSWORD}\" \\" >> "$backupscript"
               echo    "    && sleep 1" >> "$backupscript" # wait between sending text and keycodes
           fi
-          echo -e "    adb ${ADBOPTS} shell input keyevent 22 \\" >> "$backupscript"
-          echo    "    && sleep 1 \\" >> "$backupscript" # wait between keycodes
-          echo -e "    && adb ${ADBOPTS} shell input keyevent 23" >> "$backupscript"
+          if [[ ${#MK_AUTOCONFIRM_SEQUENCE[@]} -gt 0 ]]; then      # run device-specific keycode sequence. Default: 22 23
+            for keyevent in ${MK_AUTOCONFIRM_SEQUENCE[@]}; do
+              echo -e "    adb ${ADBOPTS} shell input keyevent ${keyevent}; sleep ${MK_AUTOCONFIRM_DELAY}" >> "$backupscript"
+            done
+          fi
       echo "}" >> "$backupscript"
       echo >> "$backupscript"
       echo    "function autoConfirmedBackup() {" >> "$backupscript"
@@ -439,9 +445,11 @@ getSystemAppBackup() {
               echo -e "    adb ${ADBOPTS} shell input text \"${BACKUP_PASSWORD}\" \\" >> "$restorescript"
               echo    "    && sleep 1" >> "$restorescript" # wait between sending text and keycodes
           fi
-          echo -e "    adb ${ADBOPTS} shell input keyevent 22 \\" >> "$restorescript"
-          echo    "    && sleep 1 \\" >> "$restorescript" # wait between keycodes
-          echo -e "    && adb ${ADBOPTS} shell input keyevent 23" >> "$restorescript"
+          if [[ ${#MK_AUTOCONFIRM_SEQUENCE[@]} -gt 0 ]]; then      # run device-specific keycode sequence. Default: 22 23
+            for keyevent in ${MK_AUTOCONFIRM_SEQUENCE[@]}; do
+              echo -e "    adb ${ADBOPTS} shell input keyevent ${keyevent}; sleep ${MK_AUTOCONFIRM_DELAY}" >> "$restorescript"
+            done
+          fi
       echo "}" >> "$restorescript"
       echo >> "$restorescript"
       echo    "function autoConfirmedRestore() {" >> "$restorescript"
