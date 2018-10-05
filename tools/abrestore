@@ -29,4 +29,5 @@ rm -f "${pkgname}".tar
 
 # Running Install and Restore
 adb install ${pkgname}.apk
+[[ $? -eq 0 ]] && rm ${pkgname}.apk
 adb restore $1
