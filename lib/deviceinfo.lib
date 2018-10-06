@@ -20,7 +20,7 @@ print_radiostat() {
       serv=(${mradio["mServiceState"]//,/})                     # remove comma separator
       echo "* Service state:"
       for i in "${serv[@]}"; do
-        echo "    * ${i}"
+        echo "    * ${i}" >> "$devicedoc"
       done
     else
       echo "* Service state: ${mradio[mServiceState]:0:1} (${servicestate[${radio[mServiceState]:0:1}]})" >> "$devicedoc"
