@@ -18,7 +18,7 @@ print_radiostat() {
     if [[ "${mradio[mServiceState]:0:1}" = "{" ]]; then         # Android 8+?
       mradio["mServiceState"]=${mradio["mServiceState"]:1:-1}   # get rid of the curly braces
       serv=(${mradio["mServiceState"]//,/})                     # remove comma separator
-      echo "* Service state:"
+      echo "* Service state:" >> "$devicedoc"
       for i in "${serv[@]}"; do
         echo "    * ${i}" >> "$devicedoc"
       done
