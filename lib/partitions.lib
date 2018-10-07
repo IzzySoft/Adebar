@@ -121,7 +121,8 @@ _fsProcByName() {
     [[ "${azeile[$numfields -1]:0:1}" != "/" ]] && continue
     MTD_D[${counter}]="${azeile[$numfields -3]}"
     MTD_DEV[${counter}]="${azeile[$numfields -1]}"
-    aret=$(grep "${MTD_DEV[${counter}]##*/}" ${tmp2})
+    MTD_DEV[${counter}]="$(echo -n "${MTD_DEV[${counter}]##*/}" | sed -e "s/\r$//")"
+    aret=$(grep "${MTD_DEV[${counter}]##*/}" "${tmp2}")
     aaret=(${aret})
     MTD_SIZE[${counter}]=${aaret[2]}
     aret=$(grep "/by-name/${MTD_D[${counter}]}" ${tmp3})
