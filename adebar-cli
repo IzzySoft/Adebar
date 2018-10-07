@@ -102,7 +102,7 @@ _OOPS_REPEAT=0       # whether to show the same "oops'd line" multiple times
 declare -A OOPSES    # array to store which lines where already reported
 
 ############################################[ Init ]###
-BINDIR="${0%/*}"
+BINDIR="$(dirname "$(readlink -mn "${0}")")"
 
 # check parameters
 if [[ "$1" = "-a" || "$1" = "--auto" ]]; then
