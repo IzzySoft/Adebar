@@ -4,7 +4,7 @@
 # This script works around that by extracting and installing the APK
 # before calling 'adb restore'
 [[ -z "$1" ]] && {
-  echo -e "\n\033[1;37mabrestore\033[0;37m"
+  echo -e "\n\033[1;37mabrestore\033[0"
   echo "Working around 'adb restore' issues on Nougat and above"
   echo
   echo "Syntax:"

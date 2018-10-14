@@ -1,0 +1,24 @@
+#!/bin/bash
+# Grab the APK for a given app via ADB
+# based on a post at https://stackoverflow.com/a/4033005/2533433
+
+[[ -z "$1" ]] && {
+  echo
+  echo -e "\n\033[1;37mgetapk\033[0m"
+  echo "Extracting APK files from a connected device."
+  echo
+  echo "Syntax: $0 <package_name>"
+  echo
+  exit;
+}
+
+pkgname=$1
+path=$(adb shell pm path $pkgname | awk -F':' '{print $2}')
+path="${path//[$'\t\r\n']}"
+if [[ -n "$path" ]]; then
+  adb pull $path
+  mv base.apk ${pkgname}.apk
+else
+  echo "Package $pkgname not found on device."
+  echo
+fi
