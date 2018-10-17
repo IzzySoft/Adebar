@@ -6,13 +6,38 @@
   echo
   echo -e "\n\033[1;37mgetapk\033[0m"
   echo "Extracting APK files from a connected device."
+  echo "getapk lets you extract a single app's APK, or that of all user apps,"
+  echo "all system apps, or all apps altogether – depending on what parameter"
+  echo "you passed it."
   echo
-  echo "Syntax: $0 <package_name>"
+  echo "Syntax: $0 <package_name> | user | system | all"
   echo
   exit;
 }
 
-pkgname=$1
+case $1 in
+  all)
+    for i in $(adb shell pm list packages | awk -F':' '{print $2}'); do
+      $0 ${i//[$'\t\r\n']}
+    done
+    exit;
+    ;;
+  user)
+    for i in $(adb shell pm list packages -3 | awk -F':' '{print $2}'); do
+      $0 ${i//[$'\t\r\n']}
+    done
+    exit;
+    ;;
+  system)
+    for i in $(adb shell pm list packages -s | awk -F':' '{print $2}'); do
+      $0 ${i//[$'\t\r\n']}
+    done
+    exit;
+    ;;
+  *) pkgname=${1//[$'\t\r\n']} ;;
+esac
+
+# still here? then we have a single APK to get
 path=$(adb shell pm path $pkgname | awk -F':' '{print $2}')
 path="${path//[$'\t\r\n']}"
 if [[ -n "$path" ]]; then
