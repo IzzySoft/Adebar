@@ -292,7 +292,8 @@ getDeviceInfo() {
     fi
   }
   [[ -n "${DEVPROP[persist.sys.usb.config]}" ]] && echo "* persistent USB modules: ${DEVPROP[persist.sys.usb.config]}" >> "$devicedoc"
-  if [[ ${DEVPROP[ro.adb.secure]} -eq 1 || ${DEVPROP[ro.secure]} -eq 1 ]]; then echo "* ADB secured: Yes" >> "$devicedoc"
+  if [[ -z "${DEVPROP[ro.adb.secure]}" || -z "${DEVPROP[ro.secure]}" ]]; then echo "* ADB secured: Unknown" >> "$devicedoc"
+  elif [[ ${DEVPROP[ro.adb.secure]} -eq 1 || ${DEVPROP[ro.secure]} -eq 1 ]]; then echo "* ADB secured: Yes" >> "$devicedoc"
   else echo "* ADB secured: No (running as root)" >> "$devicedoc"
   fi
   [[ -n "${DEVPROP[ro.build.selinux]}" ]] && {
