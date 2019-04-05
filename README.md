@@ -43,7 +43,15 @@ Most of them should already be obvious from above description. Nevertheless, all
 ## More details
 A documentation describing steps for installation, configuration, usage, and more can be found in [the project wiki][3].
 
+
+## Contribute
+You like *Adebar* and want to contribute?
+
+* Pull Requests are welcome!
+* [Report back your device](https://github.com/IzzySoft/Adebar/issues/7) that works with *Adebar* so it can be added to the wiki!
+* Motivate me e.g. by sending me some mBTC to `1FsfvUGUpoPkLvJboKAnuBXHZ1zN3hbBL1` :)
+
+
 [1]: https://github.com/IzzySoft/Adebar "Adebar at Github"
 [2]: http://en.wikipedia.org/wiki/Markdown "Wikipedia: Markdown"
 [3]: https://github.com/IzzySoft/Adebar/wiki "Adebar Wiki at Github"
-
