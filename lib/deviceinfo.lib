@@ -15,11 +15,12 @@ print_radiostat() {
     esac
     echo "* Signal strength: [${mradio[mSignalStrength]}](http://android.stackexchange.com/a/74954/16575)" >> "$devicedoc"
     local serv
-    if [[ "${mradio[mServiceState]:0:1}" = "{" ]]; then         # Android 8+?
+    if [[ "${mradio[mServiceState]:0:1}" = "{" ]]; then         # Android 8+
       mradio["mServiceState"]=${mradio["mServiceState"]:1:-1}   # get rid of the curly braces
-      serv=(${mradio["mServiceState"]//,/})                     # remove comma separator
+      IFS=',' read -ra serv <<< "${mradio["mServiceState"]}"    # comma-separated string to array
       echo "* Service state:" >> "$devicedoc"
       for i in "${serv[@]}"; do
+        i="${i#"${i%%[![:space:]]*}"}"    # ltrim
         echo "    * ${i}" >> "$devicedoc"
       done
     else
