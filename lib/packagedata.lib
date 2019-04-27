@@ -180,6 +180,8 @@ getAppDetails() {
         [[ "$zeile" = "    usesLibraryFiles:" ]] && continue
         [[ "$zeile" = "    usesLibraries:" ]] && continue
         [[ "$zeile" = "    libraries:" ]] && continue
+        [[ "$zeile" = "    overlay paths:" ]] && continue
+        [[ "$zeile" = "    dynamic libraries:" ]] && continue
         regex='^\s+(dis|en)abledComponents:'
         [[ "${zeile:0:6}" = "      " && ! "${zeile}" =~ $regex ]] && continue
         [[ -z "${zeile%%* }" ]] && break # end of package list is an empty line, sometimes with spaces
