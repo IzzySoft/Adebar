@@ -17,7 +17,13 @@ getSettings() {
 
   local msg
   # build.prop
-  msg="$((adb ${ADBOPTS} pull /system/build.prop "${BUILDPROP}") 2>&1)"
+  if [[ ${ROOT_COMPAT} -eq 1 ]]; then   # Android 8+ require root
+    msg="$((adb ${ADBOPTS} shell "su -c 'cat /system/build.prop'" > "${BUILDPROP}") 2>&1)"
+  else
+    msg="$((adb ${ADBOPTS} pull /system/build.prop "${BUILDPROP}") 2>&1)"
+  fi
+  [[ $? -ne 0 ]] && msg=$(ansi_code "${msg}" "red")
+  [[ -z "$msg" ]] && msg="OK"
   doProgress "- build.prop: $(trim "${msg##*]}")" 2
 
   # wpa_supplicant.conf
