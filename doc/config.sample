@@ -149,9 +149,18 @@ AUTO_UNLOCK=1
 # setting:
 uf_postrun() {
   local WEBDIR="/var/www/docs"
-  cp "${OUTDIR}/docs/deviceInfo.md" "${WEBDIR}/${DEVICE_NAME}.md"
+  cp "${OUTDIR}/docs/deviceInfo.head" "${WEBDIR}/${DEVICE_NAME}.md"
+  echo "  " >> "${WEBDIR}/${DEVICE_NAME}.md"
+  cat "${OUTDIR}/docs/apps.head" >> "${WEBDIR}/${DEVICE_NAME}.md"
+  echo >> "${WEBDIR}/${DEVICE_NAME}.md"
+  echo >> "${WEBDIR}/${DEVICE_NAME}.md"
+  cat "${OUTDIR}/docs/deviceInfo.md" >> "${WEBDIR}/${DEVICE_NAME}.md"
   echo >> "${WEBDIR}/${DEVICE_NAME}.md"
   cat "${OUTDIR}/docs/userApps.md" >> "${WEBDIR}/${DEVICE_NAME}.md"
+  [[ -f "${OUTDIR}/docs/sysApps.md" ]] && {
+    echo >> "${WEBDIR}/${DEVICE_NAME}.md"
+    cat "${OUTDIR}/docs/sysApps.md" >> "${WEBDIR}/${DEVICE_NAME}.md"
+  }
 }
 
 # --=[ Example function to retrieve app names ]=--

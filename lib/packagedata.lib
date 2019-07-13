@@ -381,6 +381,7 @@ getAppDetails() {
   echo -e "# Disabled components on ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "${SH_DISABLED}"
   echo -e "#\n# Check carefully before executing. Not all of those have been disabled by you :)\n#\n" >> "${SH_DISABLED}"
 
+  [[ $((${MK_USERAPPS} + ${MK_SYSAPPS})) -ne 0 ]] && echo -n "**Apps:**" > "${DOCDIR}/apps.head"
   [[ ${MK_USERAPPS} -ne 0 ]] && _makeAppDoc "user"
   [[ ${MK_SYSAPPS}  -ne 0 ]] && _makeAppDoc "system"
 
@@ -431,7 +432,8 @@ function _makeAppDoc() {
     local HAVE_AAPT=0
   fi
 
-  echo "# Installed ${apptype} on ${DEVICE_NAME}" > "${mdfile}"
+  echo "# Installed ${apptype} on ${DEVICE_NAME} {#${apptype/-/_}}" > "${mdfile}"
+  echo -n " \[[${apptype}](#${apptype/-/_})\]" >> "${DOCDIR}/apps.head"
   echo "(As of $(date '+%Y-%m-%d %H:%M'))" >> "${mdfile}"
   declare -A PK_INFO
   for src in ${!PK_INSTALLERS[@]}; do

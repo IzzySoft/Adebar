@@ -52,13 +52,15 @@ getDeviceInfo() {
   doProgress "Collecting device information"
   local item=""
   local devicedoc="${DOCDIR}/deviceInfo.md"
+  local devicehead="${DOCDIR}/deviceInfo.head"
   local msg=""
   local left
   local right
   local tmp=$(mktemp)
   trap "rm -f -- '$tmp'" RETURN
 
-  echo "# ${DEVICE_NAME} Device Information" > "$devicedoc"
+  echo "# ${DEVICE_NAME} Device Information { #devinfo }" > "$devicedoc"
+  echo -n "**[DeviceInfo](#devinfo):**" > "$devicehead"
   echo "(Generated at: $(date '+%Y-%m-%d %H:%M'))" >> "$devicedoc"
   adb ${ADBOPTS} shell getprop > $tmp
 
@@ -81,7 +83,8 @@ getDeviceInfo() {
   done < "${tmp}"
 
   # Do something with the collected information (and collect more while on it)
-  echo "## Device and ROM properties" >> "$devicedoc"
+  echo "## Device and ROM properties { #devprops }" >> "$devicedoc"
+  echo -n " \[[Properties](#devprops)\]" >> "$devicehead"
   doProgress "   + checking for product details" 3
   echo "### Product Info" >> "$devicedoc"
   echo "* Manufacturer: ${DEVPROP[ro.product.manufacturer]}" >> "$devicedoc"    # ro.product.manufacturer=Motorola
@@ -153,7 +156,8 @@ getDeviceInfo() {
   if [[ ${MK_DEVICEINFO_PMLISTFEATURES} -gt 0 ]]; then
     doProgress "- Evaluating 'pm list features'" 2
     echo  >> "$devicedoc"
-    echo "## Device features" >> "$devicedoc"
+    echo "## Device features { #devfeat }" >> "$devicedoc"
+    echo -n " \[[Features](#devfeat)\]" >> "$devicehead"
     echo -e "\`pm list features\`:\n" >> "$devicedoc"
     for feature in $(adb ${ADBOPTS} shell "pm list features"); do
       feature=${feature//[$'\r\n']}
@@ -165,7 +169,8 @@ getDeviceInfo() {
   if [[ ${MK_DEVICEINFO_STATUS} -gt 0 ]]; then
     doProgress "- Evaluating device status" 2
     echo >> "$devicedoc"
-    echo "## Device Status" >> "$devicedoc"
+    echo "## Device Status { #devstatus }" >> "$devicedoc"
+    echo -n " \[[Status](#devstatus)\]" >> "$devicehead"
 
     doProgress "  + Battery status" 3
     echo "### Battery Status" >> "$devicedoc"
@@ -315,7 +320,8 @@ getDeviceInfo() {
   adb ${ADBOPTS} shell dumpsys backup | sed 's/\r//g' > "$tmp"
 
   echo >> "$devicedoc"
-  echo "## Configured accounts" >> "$devicedoc"
+  echo "## Configured accounts { #devaccounts }" >> "$devicedoc"
+  echo -n " \[[Accounts](#devaccounts)\]" >> "$devicehead"
   OIFS="${IFS}"
   IFS="
 "
@@ -324,7 +330,8 @@ getDeviceInfo() {
   done
 
   echo >> "$devicedoc"
-  echo "## Google Cloud Backup" >> "$devicedoc"
+  echo "## Google Cloud Backup { #devcloudbackup }" >> "$devicedoc"
+  echo -n " \[[Cloud Backup](#devcloudbackup)\]" >> "$devicehead"
   echo "* $(grep 'Backup Manager is' "$tmp")" >> "$devicedoc"
   echo "* $(grep 'Auto-restore is' "$tmp")" >> "$devicedoc"
   echo "* Backup destinations:" >> "$devicedoc"
