@@ -315,12 +315,16 @@ getUserAppBackup() {
   fi
 
   for app in "${userApps[@]}"; do
-    if [[ "${AUTO_CONFIRM}" -eq 1 ]]; then
+    if [[ ${#PK_FLAGS[*]} -lt 1 || "${PK_FLAGS[$app]}" =~ "ALLOW_BACKUP" ]]; then
+      if [[ "${AUTO_CONFIRM}" -eq 1 ]]; then
         echo "autoConfirmedBackup ${app}" >> "$backupscript"
         echo "autoConfirmedRestore ${app}.ab" >> "$restorescript"
-    else
+      else
         echo "doBackup ${app}" >> "$backupscript"
         echo -e "doRestore \"${app}.ab\"" >> "$restorescript"
+      fi
+    else
+      echo "# ${app} does not allow backups" >> "$backupscript"
     fi
   done
 

@@ -117,6 +117,7 @@ getAppUsage() {
 #
 # Collect app details via dumpsys
 #
+declare -A PK_FLAGS     # (also needed by backup script: flags=[ SYSTEM HAS_CODE ALLOW_TASK_REPARENTING ALLOW_CLEAR_USER_DATA ALLOW_BACKUP LARGE_HEAP ]
 getAppDetails() {
   local P_BLOCK="none" # none|pkglist|pkg|disabled|enabled|perms
   local P_PKGNAME=""   # name of the currently processed package
@@ -136,7 +137,6 @@ getAppDetails() {
   PK_INSTALLERS[none]="unknown source"
   declare -A PK_INSTALLER     # per app
   declare -A PK_DISABLED      # list of components separated by spaces
-  declare -A PK_FLAGS         # flags=[ SYSTEM HAS_CODE ALLOW_TASK_REPARENTING ALLOW_CLEAR_USER_DATA ALLOW_BACKUP LARGE_HEAP ]
   declare -A PK_MTKFLAGS      # mtkFlags=[ OPERATOR ]
   declare -A PK_USERS         # User 0:  installed=true stopped=false notLaunched=false enabled=0
   declare -A PK_LASTUSED      # Usage stats

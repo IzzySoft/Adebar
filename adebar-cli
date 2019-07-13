@@ -104,7 +104,7 @@ _OOPS_REPEAT=0       # whether to show the same "oops'd line" multiple times
 declare -A OOPSES    # array to store which lines where already reported
 
 ############################################[ Init ]###
-BINDIR="$(dirname "$(readlink -mn "${0}")")"
+BINDIR="$(dirname "$(readlink -mn "${0}")")" #"
 
 # check parameters
 if [[ "$1" = "-a" || "$1" = "--auto" ]]; then
@@ -357,8 +357,6 @@ doProgress "$(ansi_code "Adebar running:" "bold")"
 initAppLists
 [[ ${MK_APPDISABLE} -gt 0 ]] && getDisabled
 [[ ${MK_APPENABLE} -gt 0 ]] && getEnable
-[[ ${MK_USERBACKUP} -gt 0 ]] && getUserAppBackup
-[[ ${MK_SYSBACKUP} -gt 0 ]] && getSystemAppBackup
 [[ ${MK_INSTALLLOC} -gt 0 ]] && getInstallLoc
 [[ $((${MK_PARTINFO} + ${MK_PARTBACKUP})) -gt 0 ]] && getPartInfo
 [[ ${MK_PARTBACKUP} -gt 0 ]] && writePartDumpScript
@@ -368,6 +366,8 @@ initAppLists
 [[ $MK_TIBU -eq 1 ]] && getTibu
 [[ -n "${TRANSFER_DIR}" ]] && doTransfer
 [[ $((${MK_USERAPPS} + ${MK_SYSAPPS})) -ne 0 ]] && getAppDetails
+[[ ${MK_USERBACKUP} -gt 0 ]] && getUserAppBackup
+[[ ${MK_SYSBACKUP} -gt 0 ]] && getSystemAppBackup
 postProcess
 doProgress "$(ansi_code "Adebar done." "bold")"
 echo
