@@ -328,6 +328,11 @@ getAppDetails() {
           break
         fi
 
+        if [[ "$zeile" == "Hidden system packages:" ]]; then # temporary work-around to eliminate "oops" ###TODO###
+          # P_BLOCK="hiddensystempackages" ...
+          break
+        fi
+
         if [[ "$zeile" == "Shared users:" ]]; then      # temporary work-around to eliminate "oops" ###TODO###
           # P_BLOCK="sharedusers" ...
           break
