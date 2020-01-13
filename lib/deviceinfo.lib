@@ -247,6 +247,7 @@ getDeviceInfo() {
     [[ -n "${DEVPROP[gsm.operator.iso-country]}" ]] && echo "* Provider country: ${DEVPROP[gsm.operator.iso-country]}" >> "$devicedoc"
     [[ -n "${DEVPROP[gsm.operator.numeric]}" ]] && echo "* Provider code: ${DEVPROP[gsm.operator.numeric]}" >> "$devicedoc"
     [[ -n "${DEVPROP[gsm.sim.state]}" ]] && echo "* SIM state: ${DEVPROP[gsm.sim.state]}" >> "$devicedoc"
+    echo >> "$devicedoc"
   fi
 
   if [[ -n "${DEVPROP[gsm.operator.alpha.2]}" ]]; then # Provider info 2nd SIM (Dual-SIM devices)
@@ -257,6 +258,7 @@ getDeviceInfo() {
     [[ -n "${DEVPROP[gsm.operator.iso-country.2]}" ]] && echo "* Provider country: ${DEVPROP[gsm.operator.iso-country.2]}" >> "$devicedoc"
     [[ -n "${DEVPROP[gsm.operator.numeric.2]}" ]] && echo "* Provider code: ${DEVPROP[gsm.operator.numeric.2]}" >> "$devicedoc"
     [[ -n "${DEVPROP[gsm.sim.state.2]}" ]] && echo "* SIM state: ${DEVPROP[gsm.sim.state.2]}" >> "$devicedoc"
+    echo >> "$devicedoc"
   fi
 
   doProgress "  + networking details" 3
@@ -279,7 +281,8 @@ getDeviceInfo() {
   [[ -n "${DEVPROP[EXTERNAL_STORAGE_MOUNT]}" ]] && echo "* Internal SD mount point: ${DEVPROP[EXTERNAL_STORAGE_MOUNT]}" >> "$devicedoc"
   [[ -n "${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" ]] && echo "* External SD mount point: ${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" >> "$devicedoc"
   [[ -n "${DEVPROP[ro.crypto.fuse_sdcard]}" ]] && echo "* Internal SD via FUSE: ${DEVPROP[ro.crypto.fuse_sdcard]}" >> "$devicedoc"
-  [[ -n "${DEVPROP[ro.crypto.state]}" ]] && echo "* Storage encrypted: ${DEVPROP[ro.crypto.state]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[persist.sys.sdcardfs]}" ]] && echo "* SDCardFS: ${DEVPROP[persist.sys.sdcardfs]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[ro.crypto.state]}" ]] && echo "* [Storage encrypted[(https://source.android.com/security/encryption): ${DEVPROP[ro.crypto.state]}" >> "$devicedoc"
   [[ ${MK_PARTINFO} -gt 0 ]] && writePartInfo "$devicedoc"
   echo "* Disk statistics:" >> "$devicedoc"
   adb ${ADBOPTS} shell dumpsys diskstats > ${tmp}
@@ -289,6 +292,38 @@ getDeviceInfo() {
     [[ "${zeile:0:12}" = "Cache Sizes:" ]] && continue
     echo -e "    * ${zeile/// }" >> "$devicedoc"
   done < ${tmp}
+  echo >> "$devicedoc"
+
+  # SafetyNet (Android 5+)
+  [[ -n "${DEVPROP[ro.boot.flash.locked]}" || -n "${DEVPROP[ro.boot.verifiedbootstate]}" || -n "${DEVPROP[ro.boot.veritymode]}" ]] && {
+    doProgress "  + SafetyNet details" 3
+    echo "### SafetyNet" >> "$devicedoc"
+    [[ -n "${DEVPROP[ro.boot.flash.locked]}" ]] && {
+      if [[ ${DEVPROP[ro.boot.flash.locked]} -eq 1 ]]; then echo "* BootLoader locked" >> "$devicedoc"
+      elif [[ ${DEVPROP[ro.boot.flash.locked]} -eq 0 ]]; then echo "* BootLoader unlocked (SafetyNet FAIL)" >> "$devicedoc"
+      fi
+    }
+    [[ -n "${DEVPROP[ro.boot.verifiedbootstate]}" ]] && {
+      case "${DEVPROP[ro.boot.verifiedbootstate]}" in
+        green)  echo "* [Verified Boot State](https://source.android.com/security/verifiedboot): green (device is LOCKED and user-settable root of trust is not used)" >> "$devicedoc" ;;
+        yellow) echo "* [Verified Boot State](https://source.android.com/security/verifiedboot): yellow (device is LOCKED and user-settable root of trust is used)" >> "$devicedoc" ;;
+        orange) echo "* [Verified Boot State](https://source.android.com/security/verifiedboot): orange (device is unlocked)" >> "$devicedoc" ;;
+        *)      echo "* [Verified Boot State](https://source.android.com/security/verifiedboot): ${DEVPROP[ro.boot.verifiedbootstate]}" >> "$devicedoc" ;;
+      esac
+    }
+    [[ -n "${DEVPROP[ro.boot.veritymode]}" ]] && echo "* [DM-Verity mode](https://source.android.com/security/verifiedboot/dm-verity): ${DEVPROP[ro.boot.veritymode]}" >> "$devicedoc"
+    [[ -n "${DEVPROP[sys.oem_unlock_allowed]}" ]] && {
+      case "${DEVPROP[sys.oem_unlock_allowed]}" in
+        0) echo "* unlocking bootloader through developer settings: disabled" >> "$devicedoc" ;;
+        1) echo "* unlocking bootloader through developer settings: enabled (SafetyNet might FAIL)" >> "$devicedoc" ;;
+        *) echo "* oem_unlock_allowed: ${DEVPROP[sys.oem_unlock_allowed]}" >> "$devicedoc" ;;
+      esac
+    }
+    echo >> "$devicedoc"
+    echo "<small>Note that this only covers a small part of SafetyNet checks. If you want to dig deeper into this, see e.g. [Inside SafetyNet](https://koz.io/inside-safetynet/).</small>" >> "$devicedoc"
+    echo >> "$devicedoc"
+  }
+
 
   # Misc
   doProgress "  + misc details" 3
@@ -308,6 +343,7 @@ getDeviceInfo() {
     elif [[ ${DEVPROP[ro.build.selinux]} -eq 0 ]]; then echo "* SELinux enabled: No" >> "$devicedoc"
     fi
   }
+  [[ -n "${DEVPROP[ro.boot.selinux]}" ]] && echo "* [SELinux mode](https://source.android.com/security/selinux): ${DEVPROP[ro.boot.selinux]}" >> "$devicedoc"    # permissive/enforced
   [[ -n "${DEVPROP[ro.alarm_boot]}" ]] && {
     if [[ "${DEVPROP[ro.alarm_boot]}" = "false" ]]; then echo "* Last boot triggered by RTC alarm: No" >> "$devicedoc"
     else echo "* Last boot triggered by RTC alarm: Yes" >> "$devicedoc"
