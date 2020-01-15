@@ -487,7 +487,7 @@ function _makeAppDoc() {
     [[ -n "${PK_CODEPATH[$app]}" ]]     && tmpstring+="    + CodePath: \`${PK_CODEPATH[$app]}\`\n"
     [[ -n "${PK_DATADIR[$app]}" ]]      && tmpstring+="    + App data: \`${PK_DATADIR[$app]}\`\n"
     [[ -n "${PK_PRIMARYCPU[$app]}" && "${PK_PRIMARYCPU[$app]}" != "null" ]]     && tmpstring+="    + Primary CPU ABI: \`${PK_PRIMARYCPU[$app]}\`\n"
-    [[ -n "${PK_SECONDARYCPU[$app]}" && "${PK_SECONDARYCPU[$app]}" != "null" ]] && tmpstring+="    + Primary CPU ABI: \`${PK_SECONDARYCPU[$app]}\`\n"
+    [[ -n "${PK_SECONDARYCPU[$app]}" && "${PK_SECONDARYCPU[$app]}" != "null" ]] && tmpstring+="    + Secondary CPU ABI: \`${PK_SECONDARYCPU[$app]}\`\n"
     [[ -n "${PK_SCREENSIZE[$app]}" ]]   && tmpstring+="    + supported screen sizes: ${PK_SCREENSIZE[$app]}\n"
     [[ -n "${PK_FLAGS[$app]}" ]]        && tmpstring+="    + flags: ${PK_FLAGS[$app]}\n"
     [[ -n "${PK_PRIVFLAGS[$app]}" ]]    && tmpstring+="    + privateFlags: ${PK_PRIVFLAGS[$app]}\n"
