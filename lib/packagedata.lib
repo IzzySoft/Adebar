@@ -1,5 +1,5 @@
 ##############################################################################
-# Adebar © 2014, 2015 by Itzchak Rehberg
+# Adebar © 2014, 2020 by Itzchak Rehberg
 # This is part of the Adebar project, see https://github.com/IzzySoft/Adebar
 # Protected by the GPLv2
 # ----------------------------------------------------------------------------
@@ -72,8 +72,8 @@ getAppname() {
 #
 # Helpers for app usage stats
 # credits to:
-# - http://stackoverflow.com/questions/893585/how-to-parse-xml-in-bash
-# - http://android.stackexchange.com/questions/116625/how-do-i-know-when-an-app-was-used-in-android
+# - https://stackoverflow.com/questions/893585/how-to-parse-xml-in-bash
+# - https://android.stackexchange.com/questions/116625/how-do-i-know-when-an-app-was-used-in-android
 #
 read_dom () {
     local IFS=\>
@@ -118,12 +118,13 @@ getAppUsage() {
 # Collect app details via dumpsys
 #
 declare -A PK_FLAGS     # (also needed by backup script: flags=[ SYSTEM HAS_CODE ALLOW_TASK_REPARENTING ALLOW_CLEAR_USER_DATA ALLOW_BACKUP LARGE_HEAP ]
+declare -A PK_PRIVFLAGS # privateFlags=[ PRIVILEGED DEFAULT_TO_DEVICE_PROTECTED_STORAGE DIRECT_BOOT_AWARE RESIZEABLE_ACTIVITIES ]
 getAppDetails() {
   local P_BLOCK="none" # none|pkglist|pkg|disabled|enabled|perms
   local P_PKGNAME=""   # name of the currently processed package
   local tmpstring=""
   local regex
-  local P_SKIP=(sharedUser pkg resourcePath nativeLibraryPath versionCode targetSdk timeStamp signatures permissionsFixed installPermissionsFixed pkgFlags pkgFlagsEx applicationInfo privateFlags dexTimeStamp apkSigningVersion)
+  local P_SKIP=(sharedUser pkg resourcePath nativeLibraryPath versionCode targetSdk timeStamp signatures permissionsFixed installPermissionsFixed pkgFlags pkgFlagsEx applicationInfo dexTimeStamp apkSigningVersion)
   declare -A PK_CODEPATH
   declare -A PK_VERSION
   declare -A PK_IDS           # UID/GID (from userId)
@@ -236,6 +237,11 @@ getAppDetails() {
           "flags")
             PK_FLAGS[$P_PKGNAME]="${zeile##*=}"
             doProgress "    +flags: ${PK_FLAGS[$P_PKGNAME]}" 5
+            continue
+            ;;
+          "privateFlags")
+            PK_PRIVFLAGS[$P_PKGNAME]="${zeile##*=}"
+            doProgress "    +privFlags: ${PK_PRIVFLAGS[$P_PKGNAME]}" 5
             continue
             ;;
           "mtkFlags")
@@ -484,6 +490,7 @@ function _makeAppDoc() {
     [[ -n "${PK_SECONDARYCPU[$app]}" && "${PK_SECONDARYCPU[$app]}" != "null" ]] && tmpstring+="    + Primary CPU ABI: \`${PK_SECONDARYCPU[$app]}\`\n"
     [[ -n "${PK_SCREENSIZE[$app]}" ]]   && tmpstring+="    + supported screen sizes: ${PK_SCREENSIZE[$app]}\n"
     [[ -n "${PK_FLAGS[$app]}" ]]        && tmpstring+="    + flags: ${PK_FLAGS[$app]}\n"
+    [[ -n "${PK_PRIVFLAGS[$app]}" ]]    && tmpstring+="    + privateFlags: ${PK_PRIVFLAGS[$app]}\n"
     [[ -n "${PK_MTKFLAGS[$app]}" ]]     && tmpstring+="    + mtkFlags: ${PK_MTKFLAGS[$app]}\n"
     [[ -n "${PK_USERS[$app]}" ]]        && tmpstring+="${PK_USERS[$app]}\n"
     [[ -n "${PK_DISABLED[$app]}" ]]     && {
