@@ -445,7 +445,7 @@ function _makeAppDoc() {
 
   echo "# Installed ${apptype} on ${DEVICE_NAME} {#${apptype/-/_}}" > "${mdfile}"
   echo -n " \[[${apptype}](#${apptype/-/_})\]" >> "${DOCDIR}/apps.head"
-  echo "(As of $(date '+%Y-%m-%d %H:%M'))" >> "${mdfile}"
+  echo "(As of $(date '+%Y-%m-%d %H:%M')) <sup>[help](https://codeberg.org/izzy/Adebar/wiki/AppDetails-explained)</sup>" >> "${mdfile}"
   declare -A PK_INFO
   for src in ${!PK_INSTALLERS[@]}; do
     PK_INFO[$src]=""
