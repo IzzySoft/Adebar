@@ -124,10 +124,11 @@ getAppDetails() {
   local P_PKGNAME=""   # name of the currently processed package
   local tmpstring=""
   local regex
-  local P_SKIP=(sharedUser pkg resourcePath nativeLibraryPath targetSdk timeStamp signatures permissionsFixed installPermissionsFixed pkgFlags pkgFlagsEx applicationInfo dexTimeStamp apkSigningVersion)
+  local P_SKIP=(sharedUser pkg resourcePath nativeLibraryPath targetSdk timeStamp signatures permissionsFixed installPermissionsFixed pkgFlags pkgFlagsEx applicationInfo dexTimeStamp)
   declare -A PK_CODEPATH
   declare -A PK_VERSION
   declare -A PK_VERSIONCODE
+  declare -A PK_SIGNINGVER
   declare -A PK_IDS           # UID/GID (from userId)
   declare -A PK_DATADIR
   declare -A PK_PRIMARYCPU
@@ -202,6 +203,11 @@ getAppDetails() {
           "versionName")
             PK_VERSION[$P_PKGNAME]="${zeile##*=}"
             doProgress "    +version: ${PK_VERSION[$P_PKGNAME]}" 5
+            continue
+            ;;
+          "apkSigningVersion")
+            PK_SIGNINGVER[$P_PKGNAME]="${zeile##*=}"
+            doProgress "    +signingVersion: ${PK_SIGNINGVER[$P_PKGNAME]}" 5
             continue
             ;;
           "userId")
@@ -490,6 +496,7 @@ function _makeAppDoc() {
     [[ -n "${PK_LASTUPDATE[$app]}" ]]   && tmpstring+="    + last updated: ${PK_LASTUPDATE[$app]}\n"
     [[ -n "${PK_LASTUSED[$app]}" ]]     && tmpstring+="    + last used: ${PK_LASTUSED[$app]}\n"
     [[ -n "${PK_VERSION[$app]}" ]]      && tmpstring+="    + installed version: ${PK_VERSION[$app]} (${PK_VERSIONCODE[$app]})\n"
+    [[ -n "${PK_SIGNINGVER[$app]}" ]]   && tmpstring+="    + signature scheme: ${PK_SIGNINGVER[$app]}\n"
     [[ -n "${PK_IDS[$app]}" ]]          && tmpstring+="    + IDs: ${PK_IDS[$app]}\n"
     [[ -n "${PK_CODEPATH[$app]}" ]]     && tmpstring+="    + CodePath: \`${PK_CODEPATH[$app]}\`\n"
     [[ -n "${PK_DATADIR[$app]}" ]]      && tmpstring+="    + App data: \`${PK_DATADIR[$app]}\`\n"
