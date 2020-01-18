@@ -477,19 +477,19 @@ function _makeAppDoc() {
     fi
     if [[ -z "${PK_INSTALLER[$app]}" ]]; then # no installer
       if [[ "${APPNAME}" = "${app}" ]]; then
-        tmpstring="+ $app\n"
+        tmpstring="+ **$app**\n"
       elif [[ -n "${APP_MARKET_URL[unknown]}" ]]; then
-        tmpstring="+ [${APPNAME}](${APP_MARKET_URL[unknown]/\%s/$app})\n"
+        tmpstring="+ **[${APPNAME}](${APP_MARKET_URL[unknown]/\%s/$app})**\n"
       else
-        tmpstring="+ ${APPNAME} (${app})\n"
+        tmpstring="+ **${APPNAME} (${app})**\n"
       fi
     elif [[ -n "${APP_MARKET_URL[${PK_INSTALLER[$app]}]}" ]]; then
-      tmpstring="+ [${APPNAME}](${APP_MARKET_URL[${PK_INSTALLER[$app]}]/\%s/$app})\n"
+      tmpstring="+ **[${APPNAME}](${APP_MARKET_URL[${PK_INSTALLER[$app]}]/\%s/$app})**\n"
     else # no web source
       if [[ "${APPNAME}" = "${app}" ]]; then
-        tmpstring="+ $app\n"
+        tmpstring="+ **$app**\n"
       else
-        tmpstring="+ ${APPNAME} (${app})\n"
+        tmpstring="+ **${APPNAME} (${app})**\n"
       fi
     fi
     [[ -n "${PK_FIRSTINSTALL[$app]}" ]] && tmpstring+="    + first installed: ${PK_FIRSTINSTALL[$app]}\n"
@@ -516,10 +516,10 @@ function _makeAppDoc() {
       done
     }
     if [[ -z "${PK_INSTALLER[$app]}" ]]; then
-      PK_INFO[none]+="$tmpstring\n"
+      PK_INFO[none]+="$tmpstring"
     else
       CUR_INSTALLER="${PK_INSTALLER[$app]}"
-      PK_INFO[$CUR_INSTALLER]+="$tmpstring\n"
+      PK_INFO[$CUR_INSTALLER]+="$tmpstring"
     fi
   done
   for src in ${!PK_INSTALLERS[@]}; do
