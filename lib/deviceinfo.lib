@@ -120,22 +120,30 @@ getDeviceInfo() {
     doProgress "   + checking for sensor details" 3
     if [[ "$(adb ${ADBOPTS} shell dumpsys sensorservice | wc -l)" -gt 1 ]]; then # make sure sensorservice is available
       echo "### Sensors" >> "$devicedoc"
-      adb ${ADBOPTS} shell dumpsys sensorservice > $tmp
-      while read zeile; do
-        left="${zeile#*|}"
-        left="${zeile%%\|*}"
-        left="${left%"${left##*[![:space:]]}"}" # remove trailing spaces
-        right="${zeile%\|*}"
-        right="${right#*\|}"
-        right="${right%%\|*}"
-        right="${right%"${right##*[![:space:]]}"}"
-        [[ "$right" = "$left" ]] && continue
-        if [[ -z "${right//[[:space:]]/}" ]]; then
-          echo "* ${left}" >> "$devicedoc"
-        else
-          echo "* ${left} (${right//[[:space:]]/})" >> "$devicedoc"
-        fi
-      done < "${tmp}"
+      if [[ $DEVICE_SDKVER -lt 25 ]]; then  # Android 7 and below
+        adb ${ADBOPTS} shell dumpsys sensorservice > $tmp
+        while read zeile; do
+          left="${zeile#*|}"
+          left="${zeile%%\|*}"
+          left="${left%"${left##*[![:space:]]}"}" # remove trailing spaces
+          right="${zeile%\|*}"
+          right="${right#*\|}"
+          right="${right%%\|*}"
+          right="${right%"${right##*[![:space:]]}"}"
+          [[ "$right" = "$left" ]] && continue
+          if [[ -z "${right//[[:space:]]/}" ]]; then
+            echo "* ${left}" >> "$devicedoc"
+          else
+            echo "* ${left} (${right//[[:space:]]/})" >> "$devicedoc"
+          fi
+        done < "${tmp}"
+      else # SDK 25+/Android 7.1+ (output format of "dumpsys sensorservice" changed)
+        adb ${ADBOPTS} shell "dumpsys sensorservice" |grep -E -A99999 "^Sensor List:" |grep -E -B99999 "^Fusion States:" > $tmp
+        re="0x[0-9]+\)\s+([^|]+)\|\s*([^|]+)"
+        while read zeile; do
+          [[ $zeile =~ $re ]] && echo "* $(trim "${BASH_REMATCH[1]}") ($(trim "${BASH_REMATCH[2]}"))" >> "$devicedoc"
+        done < "${tmp}"
+      fi
       echo >> "$devicedoc"
     fi
   fi
