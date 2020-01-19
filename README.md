@@ -1,5 +1,7 @@
 # Adebar
-***Adebar*** stands for <b>A</b>ndroid <b>De</b>vice <b>B</b>ackup <b>a</b>nd <b>R</b>eport. It is mainly based on [Bash](http://en.wikipedia.org/wiki/Bash_%28Unix_shell%29 "Wikipedia: Bash (Unix shell)") and [Adb](http://en.wikipedia.org/wiki/Android_Debug_Bridge "Wikipedia: Android Debug Bridge").
+***Adebar*** stands for <b>A</b>ndroid <b>De</b>vice <b>B</b>ackup <b>a</b>nd <b>R</b>eport. It is mainly based on [Bash](http://en.wikipedia.org/wiki/Bash_%28Unix_shell%29 "Wikipedia: Bash (Unix shell)") and [Adb](http://en.wikipedia.org/wiki/Android_Debug_Bridge "Wikipedia: Android Debug Bridge"). It reportedly works on Linux, Mac and Windows (Cygwin).
+
+**Note:** As this is a collection of Shell scripts, you won't find any „binaries“ attached to releases – there are none for *Adebar* and no „compilation“ is required. Please take a look at [the wiki](https://github.com/IzzySoft/Adebar/wiki) for further details and instructions.
 
 
 ## What makes *Adebar* specific?
