@@ -1,5 +1,5 @@
 ##############################################################################
-# Adebar © 2014-2016 by Itzchak Rehberg
+# Adebar © 2014-2020 by Itzchak Rehberg
 # This is part of the Adebar project, see https://github.com/IzzySoft/Adebar
 # Protected by the GPLv2
 # ----------------------------------------------------------------------------
@@ -102,4 +102,29 @@ ansi_code() {
     shift
   done
   echo "${txt}\033[0m"
+}
+
+
+#
+# ---------------------------------=[ Format file sizes to human-readible ]=--
+# usage:
+#   formatted=$(format_fsize $bytes)
+# $1: file size in bytes (number)
+#
+format_fsize() {
+  if [[ -z "$1" ]]; then
+    echo "(unknown)"
+  else
+    size=$1
+    if [[ $size -gt $((1024*1024*1024)) ]]; then
+      size=$((size/1024/1024/1024)); unit="GiB"
+    elif [[ $size -gt $((1024*1024)) ]]; then
+      size=$((size/1024/1024)); unit="MiB"
+    elif [[ $size -gt 1024 ]]; then
+      size=$((size/1024)); unit="KiB"
+    else
+      unit="B"
+    fi
+    echo "${size} ${unit}"
+  fi
 }

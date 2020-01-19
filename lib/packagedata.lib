@@ -113,6 +113,37 @@ getAppUsage() {
   done
 }
 
+#
+# Collecting app storage details
+#
+declare -A PK_ASIZE
+declare -A PK_CSIZE
+declare -A PK_DSIZE
+HAVE_APPSIZES=0
+getAppStorageStats() {
+  doProgress "- collecting app storage details" 2
+  DSTATS=$(adb shell dumpsys diskstats)
+  re='Package Names: \[([^]]*)\]'
+  if [[ $DSTATS =~ $re ]]; then
+    PN=( ${BASH_REMATCH[1]//,/ } )
+    re='App Sizes: \[([^]]*)\]'
+    [[ $DSTATS =~ $re ]] && ASIZE=( ${BASH_REMATCH[1]//,/ } )
+    re='App Data Sizes: \[([^]]*)\]'
+    [[ $DSTATS =~ $re ]] && DSIZE=( ${BASH_REMATCH[1]//,/ } )
+    re='Cache Sizes: \[([^]]*)\]'
+    [[ $DSTATS =~ $re ]] && CSIZE=( ${BASH_REMATCH[1]//,/ } )
+    declare -i acount=0
+    while [[ $acount -lt ${#PN[@]} ]]; do
+      pn=${PN[$acount]//\"/}
+      PK_ASIZE[$pn]=${ASIZE[$acount]}
+      PK_CSIZE[$pn]=${CSIZE[$acount]}
+      PK_DSIZE[$pn]=${DSIZE[$acount]}
+      acount+=1
+    done
+    HAVE_APPSIZES=1
+  fi
+}
+
 
 #
 # Collect app details via dumpsys
@@ -405,6 +436,8 @@ getAppDetails() {
   echo -e "# Disabled components on ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "${SH_DISABLED}"
   echo -e "#\n# Check carefully before executing. Not all of those have been disabled by you :)\n#\n" >> "${SH_DISABLED}"
 
+  getAppStorageStats
+
   [[ $((${MK_USERAPPS} + ${MK_SYSAPPS})) -ne 0 ]] && echo -n "**Apps:**" > "${DOCDIR}/apps.head"
   [[ ${MK_USERAPPS} -ne 0 ]] && _makeAppDoc "user"
   [[ ${MK_SYSAPPS}  -ne 0 ]] && _makeAppDoc "system"
@@ -492,6 +525,7 @@ function _makeAppDoc() {
         tmpstring="+ **${APPNAME} (${app})**\n"
       fi
     fi
+    [[ -n "${PK_ASIZE[$app]}" ]]        && tmpstring+="    + storage used (app/data/cache): $(format_fsize ${PK_ASIZE[$app]}) / $(format_fsize ${PK_DSIZE[$app]}) / $(format_fsize ${PK_CSIZE[$app]})\n"
     [[ -n "${PK_FIRSTINSTALL[$app]}" ]] && tmpstring+="    + first installed: ${PK_FIRSTINSTALL[$app]}\n"
     [[ -n "${PK_LASTUPDATE[$app]}" ]]   && tmpstring+="    + last updated: ${PK_LASTUPDATE[$app]}\n"
     [[ -n "${PK_LASTUSED[$app]}" ]]     && tmpstring+="    + last used: ${PK_LASTUSED[$app]}\n"
