@@ -290,7 +290,7 @@ getDeviceInfo() {
   [[ -n "${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" ]] && echo "* External SD mount point: ${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" >> "$devicedoc"
   [[ -n "${DEVPROP[ro.crypto.fuse_sdcard]}" ]] && echo "* Internal SD via FUSE: ${DEVPROP[ro.crypto.fuse_sdcard]}" >> "$devicedoc"
   [[ -n "${DEVPROP[persist.sys.sdcardfs]}" ]] && echo "* SDCardFS: ${DEVPROP[persist.sys.sdcardfs]}" >> "$devicedoc"
-  [[ -n "${DEVPROP[ro.crypto.state]}" ]] && echo "* [Storage encrypted[(https://source.android.com/security/encryption): ${DEVPROP[ro.crypto.state]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[ro.crypto.state]}" ]] && echo "* [Storage encrypted](https://source.android.com/security/encryption): ${DEVPROP[ro.crypto.state]}" >> "$devicedoc"
   [[ ${MK_PARTINFO} -gt 0 ]] && writePartInfo "$devicedoc"
   echo "* Disk statistics:" >> "$devicedoc"
   adb ${ADBOPTS} shell dumpsys diskstats > ${tmp}
