@@ -119,7 +119,6 @@ getAppUsage() {
 declare -A PK_ASIZE
 declare -A PK_CSIZE
 declare -A PK_DSIZE
-HAVE_APPSIZES=0
 getAppStorageStats() {
   doProgress "- collecting app storage details" 2
   DSTATS=$(adb shell dumpsys diskstats)
@@ -140,7 +139,6 @@ getAppStorageStats() {
       PK_DSIZE[$pn]=${DSIZE[$acount]}
       acount+=1
     done
-    HAVE_APPSIZES=1
   fi
 }
 
