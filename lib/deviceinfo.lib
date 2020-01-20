@@ -89,7 +89,6 @@ getDeviceInfo() {
   echo "### Product Info" >> "$devicedoc"
   echo "* Manufacturer: ${DEVPROP[ro.product.manufacturer]}" >> "$devicedoc"    # ro.product.manufacturer=Motorola
   echo "* Model: ${DEVPROP[ro.product.model]} (${DEVPROP[ro.product.device]})" >> "$devicedoc"  # ro.product.model=A953 (ro.product.device=milestone2)
-  [[ -n "${DEVPROP[ro.build.date]}" ]] && echo "* Manufatured on: ${DEVPROP[ro.build.date]}" >> "$devicedoc"
   local serial="${DEVPROP[ro.serialno]}"                                        # 015ECFC703028007
   [[ -z "$serial" ]] && {
     if [[ -n "${DEVPROP[ro.boot.serialno]}" ]]; then
@@ -153,6 +152,7 @@ getDeviceInfo() {
   echo "* SDK/Android version: ${DEVPROP[ro.build.version.sdk]}/${DEVPROP[ro.build.version.release]}" >> "$devicedoc" # 16/4.1.2
   [[ -n "${DEVPROP[ro.modversion]}" ]] && echo "* Mod: ${DEVPROP[ro.modversion]}" >> "$devicedoc" # ro.modversion=10-20121228-NIGHTLY-milestone2
   [[ -n "${DEVPROP[ro.build.id]}" ]] && echo "* BuildID: ${DEVPROP[ro.build.id]}" >> "$devicedoc" # JZO54K
+  [[ -n "${DEVPROP[ro.build.date]}" ]] && echo "* Build date: ${DEVPROP[ro.build.date]}" >> "$devicedoc"
   echo "* Fingerprint: ${DEVPROP[ro.build.fingerprint]}" >> "$devicedoc" # MOTO/A953_O2DE/milestone2:2.3.6/4.5.1-134_DFP-132/1317968148:user/release-keys
   [[ -n "${DEVPROP[ro.build.version.security_patch]}" ]] && echo "* Security Patch Level: ${DEVPROP[ro.build.version.security_patch]}" >> "$devicedoc" # 2019-12-05
   [[ "$(adb ${ADBOPTS} shell whence uname)" ]] && echo "* Kernel: $(adb ${ADBOPTS} shell uname -r)" >> "$devicedoc" || echo "* Kernel: $(adb ${ADBOPTS} shell busybox uname -r)" >> "$devicedoc"
