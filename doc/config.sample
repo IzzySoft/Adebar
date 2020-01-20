@@ -140,6 +140,9 @@ AUTO_CONFIRM=1
 AUTO_UNLOCK=1
 # Use a fixed location for the Bash interpreter (instead of having it auto-evaluated)
 # BASH_LOCATION="/bin/bash"
+# Where to link wiki references to. If you run a local mirror of the Adebar repo
+# (e.g. using Gitea), you can point it there.
+WIKI_BASE="https://codeberg.org/izzy/Adebar/wiki"
 
 # ------------=[ Example postrun function ]=--
 # to avoid possible collisions with functions defined by Adebar itself, use

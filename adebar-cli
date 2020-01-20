@@ -97,6 +97,7 @@ ROOT_PMDISABLE=0
 AUTO_CONFIRM=0
 AUTO_UNLOCK=0
 BASH_LOCATION="/usr/bin/env bash"
+WIKI_BASE="https://codeberg.org/izzy/Adebar/wiki"
 
 # Internal use / debugging
 _OOPS_LEVEL_ADJUST=0 # 0=no_adjust; increase to "hide" oopses, decrease to force them to be revealed even on lower levels
