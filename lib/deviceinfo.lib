@@ -61,7 +61,7 @@ getDeviceInfo() {
 
   echo "# ${DEVICE_NAME} Device Information { #devinfo }" > "$devicedoc"
   echo -n "**[DeviceInfo](#devinfo):**" > "$devicehead"
-  echo "(Generated at: $(date '+%Y-%m-%d %H:%M'))" >> "$devicedoc"
+  echo "(Generated at: $(date '+%Y-%m-%d %H:%M')) **<sup>[ⓘ](${WIKI_BASE}/DeviceInfo-explained)</sup>**" >> "$devicedoc"
   adb ${ADBOPTS} shell getprop > $tmp
 
   doProgress "- Evaluating device properties" 2
@@ -167,7 +167,7 @@ getDeviceInfo() {
     echo  >> "$devicedoc"
     echo "## Device features { #devfeat }" >> "$devicedoc"
     echo -n " \[[Features](#devfeat)\]" >> "$devicehead"
-    echo -e "\`pm list features\`:\n" >> "$devicedoc"
+    echo -e "\`pm list features\`: **<sup>[ⓘ](${WIKI_BASE}/DeviceInfo-explained#device-features)</sup>**\n" >> "$devicedoc"
     for feature in $(adb ${ADBOPTS} shell "pm list features"); do
       feature=${feature//[$'\r\n']}
       echo "* ${feature#*:}" >> "$devicedoc"
@@ -285,7 +285,7 @@ getDeviceInfo() {
 
   # Storage
   doProgress "  + storage details" 3
-  echo "### Storage details" >> "$devicedoc"
+  echo "### Storage details <sup>[ⓘ](${WIKI_BASE}/DeviceInfo-explained#storage-details)</sup>" >> "$devicedoc"
   [[ -n "${DEVPROP[EXTERNAL_STORAGE_MOUNT]}" ]] && echo "* Internal SD mount point: ${DEVPROP[EXTERNAL_STORAGE_MOUNT]}" >> "$devicedoc"
   [[ -n "${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" ]] && echo "* External SD mount point: ${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" >> "$devicedoc"
   [[ -n "${DEVPROP[ro.crypto.fuse_sdcard]}" ]] && echo "* Internal SD via FUSE: ${DEVPROP[ro.crypto.fuse_sdcard]}" >> "$devicedoc"
@@ -305,7 +305,7 @@ getDeviceInfo() {
   # SafetyNet (Android 5+)
   [[ -n "${DEVPROP[ro.boot.flash.locked]}" || -n "${DEVPROP[ro.boot.verifiedbootstate]}" || -n "${DEVPROP[ro.boot.veritymode]}" ]] && {
     doProgress "  + SafetyNet details" 3
-    echo "### SafetyNet" >> "$devicedoc"
+    echo "### SafetyNet **<sup>[ⓘ](${WIKI_BASE}/DeviceInfo-explained#safetynet)</sup>**" >> "$devicedoc"
     [[ -n "${DEVPROP[ro.boot.flash.locked]}" ]] && {
       if [[ ${DEVPROP[ro.boot.flash.locked]} -eq 1 ]]; then echo "* BootLoader locked" >> "$devicedoc"
       elif [[ ${DEVPROP[ro.boot.flash.locked]} -eq 0 ]]; then echo "* BootLoader unlocked (SafetyNet FAIL)" >> "$devicedoc"
@@ -327,8 +327,6 @@ getDeviceInfo() {
         *) echo "* oem_unlock_allowed: ${DEVPROP[sys.oem_unlock_allowed]}" >> "$devicedoc" ;;
       esac
     }
-    echo >> "$devicedoc"
-    echo "<small>Note that this only covers a small part of SafetyNet checks. If you want to dig deeper into this, see e.g. [Inside SafetyNet](https://koz.io/inside-safetynet/).</small>" >> "$devicedoc"
     echo >> "$devicedoc"
   }
 
