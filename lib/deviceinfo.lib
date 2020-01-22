@@ -127,19 +127,16 @@ getDeviceInfo() {
     if [[ $(cat "${tmp}" | wc -l) -gt 1 ]]; then # make sure sensorservice is available
       echo "### Sensors" >> "$devicedoc"
       if [[ $DEVICE_SDKVER -lt 25 ]]; then  # Android 7 and below
+        re="^([^|]+)\s*\|\s*([^|]+)\s*\|"
         while read zeile; do
-          left="${zeile#*|}"
-          left="${zeile%%\|*}"
-          left="${left%"${left##*[![:space:]]}"}" # remove trailing spaces
-          right="${zeile%\|*}"
-          right="${right#*\|}"
-          right="${right%%\|*}"
-          right="${right%"${right##*[![:space:]]}"}"
-          [[ "$right" = "$left" ]] && continue
-          if [[ -z "${right//[[:space:]]/}" ]]; then
-            echo "* ${left}" >> "$devicedoc"
-          else
-            echo "* ${left} (${right//[[:space:]]/})" >> "$devicedoc"
+          [[ "${zeile:0:2}" = "  " ]] && continue
+          [[ $zeile =~ (^[0-9]+ h/w sensors:) ]] && break
+          if [[ $zeile =~ $re ]]; then
+            if [[ -z "$(trim "${BASH_REMATCH[2]}")" ]]; then
+              echo "* $(trim "${BASH_REMATCH[1]}")" >> "$devicedoc"
+            else
+              echo "* $(trim "${BASH_REMATCH[1]}") ($(trim "${BASH_REMATCH[2]}"))" >> "$devicedoc"
+            fi
           fi
         done < "${tmp}"
       else # SDK 25+/Android 7.1+ (output format of "dumpsys sensorservice" changed)
