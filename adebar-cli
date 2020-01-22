@@ -17,11 +17,13 @@ CONFDIR="conf"
 CACHEDIR=""
 APPCACHESPLUS=""
 TRANSFER_DIR=""
+DUMMY_BASE=
 
 # -------------------=[ device specifics ]=--
 SERIAL=""
 DEVICE_NAME="MyDroid"
 BACKUP_PASSWORD=""
+DUMMY=
 
 # ---------------------=[ TiBu specifics ]=--
 DEVICE_IP=
@@ -218,6 +220,27 @@ if [ -n "${SERIAL}" ]; then
   ADBOPTS="-s ${SERIAL}"
 fi
 
+# Check for "Dummy Device" input
+if [[ -n "${DUMMY}" ]]; then
+  if [[ -n "${DUMMY_BASE}" ]]; then
+    DUMMYDIR="${DUMMY_BASE}/${DUMMY}"
+  else
+    DUMMYDIR="${DUMMY}"
+  fi
+  if [[ ! -d "${DUMMYDIR}" ]]; then
+    echo "You've specified a dummy device named '${DUMMY}', but the corresponding"
+    echo "input directory '${DUMMYDIR}' could not be found. Please correct"
+    echo "and try again."
+    echo
+    exit 2
+  fi
+  HAVE_AAPT=0       # no app check in dummy mode
+  PULL_SETTINGS=0   # nothing to pull from dummies
+  MK_PARTINFO=0
+  MK_PARTBACKUP=0
+  MK_XPRIVACY_EXPORT=0
+  MK_XPRIVACY_PULL=0
+fi
 
 # Check output directory and create it if it does not exist
 if [ -n "${STORAGE_BASE}" ]; then
@@ -237,11 +260,18 @@ if [ ! -d "${DOCDIR}" ]; then
 fi
 
 # What Android version shall we assume (for specific features)? Do not evaluate if user has configured an override.
-[[ -z "${DEVICE_SDKVER}" ]] && DEVICE_SDKVER=$(adb shell "getprop ro.build.version.sdk")
+[[ -z "${DEVICE_SDKVER}" ]] && {
+  if [[ -n "${DUMMYDIR}" ]]; then
+    DEVICE_SDKVER=$(cat "${DUMMYDIR}/getprop_ro.build.version.sdk")
+  else
+    DEVICE_SDKVER=$(adb shell "getprop ro.build.version.sdk")
+  fi
+}
 DEVICE_SDKVER=${DEVICE_SDKVER//[$'\t\r\n']}
 
 # Load libraries if needed
 . "${BINDIR}/lib/common.lib"
+. "${BINDIR}/lib/dummydevs.lib"
 [[ $((${MK_PARTINFO} + ${MK_PARTBACKUP})) -gt 0 ]] && . "${BINDIR}/lib/partitions.lib"
 [[ $(($PULL_SETTINGS + $MK_XPRIVACY_EXPORT + $MK_XPRIVACY_PULL)) -gt 0 ]] && . "${BINDIR}/lib/pull_config.lib"
 [[ $MK_TIBU -eq 1 ]] && . "${BINDIR}/lib/tibu.lib"
@@ -261,23 +291,29 @@ declare -a dApps
 initAppLists() {
   [[ $(($MK_USERBACKUP + $MK_SYSBACKUP)) -eq 0 ]] && return
   doProgress "Gathering lists of installed apps"
+  local apps
 
   doProgress "- userApps" 2
-  for app in $(adb ${ADBOPTS} shell pm list packages -3 2>/dev/null); do
+  apps=$(getAdbContent pm_list_packages_3 "adb ${ADBOPTS} shell pm list packages -3 2>/dev/null")
+  for app in $apps; do
     if [[ "${app}" =~ ^package: ]]; then
       app=${app//[$'\t\r\n']} # remove trailing CR (^M)
       userApps+=(${app##*:})
     fi
   done
+
   doProgress "- systemApps" 2
-  for app in $(adb ${ADBOPTS} shell pm list packages -s 2>/dev/null); do
+  apps=$(getAdbContent pm_list_packages_s "adb ${ADBOPTS} shell pm list packages -s 2>/dev/null")
+  for app in $apps; do
     if [[ "${app}" =~ ^package: ]]; then
       app=${app//[$'\t\r\n']}
       sysApps+=(${app##*:})
     fi
   done
+
   doProgress "- checking for uninstalled apps remembered by the system" 2
-  for app in $(adb ${ADBOPTS} shell pm list packages -u 2>/dev/null); do
+  apps=$(getAdbContent pm_list_packages_u "adb ${ADBOPTS} shell pm list packages -u 2>/dev/null")
+  for app in $apps; do
     if [[ "${app}" =~ ^package: ]]; then
       app=${app//[$'\t\r\n']}
       in_array "${app##*:}" ${sysApps[@]} && continue
