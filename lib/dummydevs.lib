@@ -1,0 +1,49 @@
+##############################################################################
+# Adebar © 2014-2020 by Itzchak Rehberg
+# This is part of the Adebar project, see https://github.com/IzzySoft/Adebar
+# Protected by the GPLv2
+# ----------------------------------------------------------------------------
+# library to deal with "dummy devices"
+##############################################################################
+
+#
+# command wrapper to obtain content either from a dummy device's file or via ADB
+# $1: filename for dummy content
+# $2: ADB command to obtain the content
+#
+getAdbContent() {
+  local file=$1
+  local command=$2
+  if [[ -n "${DUMMYDIR}" ]]; then   # this is a dummy device
+    if [[ -f "${DUMMYDIR}/${file}" ]]; then
+      echo "$(cat "${DUMMYDIR}/${file}")"
+    else
+      >&2 echo "!! DummyDev: file '${DUMMYDIR}/${file}' does not exist, getting content from real device"
+      echo "$($command)"
+    fi
+  else                              # this is a real device
+    echo "$($command)"
+  fi
+}
+
+#
+# command wrapper to obtain content to store into a file
+# $1: filename for dummy content
+# $2: ADB command to obtain the content
+# $3: file name to copy the content to
+#
+copyAdbContent() {
+  local file=$1
+  local command=$2
+  local target=$3
+  if [[ -n "${DUMMYDIR}" ]]; then   # this is a dummy device
+    if [[ -f "${DUMMYDIR}/${file}" ]]; then
+      cp "${DUMMYDIR}/${file}" "$target"
+    else
+      >&2 echo "!! DummyDev: file '${DUMMYDIR}/${file}' does not exist, getting content from real device"
+      $command > $target
+    fi
+  else                              # this is a real device
+    $command > $target
+  fi
+}
