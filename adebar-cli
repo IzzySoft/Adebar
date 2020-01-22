@@ -169,26 +169,50 @@ elif [[ $TIMESTAMPED_SUBDIRS -gt 0 ]]; then
   OUTDIR="${OUTDIR}/$(date +"%Y%m%d%H%M")"
 fi
 
+# Check for "Dummy Device" input
+if [[ -n "${DUMMY}" ]]; then
+  if [[ -n "${DUMMY_BASE}" ]]; then
+    DUMMYDIR="${DUMMY_BASE}/${DUMMY}"
+  else
+    DUMMYDIR="${DUMMY}"
+  fi
+  if [[ ! -d "${DUMMYDIR}" ]]; then
+    echo "You've specified a dummy device named '${DUMMY}', but the corresponding"
+    echo "input directory '${DUMMYDIR}' could not be found. Please correct"
+    echo "and try again."
+    echo
+    exit 2
+  fi
+  HAVE_AAPT=0       # no app check in dummy mode
+  PULL_SETTINGS=0   # nothing to pull from dummies
+  MK_PARTINFO=0
+  MK_PARTBACKUP=0
+  MK_XPRIVACY_EXPORT=0
+  MK_XPRIVACY_PULL=0
+fi
+
 # Check whether a device is connected at all and, if configured, the serial matches
 # No device connected:
 ADBOPTS=""
 
-if [ -z "$(adb devices|grep -E "^[0-9A-Za-z.:]+[[:space:]]+device[[:space:]]*$"|awk '{print $1}')" ]; then
-  echo "No device found. Make sure you have connected your device with"
-  echo "USB debugging enabled, and try again."
-  echo
-  exit 2
-fi
+if [[ -z "${DUMMYDIR}" ]]; then     # do not check when in dummy mode
+  if [ -z "$(adb devices|grep -E "^[0-9A-Za-z.:]+[[:space:]]+device[[:space:]]*$"|awk '{print $1}')" ]; then
+    echo "No device found. Make sure you have connected your device with"
+    echo "USB debugging enabled, and try again."
+    echo
+    exit 2
+  fi
 
-serials=($(adb devices|grep -E "^[0-9A-Za-z.:]+[[:space:]]+device[[:space:]]*$"|awk '{print $1}'))
-# Multiple devices connected but no serial defined:
-if [ -z "${SERIAL}" -a ${#serials[*]} -ne 1 ]; then
-  echo "There are currently multiple devices connected, and we don't know"
-  echo "which one to connect to. Please either disconnect all but the device"
-  echo "you wish to retrieve data from, or specify its serial in your"
-  echo "Configuration. Then try again."
-  echo
-  exit 3
+  serials=($(adb devices|grep -E "^[0-9A-Za-z.:]+[[:space:]]+device[[:space:]]*$"|awk '{print $1}'))
+  # Multiple devices connected but no serial defined:
+  if [ -z "${SERIAL}" -a ${#serials[*]} -ne 1 ]; then
+    echo "There are currently multiple devices connected, and we don't know"
+    echo "which one to connect to. Please either disconnect all but the device"
+    echo "you wish to retrieve data from, or specify its serial in your"
+    echo "Configuration. Then try again."
+    echo
+    exit 3
+  fi
 fi
 
 # SERIAL specified:
@@ -218,28 +242,6 @@ if [ -n "${SERIAL}" ]; then
     fi
   fi
   ADBOPTS="-s ${SERIAL}"
-fi
-
-# Check for "Dummy Device" input
-if [[ -n "${DUMMY}" ]]; then
-  if [[ -n "${DUMMY_BASE}" ]]; then
-    DUMMYDIR="${DUMMY_BASE}/${DUMMY}"
-  else
-    DUMMYDIR="${DUMMY}"
-  fi
-  if [[ ! -d "${DUMMYDIR}" ]]; then
-    echo "You've specified a dummy device named '${DUMMY}', but the corresponding"
-    echo "input directory '${DUMMYDIR}' could not be found. Please correct"
-    echo "and try again."
-    echo
-    exit 2
-  fi
-  HAVE_AAPT=0       # no app check in dummy mode
-  PULL_SETTINGS=0   # nothing to pull from dummies
-  MK_PARTINFO=0
-  MK_PARTBACKUP=0
-  MK_XPRIVACY_EXPORT=0
-  MK_XPRIVACY_PULL=0
 fi
 
 # Check output directory and create it if it does not exist
