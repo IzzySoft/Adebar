@@ -1,5 +1,5 @@
 ##############################################################################
-# Adebar © 2014-2016 by Itzchak Rehberg
+# Adebar © 2014-2020 by Itzchak Rehberg
 # This is part of the Adebar project, see https://github.com/IzzySoft/Adebar
 # Protected by the GPLv2
 # ----------------------------------------------------------------------------
@@ -25,8 +25,7 @@ getDisabled() {
   echo "# Disabled apps for ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "${scriptname}"
   echo -e "#\n# Check carefully before executing. Not all of those have been disabled by you :)\n#\n" >> "${scriptname}"
   echo -e "#\n# Disabled apps\n#\n" >> "${scriptname}"
-
-  for app in $(adb ${ADBOPTS} shell "pm list packages -d 2>/dev/null"); do
+  for app in $(getAdbContent pm_list_packages_d "adb ${ADBOPTS} shell 'pm list packages -d 2>/dev/null'"); do
     if [[ "${app}" =~ ^package: ]]; then
       app=${app//[$'\t\r\n']}
       if [[ $ROOT_PMDISABLE -eq 0 ]]; then
@@ -39,30 +38,34 @@ getDisabled() {
 
   [[ $((${MK_USERAPPS} + ${MK_SYSAPPS})) -ne 0 ]] && return     # faster done over there :)
 
-  doProgress "Obtaining list of disabled components"
+  if [[ -n "${DUMMYDIR}" ]]; then
+    doProgress "$(ansi_code "Not obtaining list of disabled components from DummyDevice" yellow)"
+  else
+    doProgress "Obtaining list of disabled components"
 
-  local comps
-  local myline
-  scriptname="${OUTDIR}/deadReceivers.sh"
-  echo "#!${BASH_LOCATION}" > "${scriptname}"
-  echo -e "\n#\n# Disabled components for ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')\n#" >> "${scriptname}"
-  for pkg in $(adb ${ADBOPTS} shell "pm list packages 2>/dev/null"); do
-    pkg=${pkg//[$'\t\r\n']}
-    pkg=${pkg##*:}
-    [[ "${pkg}" = "android" ]] && continue
-    comps=$(adb ${ADBOPTS} shell "dumpsys package ${pkg}" | grep -E -A99999 "disabledComponents:" |grep -E -B99999 "enabledComponents:")
-    if [[ -n "${comps}" ]]; then
-      echo >> "${scriptname}"
-      echo "# ${pkg}" >> "${scriptname}"
-      for myline in $comps; do
-        myline=${myline//[$'\t\r\n']}
-        [[ "${myline}" = "disabledComponents:" || "${myline}" = "enabledComponents:" ]] && continue
-        echo "adb ${ADBOPTS} shell \"pm disable ${pkg}/${myline}\"" >> "${scriptname}"
-      done
-    fi
-  done
+    local comps
+    local myline
+    scriptname="${OUTDIR}/deadReceivers.sh"
+    echo "#!${BASH_LOCATION}" > "${scriptname}"
+    echo -e "\n#\n# Disabled components for ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')\n#" >> "${scriptname}"
+    for pkg in $(adb ${ADBOPTS} shell "pm list packages 2>/dev/null"); do
+      pkg=${pkg//[$'\t\r\n']}
+      pkg=${pkg##*:}
+      [[ "${pkg}" = "android" ]] && continue
+      comps=$(adb ${ADBOPTS} shell "dumpsys package ${pkg}" | grep -E -A99999 "disabledComponents:" |grep -E -B99999 "enabledComponents:")
+      if [[ -n "${comps}" ]]; then
+        echo >> "${scriptname}"
+        echo "# ${pkg}" >> "${scriptname}"
+        for myline in $comps; do
+          myline=${myline//[$'\t\r\n']}
+          [[ "${myline}" = "disabledComponents:" || "${myline}" = "enabledComponents:" ]] && continue
+          echo "adb ${ADBOPTS} shell \"pm disable ${pkg}/${myline}\"" >> "${scriptname}"
+        done
+      fi
+    done
 
-  #chmod u+x "${scriptname}"
+    #chmod u+x "${scriptname}"
+  fi
 }
 
 
@@ -86,7 +89,7 @@ getEnable() {
   echo "# Use with care – some apps might be disabled for a good reason :)" >> "${scriptname}"
   echo >> "${scriptname}"
 
-  for app in $(adb ${ADBOPTS} shell "pm list packages 2>/dev/null"); do
+  for app in $(getAdbContent pm_list_packages "adb ${ADBOPTS} shell 'pm list packages 2>/dev/null'"); do
     if [[ "${app}" =~ ^package: ]]; then
       app=${app//[$'\t\r\n']}
       if [[ $ROOT_PMDISABLE -eq 0 ]]; then
@@ -522,7 +525,7 @@ getSystemAppBackup() {
 getInstallLoc() {
   [[ $MK_INSTALLLOC -ne 1 ]] && return
   doProgress "Checking default install-location"
-  foo="$(adb ${ADBOPTS} shell pm get-install-location)"
+  foo="$(getAdbContent pm_get-install-location "adb ${ADBOPTS} shell pm get-install-location")"
   echo "#!${BASH_LOCATION}" > "$OUTDIR/defaultInstallLoc"
   echo "# Set default install location for apps (taken from ${DEVICE_NAME} at $(date '+%Y-%m-%d %H:%M'))" >> "$OUTDIR/defaultInstallLoc"
   echo "pm set-install-location ${foo//[^0-9]/}" >> "$OUTDIR/defaultInstallLoc"
