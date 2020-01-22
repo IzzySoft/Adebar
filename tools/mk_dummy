@@ -1,0 +1,83 @@
+#!/bin/bash
+# Create a dummy device based on data from a real connected device
+# Pass the name of the device as parameter and make sure you only have a single
+# device connected (the one you want to "clone")
+
+[[ -z "$1" || "$1" = "-h" || "$1" = "?" ]] && {
+  echo "Syntax:"
+  echo "  $0 <dummy_name>"
+  echo "Example:"
+  echo "  $0 71gohan"
+  echo
+  exit
+}
+
+[[ $(adb devices | grep "device$" | wc -l) -lt 1 ]] && {
+  echo "Please make sure your device is connected, then try again."
+  echo
+  exit
+}
+
+[[ $(adb devices | grep "device$" | wc -l) -gt 1 ]] && {
+  echo "Please make sure you have only one device, then try again."
+  echo
+  exit
+}
+
+[[ -d $1 ]] && {
+  echo "Directory for '$1' already exists."
+  echo
+  exit
+}
+
+dummy=$1
+ADBOPTS=
+
+# ---------------------------=[ Do it ]=--
+echo "Creating dummy device '$dummy' from attached device (ID $(adb devices|grep "device$"|awk '{print $1'}))..."
+
+[[ ! -d $dummy ]] && mkdir $dummy
+
+#
+# --=[ adebar-cli ]=--
+#
+echo "* details for adebar-cli..."
+adb ${ADBOPTS} shell "getprop ro.build.version.sdk" > $dummy/getprop_ro.build.version.sdk
+adb ${ADBOPTS} shell pm list packages -3 2>/dev/null > $dummy/pm_list_packages_3
+adb ${ADBOPTS} shell pm list packages -s 2>/dev/null > $dummy/pm_list_packages_s
+adb ${ADBOPTS} shell pm list packages -u 2>/dev/null > $dummy/pm_list_packages_u
+
+
+#
+# --=[ deviceinfo.lib ]=--
+#
+echo "* details for deviceinfo.lib..."
+adb ${ADBOPTS} shell getprop > $dummy/getprop
+adb ${ADBOPTS} shell dumpsys iphonesubinfo > $dummy/dumpsys_iphonesubinfo
+adb ${ADBOPTS} shell dumpsys sensorservice > $dummy/dumpsys_sensorservice
+adb ${ADBOPTS} shell whence uname > $dummy/whence_uname
+[[ "$(adb ${ADBOPTS} shell whence uname)" ]] && adb ${ADBOPTS} shell uname -r > $dummy/uname-r || adb ${ADBOPTS} shell busybox uname -r > $dummy/uname-r
+adb ${ADBOPTS} shell "pm list features"> $dummy/pm_list_features
+adb ${ADBOPTS} shell dumpsys battery > $dummy/dumpsys_battery
+adb ${ADBOPTS} shell dumpsys telephony.registry > $dummy/dumpsys_telephony.registry
+adb ${ADBOPTS} shell dumpsys diskstats > $dummy/dumpsys_diskstats
+adb ${ADBOPTS} shell dumpsys account > $dummy/dumpsys_account
+adb ${ADBOPTS} shell dumpsys backup > $dummy/dumpsys_backup
+
+#
+# --=[ packagedata.lib ]=--
+#
+echo "* details for packagedata.lib..."
+# adb shell dumpsys diskstats   # already there from deviceinfo
+adb ${ADBOPTS} shell "dumpsys package" > $dummy/dumpsys_package
+
+#
+# --=[ scriptgen.lib ]=--
+#
+echo "* details for scriptgen.lib..."
+adb ${ADBOPTS} shell "pm list packages -d 2>/dev/null" > $dummy/pm_list_packages_d
+adb ${ADBOPTS} shell "pm list packages 2>/dev/null" > $dummy/pm_list_packages
+adb ${ADBOPTS} shell pm get-install-location > $dummy/pm_get-install-location
+
+echo "Dummy-Device '$dummy' created."
+echo
