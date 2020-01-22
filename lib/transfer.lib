@@ -1,5 +1,5 @@
 ##############################################################################
-# Adebar © 2014, 2015 by Itzchak Rehberg
+# Adebar © 2014-2020 by Itzchak Rehberg
 # This is part of the Adebar project, see https://github.com/IzzySoft/Adebar
 # Protected by the GPLv2
 # ----------------------------------------------------------------------------
@@ -10,6 +10,10 @@
 #
 # Install APKs
 installApk() {
+  if [[ -n "${DUMMYDIR}" ]]; then
+    echo -e "$(ansi_code "installApk cannot be run on dummy devices, skipping" "yellow")"
+    return
+  fi
   if [[ -z "${TRANSFER_DIR}" ]]; then
     echo -e "$(ansi_code "installApk called without TRANSFER_DIR being set" "red")"
     return
@@ -51,6 +55,10 @@ installApk() {
 #
 # Push files
 pushFiles() {
+  if [[ -n "${DUMMYDIR}" ]]; then
+    echo -e "$(ansi_code "pushFiles cannot be run on dummy devices, skipping" "yellow")"
+    return
+  fi
   if [[ -z "${TRANSFER_DIR}" ]]; then
     echo -e "$(ansi_code "pushFiles called without TRANSFER_DIR being set" "red")"
     return
@@ -81,6 +89,10 @@ pushFiles() {
 #
 # Special Transfer
 specialTrans() {
+  if [[ -n "${DUMMYDIR}" ]]; then
+    echo -e "$(ansi_code "specialTrans cannot be run on dummy devices, skipping" "yellow")"
+    return
+  fi
   if [[ -z "${TRANSFER_DIR}" ]]; then
     echo -e "$(ansi_code "specialTrans called without TRANSFER_DIR being set" "red")"
     return
@@ -106,6 +118,10 @@ specialTrans() {
 # Main Loop
 #
 doTransfer() {
+  if [[ -n "${DUMMYDIR}" ]]; then
+    echo -e "$(ansi_code "we cannot transfer any files to dummy devices, skipping" "yellow")"
+    return
+  fi
   if [[ -z "${TRANSFER_DIR}" ]]; then
     oops "doTransfer" "${LINENO}" "doTransfer() called without TRANSFER_DIR being set" 4
     return
