@@ -121,7 +121,7 @@ declare -A PK_CSIZE
 declare -A PK_DSIZE
 getAppStorageStats() {
   doProgress "- collecting app storage details" 2
-  DSTATS=$(adb shell dumpsys diskstats)
+  DSTATS=$(getAdbContent dumpsys_diskstats "adb ${ADBOPTS} shell dumpsys diskstats")
   re='Package Names: \[([^]]*)\]'
   if [[ $DSTATS =~ $re ]]; then
     PN=( ${BASH_REMATCH[1]//,/ } )
@@ -172,13 +172,15 @@ getAppDetails() {
   declare -A PK_MTKFLAGS      # mtkFlags=[ OPERATOR ]
   declare -A PK_USERS         # User 0:  installed=true stopped=false notLaunched=false enabled=0
   declare -A PK_LASTUSED      # Usage stats
+  local tmp=$(mktemp)
   local PKGDUMP=$(mktemp)
-  trap "rm -f -- '$PKGDUMP'" RETURN
+  trap "rm -f -- '$PKGDUMP' '$tmp'" RETURN
   local SH_DISABLED="${OUTDIR}/deadReceivers.sh"
 
   doProgress "Generating app detail info"
   doProgress "- collecting data via dumpsys" 2
-  adb ${ADBOPTS} shell "dumpsys package" |grep -E -A99999 "^Packages:" |grep -E -B99999 "^Shared users:" > "${PKGDUMP}"
+  copyAdbContent dumpsys_package "adb ${ADBOPTS} shell dumpsys package" $tmp
+  grep -E -A99999 "^Packages:" $tmp | grep -E -B99999 "^Shared users:" > "${PKGDUMP}"
 
   # Parsing dump
   doProgress "- parsing package dump" 2
@@ -441,7 +443,7 @@ getAppDetails() {
   [[ ${MK_SYSAPPS}  -ne 0 ]] && _makeAppDoc "system"
 
   doProgress "- removing temporary dumpfile" 2
-  rm -f "${PKGDUMP}"
+  rm -f "${PKGDUMP}" "$tmp"
 }
 
 
@@ -479,10 +481,14 @@ function _makeAppDoc() {
   esac
 
   # check if aapt is available on the device, so we can use it to retrieve e.g. app names
-  local str="$(adb ${ADBOPTS} shell "ls /system/bin/aapt 2>/dev/null")"
-  str=${str//[$'\t\r\n']} # stupid ^M
-  if [[ "${str}" = "/system/bin/aapt" ]]; then
-    local HAVE_AAPT=1
+  if [[ -z "${DUMMYDIR}" ]]; then
+    local str="$(adb ${ADBOPTS} shell "ls /system/bin/aapt 2>/dev/null")"
+    str=${str//[$'\t\r\n']} # stupid ^M
+    if [[ "${str}" = "/system/bin/aapt" ]]; then
+      local HAVE_AAPT=1
+    else
+      local HAVE_AAPT=0
+    fi
   else
     local HAVE_AAPT=0
   fi

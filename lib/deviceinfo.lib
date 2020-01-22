@@ -57,12 +57,13 @@ getDeviceInfo() {
   local left
   local right
   local tmp=$(mktemp)
-  trap "rm -f -- '$tmp'" RETURN
+  local tmp2=$(mktemp)
+  trap "rm -f -- '$tmp' '$tmp2'" RETURN
 
   echo "# ${DEVICE_NAME} Device Information { #devinfo }" > "$devicedoc"
   echo -n "**[DeviceInfo](#devinfo):**" > "$devicehead"
   echo "(Generated at: $(date '+%Y-%m-%d %H:%M')) **<sup>[ⓘ](${WIKI_BASE}/DeviceInfo-explained)</sup>**" >> "$devicedoc"
-  adb ${ADBOPTS} shell getprop > $tmp
+  copyAdbContent getprop "adb ${ADBOPTS} shell getprop" $tmp
 
   doProgress "- Evaluating device properties" 2
   declare -A DEVPROP
@@ -95,13 +96,18 @@ getDeviceInfo() {
       serial="${DEVPROP[ro.boot.serialno]}"
     elif [[ -n "$SERIAL" ]]; then
       serial="${SERIAL}"
+    elif [[ -n "${DUMMYDIR}" ]]; then
+      serial="0123456789ABCDEF"
     else
       [[ $(adb devices |grep "device$" |wc -l) -eq 1 ]] && serial="$(adb devices |grep "device$"|awk '{print $1}')"
     fi
   }
   echo "* Serial: ${serial}" >> "$devicedoc"                                    # 015d3c26a420000a
   serial="${DEVPROP[gsm.baseband.imei]}"
-  [[ -z "$serial" ]] && serial="$(adb ${ADBOPTS} shell dumpsys iphonesubinfo | grep -i "device id" | awk '{print $NF}' | sed 's/\r//g')"
+  [[ -z "$serial" ]] && {
+    copyAdbContent dumpsys_iphonesubinfo "adb ${ADBOPTS} shell dumpsys iphonesubinfo" "${tmp}"
+    serial="$(grep -i "device id" "${tmp}" | awk '{print $NF}' | sed 's/\r//g')"
+  }
   [[ -n "$serial" ]] && echo "* IMEI: $serial" >> "$devicedoc"
   [[ -n "${DEVPROP[ro.board.platform]}" ]] && echo "* Platform: ${DEVPROP[ro.board.platform]}" >> "$devicedoc" # omap3
   [[ -n "${DEVPROP[ro.radio.hw.version]}" ]] && echo "* Radio version: ${DEVPROP[ro.radio.hw.version]}" >> "$devicedoc" # SJUG5980AA
@@ -117,10 +123,10 @@ getDeviceInfo() {
 
   if [[ ${MK_DEVICEINFO_SENSORS} -gt 0 ]]; then
     doProgress "   + checking for sensor details" 3
-    if [[ "$(adb ${ADBOPTS} shell dumpsys sensorservice | wc -l)" -gt 1 ]]; then # make sure sensorservice is available
+    copyAdbContent dumpsys_sensorservice "adb ${ADBOPTS} shell dumpsys sensorservice 2>/dev/null" "${tmp}"
+    if [[ $(cat "${tmp}" | wc -l) -gt 1 ]]; then # make sure sensorservice is available
       echo "### Sensors" >> "$devicedoc"
       if [[ $DEVICE_SDKVER -lt 25 ]]; then  # Android 7 and below
-        adb ${ADBOPTS} shell dumpsys sensorservice > $tmp
         while read zeile; do
           left="${zeile#*|}"
           left="${zeile%%\|*}"
@@ -137,11 +143,11 @@ getDeviceInfo() {
           fi
         done < "${tmp}"
       else # SDK 25+/Android 7.1+ (output format of "dumpsys sensorservice" changed)
-        adb ${ADBOPTS} shell "dumpsys sensorservice" |grep -E -A99999 "^Sensor List:" |grep -E -B99999 "^Fusion States:" > $tmp
+        cat "${tmp}" |grep -E -A99999 "^Sensor List:" |grep -E -B99999 "^Fusion States:" > $tmp2
         re="0[x0-9][0-9]+\)\s+([^|]+)\|\s*([^|]+)"
         while read zeile; do
           [[ $zeile =~ $re ]] && echo "* $(trim "${BASH_REMATCH[1]}") ($(trim "${BASH_REMATCH[2]}"))" >> "$devicedoc"
-        done < "${tmp}"
+        done < "${tmp2}"
       fi
       echo >> "$devicedoc"
     fi
@@ -155,7 +161,7 @@ getDeviceInfo() {
   [[ -n "${DEVPROP[ro.build.date]}" ]] && echo "* Build date: ${DEVPROP[ro.build.date]}" >> "$devicedoc"
   echo "* Fingerprint: ${DEVPROP[ro.build.fingerprint]}" >> "$devicedoc" # MOTO/A953_O2DE/milestone2:2.3.6/4.5.1-134_DFP-132/1317968148:user/release-keys
   [[ -n "${DEVPROP[ro.build.version.security_patch]}" ]] && echo "* Security Patch Level: ${DEVPROP[ro.build.version.security_patch]}" >> "$devicedoc" # 2019-12-05
-  [[ "$(adb ${ADBOPTS} shell whence uname)" ]] && echo "* Kernel: $(adb ${ADBOPTS} shell uname -r)" >> "$devicedoc" || echo "* Kernel: $(adb ${ADBOPTS} shell busybox uname -r)" >> "$devicedoc"
+  [[ "$(getAdbContent whence_uname "adb ${ADBOPTS} shell whence uname")" ]] && echo "* Kernel: $(getAdbContent uname-r "adb ${ADBOPTS} shell uname -r")" >> "$devicedoc" || echo "* Kernel: $(getAdbContents uname-r "adb ${ADBOPTS} shell busybox uname -r")" >> "$devicedoc"
   echo "* Factory language: ${DEVPROP[ro.product.locale.language]}_${DEVPROP[ro.product.locale.region]}" >> "$devicedoc" # en_US
   echo "* Configured language: ${DEVPROP[persist.sys.language]}_${DEVPROP[persist.sys.country]}" >> "$devicedoc" # de_DE
   echo "* Configured timezone: ${DEVPROP[persist.sys.timezone]}" >> "$devicedoc" # Europe/Berlin
@@ -168,7 +174,7 @@ getDeviceInfo() {
     echo "## Device features { #devfeat }" >> "$devicedoc"
     echo -n " \[[Features](#devfeat)\]" >> "$devicehead"
     echo -e "\`pm list features\`: **<sup>[ⓘ](${WIKI_BASE}/DeviceInfo-explained#device-features)</sup>**\n" >> "$devicedoc"
-    for feature in $(adb ${ADBOPTS} shell "pm list features"); do
+    for feature in $(getAdbContent pm_list_features "adb ${ADBOPTS} shell pm list features"); do
       feature=${feature//[$'\r\n']}
       echo "* ${feature#*:}" >> "$devicedoc"
     done
@@ -183,7 +189,7 @@ getDeviceInfo() {
 
     doProgress "  + Battery status" 3
     echo "### Battery Status" >> "$devicedoc"
-    adb ${ADBOPTS} shell dumpsys battery > $tmp
+    copyAdbContent dumpsys_battery "adb ${ADBOPTS} shell dumpsys battery" $tmp
     local battstat=(none unknown charging discharging "not charging" full)
     local batthealth=(none unknown good overheat dead overvoltage "unspecified failure" cold)
     while IFS='' read zeile; do
@@ -213,7 +219,8 @@ getDeviceInfo() {
     }
     declare -A radio
     declare -A radio1
-    adb ${ADBOPTS} shell dumpsys telephony.registry|grep "=" > $tmp
+    copyAdbContent dumpsys_telephony.registry "adb ${ADBOPTS} shell dumpsys telephony.registry" $tmp2
+    grep "=" $tmp2 > $tmp
     local callstate=(idle ringing off-hook)
     local servicestate=(service "out of service" "emergency only" "powered off")
     local dataactivity=(none in out inout)
@@ -293,11 +300,12 @@ getDeviceInfo() {
   [[ -n "${DEVPROP[ro.crypto.state]}" ]] && echo "* [Storage encrypted](https://source.android.com/security/encryption): ${DEVPROP[ro.crypto.state]}" >> "$devicedoc"
   [[ ${MK_PARTINFO} -gt 0 ]] && writePartInfo "$devicedoc"
   echo "* Disk statistics:" >> "$devicedoc"
-  adb ${ADBOPTS} shell dumpsys diskstats > ${tmp}
+  copyAdbContent dumpsys_diskstats "adb ${ADBOPTS} shell dumpsys diskstats" ${tmp}
   while read zeile; do
-    [[ "${zeile:0:14}" = "Package Names:" ]] && continue    # these 3 come a.o. on LOS 14.1/Android 7.1.2
+    [[ "${zeile:0:14}" = "Package Names:" ]] && continue    # these 3 are new with Android 7.1.2
     [[ "${zeile:0:10}" = "App Sizes:" ]] && continue
     [[ "${zeile:0:12}" = "Cache Sizes:" ]] && continue
+    [[ "${zeile:0:15}" = "App Data Sizes:" ]] && continue   # this was added with Oreo
     echo -e "    * ${zeile/// }" >> "$devicedoc"
   done < ${tmp}
   echo >> "$devicedoc"
@@ -359,8 +367,10 @@ getDeviceInfo() {
 
   # ADB calls for the next two blocks must be made with default IFS or will fail
   doProgress "- Obtaining account and backup details" 2
-  local accs=$(adb ${ADBOPTS} shell dumpsys account|grep " Account "|sed 's/[\{\}\r]//g'|awk '{$1=""; print $0}')
-  adb ${ADBOPTS} shell dumpsys backup | sed 's/\r//g' > "$tmp"
+  copyAdbContent dumpsys_account "adb ${ADBOPTS} shell dumpsys account" $tmp
+  local accs=$(grep " Account " $tmp | sed 's/[\{\}\r]//g' | awk '{$1=""; print $0}')
+  copyAdbContent dumpsys_backup "adb ${ADBOPTS} shell dumpsys backup" $tmp2
+  cat $tmp2 | sed 's/\r//g' > "$tmp"
 
   echo >> "$devicedoc"
   echo "## Configured accounts { #devaccounts }" >> "$devicedoc"
@@ -391,7 +401,7 @@ getDeviceInfo() {
       *) echo "    - ${zeile}" >> "$devicedoc" ;;
     esac
   done
-  rm "$tmp"
+  rm "$tmp" "$tmp2"
 
   IFS="${OIFS}"
 }
