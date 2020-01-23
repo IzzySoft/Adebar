@@ -135,7 +135,7 @@ elif [[ -z "$1" || "$1" = "-h" || "$1" = "--help" ]]; then
   if [[ ! -d "${BINDIR}/config" || "$1" = "-h" || "$1" = "--help" ]]; then
     echo "There are no more command-line parameters currently, everything is"
     echo "controlled via config files. For details, please see the project's"
-    echo "wiki at https://github.com/IzzySoft/Adebar/wiki/Configuration"
+    echo "wiki at ${WIKI_BASE}/Configuration"
     echo
   fi
   if [[ -d "${BINDIR}/config" ]]; then
@@ -266,7 +266,7 @@ fi
   if [[ -n "${DUMMYDIR}" ]]; then
     DEVICE_SDKVER=$(cat "${DUMMYDIR}/getprop_ro.build.version.sdk")
   else
-    DEVICE_SDKVER=$(adb shell "getprop ro.build.version.sdk")
+    DEVICE_SDKVER=$(adb ${ADBOPTS} shell "getprop ro.build.version.sdk")
   fi
 }
 DEVICE_SDKVER=${DEVICE_SDKVER//[$'\t\r\n']}
