@@ -50,10 +50,8 @@ print_radiostat() {
 getDeviceInfo() {
   [[ $MK_DEVICEINFO -ne 1 ]] && return
   doProgress "Collecting device information"
-  local item=""
   local devicedoc="${DOCDIR}/deviceInfo.md"
   local devicehead="${DOCDIR}/deviceInfo.head"
-  local msg=""
   local left
   local right
   local tmp=$(mktemp)
@@ -380,14 +378,16 @@ getDeviceInfo() {
   done
 
   echo >> "$devicedoc"
-  echo "## Google Cloud Backup { #devcloudbackup }" >> "$devicedoc"
-  echo -n " \[[Cloud Backup](#devcloudbackup)\]" >> "$devicehead"
+  echo "## Android Backup Manager { #androidbackup }" >> "$devicedoc"
+  echo -n " \[[Backup Manager](#androidbackup)\]" >> "$devicehead"
   echo "* $(grep 'Backup Manager is' "$tmp")" >> "$devicedoc"
   echo "* $(grep 'Auto-restore is' "$tmp")" >> "$devicedoc"
   echo "* Backup destinations:" >> "$devicedoc"
-  for dest in $(grep "destination:" "$tmp"|awk '{$1=""; print $0}'); do
-    echo "    - ${dest}" >> "$devicedoc"
-  done
+  while IFS= read -r zeile; do
+    [[ "$zeile" =~ ^\ {4}([^\ ]+) ]] && echo -n "    - ${BASH_REMATCH[1]}: " >> "$devicedoc"
+    [[ "$zeile" =~ ^\ {2}\*\ ([^\ ]+) ]] && echo -n "    - **${BASH_REMATCH[1]}:** " >> "$devicedoc"
+    [[ "$zeile" =~ ^\ {7}destination:\ (.+) ]] && echo "${BASH_REMATCH[1]}" >> "$devicedoc"
+  done < <(grep -E -A99999 "^Available transports:" "$tmp" | grep -E -B99999 "^Pending init:")
   echo "* $(grep 'Last backup pass' "$tmp")" >> "$devicedoc"
   echo "* $(grep 'Ever backed up:' "$tmp")" >> "$devicedoc"
   [[ -n "$(grep 'Pending backup:' "$tmp")" ]] && echo "* $(grep 'Pending backup:' "$tmp")" >> "$devicedoc"
