@@ -25,7 +25,7 @@ getDisabled() {
   echo "# Disabled apps for ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "${scriptname}"
   echo -e "#\n# Check carefully before executing. Not all of those have been disabled by you :)\n#\n" >> "${scriptname}"
   echo -e "#\n# Disabled apps\n#\n" >> "${scriptname}"
-  for app in $(getAdbContent pm_list_packages_d "adb ${ADBOPTS} shell 'pm list packages -d 2>/dev/null'"); do
+  for app in $(getAdbContent pm_list_packages_d "adb ${ADBOPTS} shell ''pm list packages -d 2>/dev/null''"); do
     if [[ "${app}" =~ ^package: ]]; then
       app=${app//[$'\t\r\n']}
       if [[ $ROOT_PMDISABLE -eq 0 ]]; then
@@ -89,7 +89,7 @@ getEnable() {
   echo "# Use with care – some apps might be disabled for a good reason :)" >> "${scriptname}"
   echo >> "${scriptname}"
 
-  for app in $(getAdbContent pm_list_packages "adb ${ADBOPTS} shell 'pm list packages 2>/dev/null'"); do
+  for app in $(getAdbContent pm_list_packages "adb ${ADBOPTS} shell ''pm list packages 2>/dev/null''"); do
     if [[ "${app}" =~ ^package: ]]; then
       app=${app//[$'\t\r\n']}
       if [[ $ROOT_PMDISABLE -eq 0 ]]; then
