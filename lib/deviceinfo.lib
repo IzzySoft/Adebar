@@ -365,7 +365,7 @@ getDeviceInfo() {
   # ADB calls for the next two blocks must be made with default IFS or will fail
   doProgress "- Obtaining account and backup details" 2
   copyAdbContent dumpsys_account "adb ${ADBOPTS} shell dumpsys account" $tmp
-  local accs=$(grep " Account " $tmp | sed 's/[\{\}\r]//g' | awk '{$1=""; print $0}')
+  local accs=$(grep " Account {" $tmp | sed 's/[\{\}\r]//g' | awk '{$1=""; print $0}')
   copyAdbContent dumpsys_backup "adb ${ADBOPTS} shell dumpsys backup" $tmp2
   cat $tmp2 | sed 's/\r//g' > "$tmp"
 
