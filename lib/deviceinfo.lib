@@ -60,7 +60,7 @@ getDeviceInfo() {
 
   echo "# ${DEVICE_NAME} Device Information { #devinfo }" > "$devicedoc"
   echo -n "**[DeviceInfo](#devinfo):**" > "$devicehead"
-  echo "(Generated at: $(date '+%Y-%m-%d %H:%M')) **<sup>[ⓘ](${WIKI_BASE}/DeviceInfo-explained)</sup>**" >> "$devicedoc"
+  echo "(Generated at: $(date '+%Y-%m-%d %H:%M')) **<sup>[ⓘ](${WIKI_BASE}/DeviceInfo-explained \"Wiki\")</sup>**" >> "$devicedoc"
   copyAdbContent getprop "adb ${ADBOPTS} shell getprop" $tmp
 
   doProgress "- Evaluating device properties" 2
@@ -168,7 +168,7 @@ getDeviceInfo() {
     echo  >> "$devicedoc"
     echo "## Device features { #devfeat }" >> "$devicedoc"
     echo -n " \[[Features](#devfeat)\]" >> "$devicehead"
-    echo -e "\`pm list features\`: **<sup>[ⓘ](${WIKI_BASE}/DeviceInfo-explained#device-features)</sup>**\n" >> "$devicedoc"
+    echo -e "\`pm list features\`: **<sup>[ⓘ](${WIKI_BASE}/DeviceInfo-explained#device-features \"Wiki\")</sup>**\n" >> "$devicedoc"
     for feature in $(getAdbContent pm_list_features "adb ${ADBOPTS} shell pm list features"); do
       feature=${feature//[$'\r\n']}
       echo "* ${feature#*:}" >> "$devicedoc"
@@ -287,7 +287,7 @@ getDeviceInfo() {
 
   # Storage
   doProgress "  + storage details" 3
-  echo "### Storage details <sup>[ⓘ](${WIKI_BASE}/DeviceInfo-explained#storage-details)</sup>" >> "$devicedoc"
+  echo "### Storage details <sup>[ⓘ](${WIKI_BASE}/DeviceInfo-explained#storage-details \"Wiki\")</sup>" >> "$devicedoc"
   [[ -n "${DEVPROP[EXTERNAL_STORAGE_MOUNT]}" ]] && echo "* Internal SD mount point: ${DEVPROP[EXTERNAL_STORAGE_MOUNT]}" >> "$devicedoc"
   [[ -n "${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" ]] && echo "* External SD mount point: ${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" >> "$devicedoc"
   [[ -n "${DEVPROP[ro.crypto.fuse_sdcard]}" ]] && echo "* Internal SD via FUSE: ${DEVPROP[ro.crypto.fuse_sdcard]}" >> "$devicedoc"
@@ -308,7 +308,7 @@ getDeviceInfo() {
   # SafetyNet (Android 5+)
   [[ -n "${DEVPROP[ro.boot.flash.locked]}" || -n "${DEVPROP[ro.boot.verifiedbootstate]}" || -n "${DEVPROP[ro.boot.veritymode]}" ]] && {
     doProgress "  + SafetyNet details" 3
-    echo "### SafetyNet **<sup>[ⓘ](${WIKI_BASE}/DeviceInfo-explained#safetynet)</sup>**" >> "$devicedoc"
+    echo "### SafetyNet **<sup>[ⓘ](${WIKI_BASE}/DeviceInfo-explained#safetynet \"Wiki\")</sup>**" >> "$devicedoc"
     [[ -n "${DEVPROP[ro.boot.flash.locked]}" ]] && {
       if [[ ${DEVPROP[ro.boot.flash.locked]} -eq 1 ]]; then echo "* BootLoader locked" >> "$devicedoc"
       elif [[ ${DEVPROP[ro.boot.flash.locked]} -eq 0 ]]; then echo "* BootLoader unlocked (SafetyNet FAIL)" >> "$devicedoc"
@@ -378,7 +378,7 @@ getDeviceInfo() {
   done
 
   echo >> "$devicedoc"
-  echo "## Android Backup Manager { #androidbackup }" >> "$devicedoc"
+  echo "## Android Backup Manager <sup>[ⓘ](${WIKI_BASE}/DeviceInfo-explained#android-backup-manager \"Wiki\")</sup> { #androidbackup }" >> "$devicedoc"
   echo -n " \[[Backup Manager](#androidbackup)\]" >> "$devicehead"
   echo "* $(grep 'Backup Manager is' "$tmp")" >> "$devicedoc"
   echo "* $(grep 'Auto-restore is' "$tmp")" >> "$devicedoc"
