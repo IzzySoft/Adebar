@@ -391,6 +391,8 @@ getDeviceInfo() {
   echo "* $(grep 'Last backup pass' "$tmp")" >> "$devicedoc"
   echo "* $(grep 'Ever backed up:' "$tmp")" >> "$devicedoc"
   [[ -n "$(grep 'Pending backup:' "$tmp")" ]] && echo "* $(grep 'Pending backup:' "$tmp")" >> "$devicedoc"
+  [[ -n "$(grep 'Pending key/value backup:' "$tmp")" ]] && echo "* $(grep 'Pending key/value backup:' "$tmp")" >> "$devicedoc"
+  [[ -n "$(grep 'Full backup queue:' "$tmp")" ]] && echo "* $(grep 'Full backup queue:' "$tmp")" >> "$devicedoc"
   echo "* Participants:" >> "$devicedoc"
   for zeile in $(grep -A1 "uid:" "$tmp"|awk '{print $1}'); do
     case "$zeile" in
