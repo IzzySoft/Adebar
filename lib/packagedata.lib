@@ -153,6 +153,7 @@ getAppDetails() {
   local P_PKGNAME=""   # name of the currently processed package
   local tmpstring=""
   local regex
+  local appCategory=(game audio video image social news maps productivity)  # https://developer.android.com/reference/android/R.attr.html#appCategory
   local P_SKIP=(sharedUser pkg resourcePath nativeLibraryPath targetSdk timeStamp signatures permissionsFixed installPermissionsFixed pkgFlags pkgFlagsEx applicationInfo dexTimeStamp)
   declare -A PK_CODEPATH
   declare -A PK_VERSION
@@ -162,6 +163,7 @@ getAppDetails() {
   declare -A PK_DATADIR
   declare -A PK_PRIMARYCPU
   declare -A PK_SECONDARYCPU
+  declare -A PK_APPCATEGORY
   declare -A PK_SCREENSIZE
   declare -A PK_FIRSTINSTALL
   declare -A PK_LASTUPDATE
@@ -330,6 +332,11 @@ getAppDetails() {
             if [[ "${zeile:0:19}" == "    secondaryCpuAbi" ]]; then # secondaryCpuAbi=null
               PK_SECONDARYCPU[$P_PKGNAME]="${zeile:20}"
               doProgress "    +secondaryCpuAbi: ${PK_SECONDARYCPU[$P_PKGNAME]}" 5
+              continue
+            fi
+            if [[ "${zeile:0:15}" == "    appCategory" ]]; then
+              PK_APPCATEGORY[$P_PKGNAME]="${appCategory[${zeile:16}]}"
+              doProgress "    +appCategory: ${PK_APPCATEGORY[$P_PKGNAME]}" 5
               continue
             fi
             # silently skip some stuff:
@@ -529,6 +536,7 @@ function _makeAppDoc() {
         tmpstring="+ **${APPNAME} (${app})**\n"
       fi
     fi
+    [[ -n "${PK_APPCATEGORY[$app]}" ]]  && tmpstring+="    + Category: ${PK_APPCATEGORY[$app]}\n"
     [[ -n "${PK_ASIZE[$app]}" ]]        && tmpstring+="    + storage used (app/data/cache): $(format_fsize ${PK_ASIZE[$app]}) / $(format_fsize ${PK_DSIZE[$app]}) / $(format_fsize ${PK_CSIZE[$app]})\n"
     [[ -n "${PK_FIRSTINSTALL[$app]}" ]] && tmpstring+="    + first installed: ${PK_FIRSTINSTALL[$app]}\n"
     [[ -n "${PK_LASTUPDATE[$app]}" ]]   && tmpstring+="    + last updated: ${PK_LASTUPDATE[$app]}\n"
