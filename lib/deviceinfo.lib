@@ -296,12 +296,14 @@ getDeviceInfo() {
   [[ ${MK_PARTINFO} -gt 0 ]] && writePartInfo "$devicedoc"
   echo "* Disk statistics:" >> "$devicedoc"
   copyAdbContent dumpsys_diskstats "adb ${ADBOPTS} shell dumpsys diskstats" ${tmp}
+  re="(App|App Cache|Photos|Videos|Audio|Downloads|System|Other)( Size:)\s*([0-9]+)"
   while read zeile; do
-    [[ "${zeile:0:14}" = "Package Names:" ]] && continue    # these 3 are new with Android 7.1.2
-    [[ "${zeile:0:10}" = "App Sizes:" ]] && continue
-    [[ "${zeile:0:12}" = "Cache Sizes:" ]] && continue
-    [[ "${zeile:0:15}" = "App Data Sizes:" ]] && continue   # this was added with Oreo
-    echo -e "    * ${zeile/// }" >> "$devicedoc"
+    [[ "$zeile" =~ ^(Package Names:|App Sizes:|Cache Sizes:|App Data Sizes:) ]] && continue # 1-3 added w/ Android 7.1, 4 w/ Oreo
+    if [[ "${zeile}" =~ $re ]]; then
+      echo "    * ${BASH_REMATCH[1]}${BASH_REMATCH[2]} $((${BASH_REMATCH[3]} /1024/1024)) MiB" >> "$devicedoc"
+    else
+      echo -e "    * ${zeile/// }" >> "$devicedoc"
+    fi
   done < ${tmp}
   echo >> "$devicedoc"
 
