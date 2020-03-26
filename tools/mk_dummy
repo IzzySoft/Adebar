@@ -54,6 +54,7 @@ adb ${ADBOPTS} shell pm list packages -u 2>/dev/null > $dummy/pm_list_packages_u
 echo "* details for deviceinfo.lib..."
 adb ${ADBOPTS} shell getprop > $dummy/getprop
 adb ${ADBOPTS} shell dumpsys iphonesubinfo > $dummy/dumpsys_iphonesubinfo
+adb ${ADBOPTS} shell service call iphonesubinfo 3 | awk -F "'" '{print $2}' | sed '1 d' | tr -d '.' | awk '{print}' ORS= >$dummy/serviceCall_iphonesubinfo_3
 adb ${ADBOPTS} shell dumpsys sensorservice > $dummy/dumpsys_sensorservice
 adb ${ADBOPTS} shell whence uname > $dummy/whence_uname
 [[ "$(adb ${ADBOPTS} shell whence uname)" ]] && adb ${ADBOPTS} shell uname -r > $dummy/uname-r || adb ${ADBOPTS} shell busybox uname -r > $dummy/uname-r
