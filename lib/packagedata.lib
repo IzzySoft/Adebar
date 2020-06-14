@@ -554,12 +554,13 @@ function _makeAppDoc() {
     [[ -n "${PK_MTKFLAGS[$app]}" ]]     && tmpstring+="    + mtkFlags: ${PK_MTKFLAGS[$app]}\n"
     [[ -n "${PK_USERS[$app]}" ]]        && tmpstring+="${PK_USERS[$app]}\n"
     [[ -n "${PK_DISABLED[$app]}" ]]     && {
-      tmpstring+="    + disabled components:\n"
+      tmpstring+="    + <details><summary>disabled components:</summary><ul>"
       echo "" >> "${SH_DISABLED}"
       for comp in ${PK_DISABLED[$app]}; do
-        tmpstring+="        - $comp\n"
+        tmpstring+="<li>$comp</li>"
         echo "adb ${ADBOPTS} shell \"pm disable ${app}/${comp}\"" >> "${SH_DISABLED}"
       done
+      tmpstring+="</ul></details>\n"
     }
     if [[ -z "${PK_INSTALLER[$app]}" ]]; then
       PK_INFO[none]+="$tmpstring"
