@@ -177,6 +177,7 @@ getDeviceInfo() {
       feature=${feature//[$'\r\n']}
       echo "* ${feature#*:}" >> "$devicedoc"
     done
+    echo >> "$devicedoc"
   fi
 
   # device status
@@ -247,11 +248,11 @@ getDeviceInfo() {
       echo "#### SIM2" >> "$devicedoc"
       print_radiostat 1
     }
+    echo >> "$devicedoc"
   fi
 
   if [[ -n "${DEVPROP[gsm.operator.alpha]}" ]]; then # Provider info
     doProgress "  + Provider info" 3
-    echo >> "$devicedoc"
     if [[ -n "${DEVPROP[gsm.operator.alpha.2]}" ]]; then # Dual-SIM device
       echo "### Provider info (SIM1)" >> "$devicedoc"
     else
@@ -277,12 +278,22 @@ getDeviceInfo() {
 
   doProgress "  + networking details" 3
   echo "### Networking details" >> "$devicedoc"
-  echo "* Hostname: ${DEVPROP[net.hostname]}" >> "$devicedoc"
+  if [[ -n "${DEVPROP[net.hostname]}" ]]; then
+    echo "* Hostname: ${DEVPROP[net.hostname]}" >> "$devicedoc"
+  elif [[ -n "${DEVPROP[ro.build.product]}" ]]; then  # this is where newer Androids take it from (could also be ro.build.device)
+    echo "* Hostname: ${DEVPROP[ro.build.product]}" >> "$devicedoc"
+  elif [[ -n "${DEVPROP[ro.build.device]}" ]]; then
+    echo "* Hostname: ${DEVPROP[ro.build.device]}" >> "$devicedoc"
+  elif [[ -n "${DEVPROP[ro.vendor.product.device]}" ]]; then
+    echo "* Hostname: ${DEVPROP[ro.vendor.product.device]}" >> "$devicedoc"
+  elif [[ -n "${DEVPROP[ro.product.device]}" ]]; then
+    echo "* Hostname: ${DEVPROP[ro.product.device]}" >> "$devicedoc"
+  fi
   [[ -n "${DEVPROP[wifi.interface]}" ]] && echo "* WiFi Interface: ${DEVPROP[wifi.interface]}" >> "$devicedoc"
   [[ -n "${DEVPROP[wlan.driver.config]}" ]] && echo "* WiFi config: \`${DEVPROP[wlan.driver.config]}\`" >> "$devicedoc"
   [[ -n "${DEVPROP[net.dns1]}${DEVPROP[net.dns2]}" ]] && echo "* Default DNS server: ${DEVPROP[net.dns1]} / ${DEVPROP[net.dns2]}" >> "$devicedoc"
-  echo "* WiFi driver status: ${DEVPROP[wlan.driver.status]}" >> "$devicedoc"
-  echo "* WiFi scan interval: ${DEVPROP[wifi.supplicant_scan_interval]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[wlan.driver.status]}" ]] && echo "* WiFi driver status: ${DEVPROP[wlan.driver.status]}" >> "$devicedoc"
+  [[ -n "${DEVPROP[wifi.supplicant_scan_interval]}" ]] && echo "* WiFi scan interval: ${DEVPROP[wifi.supplicant_scan_interval]}" >> "$devicedoc"
   [[ -n "${DEVPROP[dhcp.wlan0.dns1]}" ]] && echo "* WiFi DHCP DNS: ${DEVPROP[dhcp.wlan0.dns1]} / ${DEVPROP[dhcp.wlan0.dns2]} / ${DEVPROP[dhcp.wlan0.dns3]}" >> "$devicedoc"
   [[ -n "${DEVPROP[dhcp.wlan0.gateway]}" ]] && echo "* WiFi default gateway: ${DEVPROP[dhcp.wlan0.gateway]}" >> "$devicedoc"
   [[ -n "${DEVPROP[dhcp.wlan0.ipaddress]}" ]] && echo "* WiFi IP: ${DEVPROP[dhcp.wlan0.ipaddress]}" >> "$devicedoc"
