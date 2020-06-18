@@ -6,6 +6,10 @@
 # library to deal with package data (apps)
 ##############################################################################
 
+# Mapping AndroidSDK to AndroidVersion
+# SDK                                   5                               10                              15                              20                            25                            30
+SDK2VER=("0" "1.0" "1.1" "1.5" "1.6" "2.0" "2.0.1" "2.1" "2.2" "2.3" "2.3.3" "3.0" "3.1" "3.2" "4.0" "4.0.3" "4.1" "4.2" "4.3" "4.4" "4.4W" "5.0" "5.1" "6.0" "7.0" "7.1" "8.0" "8.1" "9.0" "10.0" "11.0")
+
 #
 # Get app names by package names (if possible)
 # $1: package name
@@ -158,6 +162,8 @@ getAppDetails() {
   declare -A PK_CODEPATH
   declare -A PK_VERSION
   declare -A PK_VERSIONCODE
+  declare -A PK_MINSDK
+  declare -A PK_TARGETSDK
   declare -A PK_SIGNINGVER
   declare -A PK_IDS           # UID/GID (from userId)
   declare -A PK_DATADIR
@@ -230,7 +236,16 @@ getAppDetails() {
           "versionCode")
             PK_VERSIONCODE[$P_PKGNAME]="${zeile#*=}"   # versionCode=1 minSdk=27 targetSdk=27
             PK_VERSIONCODE[$P_PKGNAME]="${PK_VERSIONCODE[$P_PKGNAME]%%[[:space:]]*}"
-            doProgress "    +versionCode: ${PK_VERSIONCODE[$P_PKGNAME]}" 5
+            # versionCode=906400000 minSdk=26 targetSdk=28
+            re='minSdk=([0-9]+)'
+            if [[ $zeile =~ $re ]]; then
+              PK_MINSDK[$P_PKGNAME]=${BASH_REMATCH[1]}
+            fi
+            re='targetSdk=([0-9]+)'
+            if [[ $zeile =~ $re ]]; then
+              PK_TARGETSDK[$P_PKGNAME]=${BASH_REMATCH[1]}
+            fi
+            doProgress "    +versionCode: ${PK_VERSIONCODE[$P_PKGNAME]}, minSdk: ${PK_MINSDK[$P_PKGNAME]}, targetSdk: ${PK_TARGETSDK[$P_PKGNAME]}" 5
             continue
             ;;
           "versionName")
@@ -244,7 +259,7 @@ getAppDetails() {
             continue
             ;;
           "userId")
-            PK_IDS[$P_PKGNAME]="${zeile}"
+            PK_IDS[$P_PKGNAME]="$(trim "${zeile}")"
             doProgress "    +IDs: ${PK_IDS[$P_PKGNAME]}" 5
             continue
             ;;
@@ -541,7 +556,10 @@ function _makeAppDoc() {
     [[ -n "${PK_FIRSTINSTALL[$app]}" ]] && tmpstring+="    + first installed: ${PK_FIRSTINSTALL[$app]}\n"
     [[ -n "${PK_LASTUPDATE[$app]}" ]]   && tmpstring+="    + last updated: ${PK_LASTUPDATE[$app]}\n"
     [[ -n "${PK_LASTUSED[$app]}" ]]     && tmpstring+="    + last used: ${PK_LASTUSED[$app]}\n"
-    [[ -n "${PK_VERSION[$app]}" ]]      && tmpstring+="    + installed version: ${PK_VERSION[$app]} (${PK_VERSIONCODE[$app]})\n"
+    str=
+    [[ -n "${PK_MINSDK[$app]}" ]]       && str+="; Android ${SDK2VER[${PK_MINSDK[$app]}]}+"
+    [[ -n "${PK_TARGETSDK[$app]}" ]]    && str+="; targets Android ${SDK2VER[${PK_MINSDK[$app]}]}"
+    [[ -n "${PK_VERSION[$app]}" ]]      && tmpstring+="    + installed version: ${PK_VERSION[$app]} (${PK_VERSIONCODE[$app]}${str})\n"
     [[ -n "${PK_SIGNINGVER[$app]}" ]]   && tmpstring+="    + signature scheme: ${PK_SIGNINGVER[$app]}\n"
     [[ -n "${PK_IDS[$app]}" ]]          && tmpstring+="    + IDs: ${PK_IDS[$app]}\n"
     [[ -n "${PK_CODEPATH[$app]}" ]]     && tmpstring+="    + CodePath: \`${PK_CODEPATH[$app]}\`\n"
