@@ -158,7 +158,7 @@ getAppDetails() {
   local tmpstring=""
   local regex
   local appCategory=(game audio video image social news maps productivity)  # https://developer.android.com/reference/android/R.attr.html#appCategory
-  local P_SKIP=(sharedUser pkg resourcePath nativeLibraryPath targetSdk timeStamp signatures permissionsFixed installPermissionsFixed pkgFlags pkgFlagsEx applicationInfo dexTimeStamp)
+  local P_SKIP=(sharedUser pkg resourcePath nativeLibraryPath targetSdk timeStamp signatures permissionsFixed installPermissionsFixed pkgFlags pkgFlagsEx applicationInfo dexTimeStamp overlayTarget overlayCategory)
   declare -A PK_CODEPATH
   declare -A PK_VERSION
   declare -A PK_VERSIONCODE
