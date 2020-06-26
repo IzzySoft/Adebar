@@ -206,49 +206,52 @@ getDeviceInfo() {
         *)        echo "* ${left}: ${right}"  >> "$devicedoc" ;;
       esac
     done < "${tmp}"
+    echo >> "$devicedoc"
 
-    doProgress "  + Radio status" 3
-    echo >> "$devicedoc"
-    echo "### Radio Status" >> "$devicedoc"
-    [[ -n "${DEVPROP[gsm.version.baseband]}" ]]  && echo "* Baseband: ${DEVPROP[gsm.version.baseband]}" >> "$devicedoc"
-    [[ -n "${DEVPROP[gsm.version.baseband1]}" ]] && echo "* Baseband (SIM2): ${DEVPROP[gsm.version.baseband1]}" >> "$devicedoc"
-    [[ -n "${DEVPROP[gsm.version.ril-impl]}" ]]  && {
-      if [[ -n "${DEVPROP[rild.libpath]}" ]]; then echo "* RIL: ${DEVPROP[gsm.version.ril-impl]} (\`${DEVPROP[rild.libpath]}\`)" >> "$devicedoc"
-      else echo "* RIL: ${DEVPROP[gsm.version.ril-impl]}" >> "$devicedoc"
-      fi
-    }
-    declare -A radio
-    declare -A radio1
-    copyAdbContent dumpsys_telephony.registry "adb ${ADBOPTS} shell dumpsys telephony.registry" $tmp2
-    grep "=" $tmp2 > $tmp
-    local callstate=(idle ringing off-hook)
-    local servicestate=(service "out of service" "emergency only" "powered off")
-    local dataactivity=(none in out inout)
-    local dataconnectionstate=(disconnected connecting connected suspended)
-    local phoneid=0
-    local vname
-    while IFS='' read zeile; do
-      zeile="${zeile//[$'\t\r\n']}"
-      zeile="${zeile#"${zeile%%[![:space:]]*}"}" #"
-      vname="${zeile%%=*}"
-      if [[ "$vname" = "Phone Id" ]]; then # MultiSIM
-        phoneid="${zeile#*=}"
-        continue
-      fi
-      [[ "${vname:0:1}" == "{" ]] && break # only registration history follows here
-      case $phoneid in
-        0) radio[${zeile%%=*}]="${zeile#*=}" ;;
-        1) radio1[${zeile%%=*}]="${zeile#*=}" ;;
-        *) oops "dev" "${LINENO}" "Unexpected phone id: '${zeile#*=}'" 2 ;;
-      esac
-    done < "${tmp}"
-    [[ $phoneid -gt 0 ]] && echo "#### SIM1" >> "$devicedoc"
-    print_radiostat 0
-    [[ $phoneid -gt 0 ]] && {
-      echo "#### SIM2" >> "$devicedoc"
-      print_radiostat 1
-    }
-    echo >> "$devicedoc"
+    if [[ ${MK_RADIO} -gt 0 ]]; then
+      doProgress "  + Radio status" 3
+      echo >> "$devicedoc"
+      echo "### Radio Status" >> "$devicedoc"
+      [[ -n "${DEVPROP[gsm.version.baseband]}" ]]  && echo "* Baseband: ${DEVPROP[gsm.version.baseband]}" >> "$devicedoc"
+      [[ -n "${DEVPROP[gsm.version.baseband1]}" ]] && echo "* Baseband (SIM2): ${DEVPROP[gsm.version.baseband1]}" >> "$devicedoc"
+      [[ -n "${DEVPROP[gsm.version.ril-impl]}" ]]  && {
+        if [[ -n "${DEVPROP[rild.libpath]}" ]]; then echo "* RIL: ${DEVPROP[gsm.version.ril-impl]} (\`${DEVPROP[rild.libpath]}\`)" >> "$devicedoc"
+        else echo "* RIL: ${DEVPROP[gsm.version.ril-impl]}" >> "$devicedoc"
+        fi
+      }
+      declare -A radio
+      declare -A radio1
+      copyAdbContent dumpsys_telephony.registry "adb ${ADBOPTS} shell dumpsys telephony.registry" $tmp2
+      grep "=" $tmp2 > $tmp
+      local callstate=(idle ringing off-hook)
+      local servicestate=(service "out of service" "emergency only" "powered off")
+      local dataactivity=(none in out inout)
+      local dataconnectionstate=(disconnected connecting connected suspended)
+      local phoneid=0
+      local vname
+      while IFS='' read zeile; do
+        zeile="${zeile//[$'\t\r\n']}"
+        zeile="${zeile#"${zeile%%[![:space:]]*}"}" #"
+        vname="${zeile%%=*}"
+        if [[ "$vname" = "Phone Id" ]]; then # MultiSIM
+          phoneid="${zeile#*=}"
+          continue
+        fi
+        [[ "${vname:0:1}" == "{" ]] && break # only registration history follows here
+        case $phoneid in
+          0) radio[${zeile%%=*}]="${zeile#*=}" ;;
+          1) radio1[${zeile%%=*}]="${zeile#*=}" ;;
+          *) oops "dev" "${LINENO}" "Unexpected phone id: '${zeile#*=}'" 2 ;;
+        esac
+      done < "${tmp}"
+      [[ $phoneid -gt 0 ]] && echo "#### SIM1" >> "$devicedoc"
+      print_radiostat 0
+      [[ $phoneid -gt 0 ]] && {
+        echo "#### SIM2" >> "$devicedoc"
+        print_radiostat 1
+      }
+      echo >> "$devicedoc"
+    fi
   fi
 
   if [[ -n "${DEVPROP[gsm.operator.alpha]}" ]]; then # Provider info
