@@ -1,6 +1,6 @@
 ##############################################################################
 # Adebar © 2014, 2015 by Itzchak Rehberg
-# This is part of the Adebar project, see https://github.com/IzzySoft/Adebar
+# This is part of the Adebar project, see https://codeberg.org/izzy/Adebar
 # Protected by the GPLv2
 # ----------------------------------------------------------------------------
 # library to deal with partition information
@@ -219,7 +219,7 @@ _fsPartDoc() {
     else
       pname="${MTD_NAME[${counter}]}"
     fi
-    [[ -z "${MTD_SIZE[${counter}]}" ]] && MTD_SIZE[${counter}]=0    # on some devices this is only available with root, see https://github.com/IzzySoft/Adebar/issues/45
+    [[ -z "${MTD_SIZE[${counter}]}" ]] && MTD_SIZE[${counter}]=0    # on some devices this is only available with root, see https://codeberg.org/izzy/Adebar/issues/45
     echo "    * ${MTD_DEV[${counter}]}: ${pname} ($(printf "%'.0f\n" $((${MTD_SIZE[${counter}]} / 1024))) MiB)" >> "$1"
     counter+=1
   done
