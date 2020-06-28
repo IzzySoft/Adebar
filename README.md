@@ -1,7 +1,7 @@
 # Adebar
 ***Adebar*** stands for <b>A</b>ndroid <b>De</b>vice <b>B</b>ackup <b>a</b>nd <b>R</b>eport. It is mainly based on [Bash](http://en.wikipedia.org/wiki/Bash_%28Unix_shell%29 "Wikipedia: Bash (Unix shell)") and [Adb](http://en.wikipedia.org/wiki/Android_Debug_Bridge "Wikipedia: Android Debug Bridge"). It reportedly works on Linux, Mac and Windows (Cygwin).
 
-**Note:** As this is a collection of Shell scripts, you won't find any „binaries“ attached to releases – there are none for *Adebar* and no „compilation“ is required. Please take a look at [the wiki](https://github.com/IzzySoft/Adebar/wiki) for further details and instructions.
+**Note:** As this is a collection of Shell scripts, you won't find any „binaries“ attached to releases – there are none for *Adebar* and no „compilation“ is required. Please take a look at [the wiki](https://codeberg.org/izzy/Adebar/wiki) for further details and instructions.
 
 
 ## What makes *Adebar* specific?
@@ -23,14 +23,14 @@ As a side-effect, *Adebar* generates a „report“ (or „short documentation�
 * it pulls the `wpa_supplicant.conf` from your device, which holds information on all WiFi APs you've configured (root required) – and also some more configuration files.
 * it pulls the `packages.xml` from your device, which holds all information about apps installed on your device (with Android 4.1 and above, this again requires root)
 * a shell script to disable all broadcast receivers (aka "auto-starts") which were disabled on the given device
-* a [Markdown][2] file listing all user-installed apps with their sources you've installed them from (e.g. *Google Play*, *F-Droid*, *Aptoide*), date of first install/last update, installed version, and more (see [example `userApps.md` in the Wiki](https://github.com/IzzySoft/Adebar/wiki/example-userApps.md)).
-* a [Markdown][2] file with some general device documentation (see above – and the [example `deviceInfo.md` in the wiki](https://github.com/IzzySoft/Adebar/wiki/example-deviceInfo.md)).
+* a [Markdown][2] file listing all user-installed apps with their sources you've installed them from (e.g. *Google Play*, *F-Droid*, *Aptoide*), date of first install/last update, installed version, and more (see [example `userApps.md` in the Wiki](https://codeberg.org/izzy/Adebar/wiki/example-userApps.md)).
+* a [Markdown][2] file with some general device documentation (see above – and the [example `deviceInfo.md` in the wiki](https://codeberg.org/izzy/Adebar/wiki/example-deviceInfo.md)).
 
-![Adebar-created files](https://github.com/IzzySoft/Adebar/wiki/AdebarFiles.png)
+![Adebar-created files](https://codeberg.org/izzy/Adebar/wiki/AdebarFiles.png)
 
-Optionally, if you have the PHP [CLI](http://en.wikipedia.org/wiki/Command-line_interface "Wikipedia: Command-line interface") available on your computer, you can parse the `packages.xml` with provided PHP scripts, located in the `tools/` directory. This directory also includes a shell script to convert ADB backup files into `.tar.gz` archives (`ab2tar`; requires `openssl`) – and another one if you have issues restoring ADB backups on Android 7 or higher (`abrestore`; if your device is affected by the ADB restore bug, only restoring backups of apps already installed on the device).
+Optionally, if you have the PHP [CLI](https://en.wikipedia.org/wiki/Command-line_interface "Wikipedia: Command-line interface") available on your computer, you can parse the `packages.xml` with provided PHP scripts, located in the `tools/` directory. This directory also includes a shell script to convert ADB backup files into `.tar.gz` archives (`ab2tar`; requires `openssl`) – and another one if you have issues restoring ADB backups on Android 7 or higher (`abrestore`; if your device is affected by the ADB restore bug, only restoring backups of apps already installed on the device).
 
-> **As *Adebar* is not yet tested on too many devices, there might be some errors/bugs here and there; if you encounter one, please file an issue at [the project's Github presence][1]. General feedback is also more than welcome if you're successfully using *Adebar* with your device, see [List of tested devices](https://github.com/IzzySoft/Adebar/issues/7).**
+> **As *Adebar* is not yet tested on too many devices, there might be some errors/bugs here and there; if you encounter one, please file an issue at [the project's Codeberg presence][1]. General feedback is also more than welcome if you're successfully using *Adebar* with your device, see [List of tested devices](https://codeberg.org/izzy/Adebar/issues/7).**
 
 
 ## Requirements
@@ -50,10 +50,10 @@ A documentation describing steps for installation, configuration, usage, and mor
 You like *Adebar* and want to contribute?
 
 * Pull Requests are welcome!
-* [Report back your device](https://github.com/IzzySoft/Adebar/issues/7) that works with *Adebar* so it can be added to the wiki!
+* [Report back your device](https://codeberg.org/izzy/Adebar/issues/7) that works with *Adebar* so it can be added to the wiki!
 * Motivate me e.g. by sending me some mBTC to `1FsfvUGUpoPkLvJboKAnuBXHZ1zN3hbBL1` :)
 
 
-[1]: https://github.com/IzzySoft/Adebar "Adebar at Github"
-[2]: http://en.wikipedia.org/wiki/Markdown "Wikipedia: Markdown"
-[3]: https://github.com/IzzySoft/Adebar/wiki "Adebar Wiki at Github"
+[1]: https://codeberg.org/izzy/Adebar "Adebar at Codeberg"
+[2]: https://en.wikipedia.org/wiki/Markdown "Wikipedia: Markdown"
+[3]: https://codeberg.org/izzy/Adebar/wiki "Adebar Wiki at Codeberg"
