@@ -13,7 +13,7 @@ As a side-effect, *Adebar* generates a „report“ (or „short documentation�
 
 
 ## What kind of backup does *Adebar* create?
-*Adebar* itself creates multiple files, including
+*Adebar* itself does not create any backups. But it generates multiple files, including
 
 * a [shell script](http://en.wikipedia.org/wiki/Shell_script "Wikipedia: Shell script") to create separate ADB backups for the apps you've installed yourself ("user-apps"), including their `.apk` files and their data
 * a shell script to create ADB backups of system apps, only containing their data
