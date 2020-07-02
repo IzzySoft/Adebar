@@ -333,9 +333,9 @@ getAppDetails() {
             if [[ "${zeile:0:8}" = "    User" ]]; then  # Android 4.2+ MultiUser info
               # '    User 0:  installed=true stopped=false notLaunched=false enabled=0'
               if [[ -z "${PK_USERS[$P_PKGNAME]}" ]]; then
-                PK_USERS[$P_PKGNAME]="    + ${zeile:4}"
+                PK_USERS[$P_PKGNAME]="${zeile:4}"
               else
-                PK_USERS[$P_PKGNAME]+="\n    + ${zeile:4}"
+                PK_USERS[$P_PKGNAME]+="\n${zeile:4}"
               fi
               continue
             fi
@@ -460,9 +460,10 @@ getAppDetails() {
 
   getAppStorageStats
 
-  [[ $((${MK_USERAPPS} + ${MK_SYSAPPS})) -ne 0 ]] && echo -n "**Apps:**" > "${DOCDIR}/apps.head"
+  [[ $((${MK_USERAPPS} + ${MK_SYSAPPS})) -ne 0 ]] && echo " <li>Apps<ul>" > "${DOCDIR}/apps.head"
   [[ ${MK_USERAPPS} -ne 0 ]] && _makeAppDoc "user"
   [[ ${MK_SYSAPPS}  -ne 0 ]] && _makeAppDoc "system"
+  [[ $((${MK_USERAPPS} + ${MK_SYSAPPS})) -ne 0 ]] && echo " </li></ul>" >> "${DOCDIR}/apps.head"
 
   doProgress "- removing temporary dumpfile" 2
   rm -f "${PKGDUMP}" "$tmp"
@@ -515,9 +516,9 @@ function _makeAppDoc() {
     local HAVE_AAPT=0
   fi
 
-  echo "# Installed ${apptype} on ${DEVICE_NAME} {#${apptype/-/_}}" > "${mdfile}"
-  echo -n " \[[${apptype}](#${apptype/-/_})\]" >> "${DOCDIR}/apps.head"
-  echo "(As of $(date '+%Y-%m-%d %H:%M')) **<sup>[ⓘ](${WIKI_BASE}/AppDetails-explained \"Wiki\")</sup>**" >> "${mdfile}"
+  echo "$(heading 2 "Installed ${apptype} on ${DEVICE_NAME}" "{#${apptype/-/_}}")" > "${mdfile}"
+  echo "  <li>$(href "#${apptype/-/_}" "${apptype}")</li>" >> "${DOCDIR}/apps.head"
+  echo "<p class='date_info'>(As of $(date '+%Y-%m-%d %H:%M')) <b><sup><a href='${WIKI_BASE}/AppDetails-explained' title='Wiki'>ⓘ</a></sup></b></p>" >> "${mdfile}"
   declare -A PK_INFO
   for src in ${!PK_INSTALLERS[@]}; do
     PK_INFO[$src]=""
@@ -536,61 +537,70 @@ function _makeAppDoc() {
     fi
     if [[ -z "${PK_INSTALLER[$app]}" ]]; then # no installer
       if [[ "${APPNAME}" = "${app}" ]]; then
-        tmpstring="+ **$app**\n"
+        tmpstring="$app"
       elif [[ -n "${APP_MARKET_URL[unknown]}" ]]; then
-        tmpstring="+ **[${APPNAME}](${APP_MARKET_URL[unknown]/\%s/$app})**\n"
+        tmpstring="$(href "${APP_MARKET_URL[unknown]/\%s/$app}" "${APPNAME}")"
       else
-        tmpstring="+ **${APPNAME} (${app})**\n"
+        tmpstring="${APPNAME} (${app})"
       fi
     elif [[ -n "${APP_MARKET_URL[${PK_INSTALLER[$app]}]}" ]]; then
-      tmpstring="+ **[${APPNAME}](${APP_MARKET_URL[${PK_INSTALLER[$app]}]/\%s/$app})**\n"
+      tmpstring="$(href "${APP_MARKET_URL[${PK_INSTALLER[$app]}]/\%s/$app}" "${APPNAME}")"
     else # no web source
       if [[ "${APPNAME}" = "${app}" ]]; then
-        tmpstring="+ **$app**\n"
+        tmpstring="$app"
       else
-        tmpstring="+ **${APPNAME} (${app})**\n"
+        tmpstring="${APPNAME} (${app})"
       fi
     fi
-    [[ -n "${PK_APPCATEGORY[$app]}" ]]  && tmpstring+="    + Category: ${PK_APPCATEGORY[$app]}\n"
-    [[ -n "${PK_ASIZE[$app]}" ]]        && tmpstring+="    + storage used (app/data/cache): $(format_fsize ${PK_ASIZE[$app]}) / $(format_fsize ${PK_DSIZE[$app]}) / $(format_fsize ${PK_CSIZE[$app]})\n"
-    [[ -n "${PK_FIRSTINSTALL[$app]}" ]] && tmpstring+="    + first installed: ${PK_FIRSTINSTALL[$app]}\n"
-    [[ -n "${PK_LASTUPDATE[$app]}" ]]   && tmpstring+="    + last updated: ${PK_LASTUPDATE[$app]}\n"
-    [[ -n "${PK_LASTUSED[$app]}" ]]     && tmpstring+="    + last used: ${PK_LASTUSED[$app]}\n"
+    tmpstring="$(trth2 "${tmpstring}" 'left')\n"
+    [[ -n "${PK_APPCATEGORY[$app]}" ]]  && tmpstring+="$(trthtd 'Category' "${PK_APPCATEGORY[$app]}")\n"
+    [[ -n "${PK_ASIZE[$app]}" ]]        && tmpstring+="$(trthtd 'storage used (app/data/cache)' "$(format_fsize ${PK_ASIZE[$app]}) / $(format_fsize ${PK_DSIZE[$app]}) / $(format_fsize ${PK_CSIZE[$app]})")\n"
+    [[ -n "${PK_FIRSTINSTALL[$app]}" ]] && tmpstring+="$(trthtd 'first installed' "${PK_FIRSTINSTALL[$app]}")\n"
+    [[ -n "${PK_LASTUPDATE[$app]}" ]]   && tmpstring+="$(trthtd 'last updated' "${PK_LASTUPDATE[$app]}")\n"
+    [[ -n "${PK_LASTUSED[$app]}" ]]     && tmpstring+="$(trthtd 'last used' "${PK_LASTUSED[$app]}")\n"
     str=
     [[ -n "${PK_MINSDK[$app]}" ]]       && str+="; Android ${SDK2VER[${PK_MINSDK[$app]}]}+"
     [[ -n "${PK_TARGETSDK[$app]}" ]]    && str+="; targets Android ${SDK2VER[${PK_MINSDK[$app]}]}"
-    [[ -n "${PK_VERSION[$app]}" ]]      && tmpstring+="    + installed version: ${PK_VERSION[$app]} (${PK_VERSIONCODE[$app]}${str})\n"
-    [[ -n "${PK_SIGNINGVER[$app]}" ]]   && tmpstring+="    + signature scheme: ${PK_SIGNINGVER[$app]}\n"
-    [[ -n "${PK_IDS[$app]}" ]]          && tmpstring+="    + IDs: ${PK_IDS[$app]}\n"
-    [[ -n "${PK_CODEPATH[$app]}" ]]     && tmpstring+="    + CodePath: \`${PK_CODEPATH[$app]}\`\n"
-    [[ -n "${PK_DATADIR[$app]}" ]]      && tmpstring+="    + App data: \`${PK_DATADIR[$app]}\`\n"
-    [[ -n "${PK_PRIMARYCPU[$app]}" && "${PK_PRIMARYCPU[$app]}" != "null" ]]     && tmpstring+="    + Primary CPU ABI: \`${PK_PRIMARYCPU[$app]}\`\n"
-    [[ -n "${PK_SECONDARYCPU[$app]}" && "${PK_SECONDARYCPU[$app]}" != "null" ]] && tmpstring+="    + Secondary CPU ABI: \`${PK_SECONDARYCPU[$app]}\`\n"
-    [[ -n "${PK_SCREENSIZE[$app]}" ]]   && tmpstring+="    + supported screen sizes: ${PK_SCREENSIZE[$app]}\n"
-    [[ -n "${PK_FLAGS[$app]}" ]]        && tmpstring+="    + flags: ${PK_FLAGS[$app]}\n"
-    [[ -n "${PK_PRIVFLAGS[$app]}" ]]    && tmpstring+="    + privateFlags: ${PK_PRIVFLAGS[$app]}\n"
-    [[ -n "${PK_MTKFLAGS[$app]}" ]]     && tmpstring+="    + mtkFlags: ${PK_MTKFLAGS[$app]}\n"
-    [[ -n "${PK_USERS[$app]}" ]]        && tmpstring+="${PK_USERS[$app]}\n"
+    [[ -n "${PK_VERSION[$app]}" ]]      && tmpstring+="$(trthtd 'installed version' "${PK_VERSION[$app]} (${PK_VERSIONCODE[$app]}${str})")\n"
+    [[ -n "${PK_SIGNINGVER[$app]}" ]]   && tmpstring+="$(trthtd 'signature scheme' "${PK_SIGNINGVER[$app]}")\n"
+    [[ -n "${PK_IDS[$app]}" ]]          && tmpstring+="$(trthtd 'IDs' "${PK_IDS[$app]}")\n"
+    [[ -n "${PK_CODEPATH[$app]}" ]]     && tmpstring+="$(trthtd 'CodePath' "<code>${PK_CODEPATH[$app]}</code>")\n"
+    [[ -n "${PK_DATADIR[$app]}" ]]      && tmpstring+="$(trthtd 'App data' "<code>${PK_DATADIR[$app]}</code>")\n"
+    [[ -n "${PK_PRIMARYCPU[$app]}" && "${PK_PRIMARYCPU[$app]}" != "null" ]]     && tmpstring+="$(trthtd 'Primary CPU ABI' "<code>${PK_PRIMARYCPU[$app]}</code>")\n"
+    [[ -n "${PK_SECONDARYCPU[$app]}" && "${PK_SECONDARYCPU[$app]}" != "null" ]] && tmpstring+="$(trthtd 'Secondary CPU ABI' "<code>${PK_SECONDARYCPU[$app]}</code>")\n"
+    [[ -n "${PK_SCREENSIZE[$app]}" ]]   && tmpstring+="$(trthtd 'supported screen sizes' "${PK_SCREENSIZE[$app]}")\n"
+    [[ -n "${PK_FLAGS[$app]}" ]]        && tmpstring+="$(trthtd 'flags' "${PK_FLAGS[$app]}")\n"
+    [[ -n "${PK_PRIVFLAGS[$app]}" ]]    && tmpstring+="$(trthtd 'privateFlags' "${PK_PRIVFLAGS[$app]}")\n"
+    [[ -n "${PK_MTKFLAGS[$app]}" ]]     && tmpstring+="$(trthtd 'mtkFlags' "${PK_MTKFLAGS[$app]}")\n"
+    [[ -n "${PK_USERS[$app]}" ]]        && { # PK_USERS can be multi-line (when multi-user)!
+      IFS=$'\n'
+      for zeile in "${PK_USERS[$app]}"; do
+        tmpstring+="$(trthtd "${zeile%%:*}" "$(trim "${zeile##*:}")")\n"
+      done
+      unset IFS
+    }
     [[ -n "${PK_DISABLED[$app]}" ]]     && {
-      tmpstring+="    + <details><summary>disabled components:</summary><ul>"
+      tmpstring+="$(trthtd_ 'disabled components' '<details><summary>expand</summary><ul>')"
       echo "" >> "${SH_DISABLED}"
       for comp in ${PK_DISABLED[$app]}; do
         tmpstring+="<li>$comp</li>"
         echo "adb ${ADBOPTS} shell \"pm disable ${app}/${comp}\"" >> "${SH_DISABLED}"
       done
-      tmpstring+="</ul></details>\n"
+      tmpstring+="</ul></details>$(_tdtr)\n"
     }
     if [[ -z "${PK_INSTALLER[$app]}" ]]; then
-      PK_INFO[none]+="$tmpstring"
+      PK_INFO[none]+="$tmpstring\n"
     else
       CUR_INSTALLER="${PK_INSTALLER[$app]}"
-      PK_INFO[$CUR_INSTALLER]+="$tmpstring"
+      PK_INFO[$CUR_INSTALLER]+="$tmpstring\n"
     fi
   done
   for src in ${!PK_INSTALLERS[@]}; do
     [[ -n "${PK_INFO[$src]}" ]] && {
-      echo -e "## Installed from ${PK_INSTALLERS[$src]} (installer: $src)\n" >> "${mdfile}"
-      echo -e "${PK_INFO[$src]}\n" >> "${mdfile}"
+      echo -e "$(heading 3 "Installed from ${PK_INSTALLERS[$src]} (installer: $src)")\n" >> "${mdfile}"
+      echo "$(tab_classopen 'apps')" >> "${mdfile}"
+      echo -e "${PK_INFO[$src]}" >> "${mdfile}"
+      echo -e "$(tab_close)\n" >> "${mdfile}"
     }
   done
 }
