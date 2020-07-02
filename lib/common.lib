@@ -128,3 +128,61 @@ format_fsize() {
     echo "${size} ${unit}"
   fi
 }
+
+#
+# ---------------------------------------------------=[ HTML/Doc wrappers ]=--
+# Create an HTML heading. Params: level (1-6), title [, id]
+function heading() {
+  if [[ -n "$3" ]]; then
+    echo "<h${1} id='${3}'>${2}</h${1}>"
+  else
+    echo "<h${1}>${2}</h${1}>"
+  fi
+}
+
+# Opening tag for a table. Param: css_class_name
+function tab_classopen() {
+  echo "<table class='${1}'>"
+}
+
+# Closing tag for a table
+function tab_close() {
+  echo "</table>"
+}
+
+# One table row with a single multi-span th. Param: row content [, css_class]
+function trth2() {
+  if [[ -n "$2" ]]; then
+    echo " <tr><th colspan='2' class='$2'>${1}</th></tr>"
+  else
+    echo " <tr><th colspan='2' class='title'>${1}</th></tr>"
+  fi
+}
+
+# One table row with a th followed by a td. Params: th-content, td-content
+function trthtd() {
+  echo " <tr><th>${1}:</th><td>${2}</td></tr>"
+}
+# like trthtd but td left open (for nesting)
+function trthtd_() {
+  echo " <tr><th>${1}:</th><td>${2}"
+}
+# close td and open new td
+function tdtd() {
+  echo "</td><td>"
+}
+# close table row left open by trthtd_
+function _tdtr() {
+  echo "</td></tr>"
+}
+
+# Hyperlink. Parameters: url [, name [, title]]
+function href() {
+  if [[ -n "$3" ]]; then
+    echo "<a href='${1}' title='${3}'>${2}</a>"
+  elif [[ -n "$2" ]]; then
+    echo "<a href='${1}'>${2}</a>"
+  else
+    echo "<a href='${1}'>${1}</a>"
+  fi
+}

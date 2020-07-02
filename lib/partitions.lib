@@ -1,5 +1,5 @@
 ##############################################################################
-# Adebar © 2014, 2015 by Itzchak Rehberg
+# Adebar © 2014 - 2020 by Itzchak Rehberg
 # This is part of the Adebar project, see https://codeberg.org/izzy/Adebar
 # Protected by the GPLv2
 # ----------------------------------------------------------------------------
@@ -204,7 +204,7 @@ _fsPartDoc() {
   [[ ${MK_PARTINFO} -eq 0 ]] && return
   declare -i counter=0
   local pname
-  echo "* Partitions (source: ${PARTITION_SRC^^})" >> "$1"
+  echo "$(trthtd_ "Partitions (source: ${PARTITION_SRC^^})" "$(tab_classopen 'inner')")" >> "$1"
   while [[ -n "${MTD_D[${counter}]}" ]]; do
     [[ -z "${MTD_DEV[${counter}]}" ]] && {
       counter+=1
@@ -220,9 +220,10 @@ _fsPartDoc() {
       pname="${MTD_NAME[${counter}]}"
     fi
     [[ -z "${MTD_SIZE[${counter}]}" ]] && MTD_SIZE[${counter}]=0    # on some devices this is only available with root, see https://codeberg.org/izzy/Adebar/issues/45
-    echo "    * ${MTD_DEV[${counter}]}: ${pname} ($(printf "%'.0f\n" $((${MTD_SIZE[${counter}]} / 1024))) MiB)" >> "$1"
+    echo "   $(trthtd_ "<code>${MTD_DEV[${counter}]}</code>" "${pname}$(tdtd)$(printf "%'.0f\n" $((${MTD_SIZE[${counter}]} / 1024))) MiB$(_tdtr)")" >> "$1"
     counter+=1
   done
+  echo "   $(tab_close)$(_tdtr)" >> "$1"
 }
 
 #
