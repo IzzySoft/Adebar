@@ -1,0 +1,66 @@
+/* Main */
+body {
+  background-color:white;
+  font-family:Liberation Sans,Droid Sans,arial,helvetica,sans-serif;
+  font-size:14px;
+}
+p,div { text-align:justify; font-size:13px; }
+a { color:#000bff; text-decoration:none; }
+a:hover { text-decoration:underline; font-style:italic; background-color:#eeeeee; }
+table { border:1px #999999 solid; background-color:#e5e5e5; }
+th,td,li { font-size:13px; }
+th { background-color:#ffff99; }
+td { background-color:#f5f5f5; }
+
+
+/* Mobile */
+@media (max-width: 800px) {
+  a[title], span:not([title='']) { display:inline; position:relative; }
+  a[title]:hover:after, span:not([title='']):hover:after {
+    background: #333;
+    background: rgba(0,0,0,.8);
+    border-radius: 5px;
+    bottom: 26px;
+    color: #fff;
+    content: attr(title);
+    left: 20%;
+    padding: 5px 15px;
+    position: absolute;
+    z-index: 98;
+    max-width: 320px;
+  }
+  a[title]:hover:before,span:not([title='']):hover:before {
+    border: solid;
+    border-color: #333 transparent;
+    border-width: 6px 6px 0 6px;
+    bottom: 20px;
+    content: "";
+    left: 50%;
+    position: absolute;
+    z-index: 99;
+  }
+  td.inner { word-break:break-all; }
+}
+
+
+
+/* Adebar */
+h1,h2,h3,h4,h5 { color:#000bff; }
+table + h2, table + h3, table + h4, table + h5 { clear:both; }
+table.block, #content table apps { margin-bottom:1em; margin-right:.5em; }
+table.block { float:left; }
+th, #content td { font-size:12px; }
+th { text-align:right; background-color:lightskyblue; padding-right:.5em; }
+th.title { text-align:center; }
+th.left { text-align:left; }
+table.inner th { background-color:lightsteelblue; }
+td { padding-left:.5em; }
+td code { font-family:Liberation Mono, DejaVu Sans Mono, monospace; }
+#toc { position:fixed; top:1%; right:1%; background-color:ghostwhite; }
+#toc details[open] { border:2px solid gray; padding:5px; }
+p.date_info { margin-top:-13px; font-size:11px !important; }
+details ul { padding-inline-start:20px; }
+summary + ul { margin-top:0; margin-bottom:0; }
+@media (max-width: 800px) {
+  table.block { float:none; }
+}
