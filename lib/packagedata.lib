@@ -460,7 +460,7 @@ getAppDetails() {
 
   getAppStorageStats
 
-  [[ $((${MK_USERAPPS} + ${MK_SYSAPPS})) -ne 0 ]] && echo " <li>Apps<ul>" > "${DOCDIR}/apps.head"
+  [[ $((${MK_USERAPPS} + ${MK_SYSAPPS})) -ne 0 ]] && echo " <li>$(href '#apps' 'Apps')<ul>" > "${DOCDIR}/apps.head"
   [[ ${MK_USERAPPS} -ne 0 ]] && _makeAppDoc "user"
   [[ ${MK_SYSAPPS}  -ne 0 ]] && _makeAppDoc "system"
   [[ $((${MK_USERAPPS} + ${MK_SYSAPPS})) -ne 0 ]] && echo " </li></ul>" >> "${DOCDIR}/apps.head"
@@ -516,7 +516,7 @@ function _makeAppDoc() {
     local HAVE_AAPT=0
   fi
 
-  echo "$(heading 2 "Installed ${apptype} on ${DEVICE_NAME}" "{#${apptype/-/_}}")" > "${mdfile}"
+  echo "$(heading 2 "Installed ${apptype} on ${DEVICE_NAME}" "${apptype/-/_}")" > "${mdfile}"
   echo "  <li>$(href "#${apptype/-/_}" "${apptype}")</li>" >> "${DOCDIR}/apps.head"
   echo "<p class='date_info'>(As of $(date '+%Y-%m-%d %H:%M')) <b><sup><a href='${WIKI_BASE}/AppDetails-explained' title='Wiki'>ⓘ</a></sup></b></p>" >> "${mdfile}"
   declare -A PK_INFO

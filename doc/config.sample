@@ -165,6 +165,7 @@ uf_postrun() {
   echo >> "${WEBDIR}/${DEVICE_NAME}.md"
   cat "${OUTDIR}/docs/deviceInfo.md" >> "${WEBDIR}/${DEVICE_NAME}.md"
   echo >> "${WEBDIR}/${DEVICE_NAME}.md"
+  echo "<h1 id='apps'>Apps</h2>" >> "${WEBDIR}/${DEVICE_NAME}.md"
   cat "${OUTDIR}/docs/userApps.md" >> "${WEBDIR}/${DEVICE_NAME}.md"
   [[ -f "${OUTDIR}/docs/sysApps.md" ]] && {
     echo >> "${WEBDIR}/${DEVICE_NAME}.md"

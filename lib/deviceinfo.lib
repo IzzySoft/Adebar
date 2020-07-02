@@ -444,7 +444,7 @@ getDeviceInfo() {
   echo "$(trthtd_ 'Backup destinations' "$(tab_classopen 'inner')")" >> "$devicedoc"
   while IFS= read -r zeile; do
     [[ "$zeile" =~ ^\ {4}([^\ ]+) ]] && echo -n "  $(trthtd_ "${BASH_REMATCH[1]}")" >> "$devicedoc"
-    [[ "$zeile" =~ ^\ {2}\*\ ([^\ ]+) ]] && echo -n "  $(trthtd "<b>${BASH_REMATCH[1]}</b>")" >> "$devicedoc"
+    [[ "$zeile" =~ ^\ {2}\*\ ([^\ ]+) ]] && echo -n "  $(trthtd_ "<i>${BASH_REMATCH[1]}</i>")" >> "$devicedoc"
     [[ "$zeile" =~ ^\ {7}destination:\ (.+) ]] && echo "${BASH_REMATCH[1]}$(_tdtr)" >> "$devicedoc"
   done < <(grep -E -A99999 "^Available transports:" "$tmp" | grep -E -B99999 "^Pending init:")
   echo " $(tab_close)" >> "$devicedoc"

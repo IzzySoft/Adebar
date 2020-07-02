@@ -46,7 +46,7 @@ td { background-color:#f5f5f5; }
 
 /* Adebar */
 h1,h2,h3,h4,h5 { color:#000bff; }
-table + h2, table + h3, table + h4, table + h5 { clear:both; }
+table + h1, table + h2, table + h3, table + h4, table + h5 { clear:both; }
 table.block, #content table apps { margin-bottom:1em; margin-right:.5em; }
 table.block { float:left; }
 th, #content td { font-size:12px; }
