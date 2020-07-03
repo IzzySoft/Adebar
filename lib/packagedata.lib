@@ -560,7 +560,7 @@ function _makeAppDoc() {
     [[ -n "${PK_LASTUSED[$app]}" ]]     && tmpstring+="$(trthtd 'last used' "${PK_LASTUSED[$app]}")\n"
     str=
     [[ -n "${PK_MINSDK[$app]}" ]]       && str+="; Android ${SDK2VER[${PK_MINSDK[$app]}]}+"
-    [[ -n "${PK_TARGETSDK[$app]}" ]]    && str+="; targets Android ${SDK2VER[${PK_MINSDK[$app]}]}"
+    [[ -n "${PK_TARGETSDK[$app]}" ]]    && str+="; targets Android ${SDK2VER[${PK_TARGETSDK[$app]}]}"
     [[ -n "${PK_VERSION[$app]}" ]]      && tmpstring+="$(trthtd 'installed version' "${PK_VERSION[$app]} (${PK_VERSIONCODE[$app]}${str})")\n"
     [[ -n "${PK_SIGNINGVER[$app]}" ]]   && tmpstring+="$(trthtd 'signature scheme' "${PK_SIGNINGVER[$app]}")\n"
     [[ -n "${PK_IDS[$app]}" ]]          && tmpstring+="$(trthtd 'IDs' "${PK_IDS[$app]}")\n"
