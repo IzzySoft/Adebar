@@ -86,7 +86,7 @@ getDeviceInfo() {
   echo "$(heading 2 'Device and ROM properties' 'devprops')" >> "$devicedoc"
   echo "  <li>$(href '#devprops' 'Properties')</li>" >> "$devicehead"
   doProgress "   + checking for product details" 3
-  echo "$(tab_classopen 'block')" >> "$devicedoc"
+  echo "$(tab_classopen 'block' 'tab_prodinfo')" >> "$devicedoc"
   echo "$(trth2 'Product Info')" >> "$devicedoc"
   echo "$(trthtd 'Manufacturer' "${DEVPROP[ro.product.manufacturer]}")" >> "$devicedoc"                   # ro.product.manufacturer=Motorola
   echo "$(trthtd 'Model' "${DEVPROP[ro.product.model]} (${DEVPROP[ro.product.device]})")" >> "$devicedoc" # ro.product.model=A953 (ro.product.device=milestone2)
@@ -130,7 +130,7 @@ getDeviceInfo() {
     doProgress "   + checking for sensor details" 3
     copyAdbContent dumpsys_sensorservice "adb ${ADBOPTS} shell dumpsys sensorservice 2>/dev/null" "${tmp}"
     if [[ $(cat "${tmp}" | wc -l) -gt 1 ]]; then # make sure sensorservice is available
-      echo "$(tab_classopen 'block')" >> "$devicedoc"
+      echo "$(tab_classopen 'block' 'tab_sensors')" >> "$devicedoc"
       echo "$(trth2 'Sensors')" >> "$devicedoc"
       local -i lineno=0
       if [[ $DEVICE_SDKVER -lt 25 ]]; then  # Android 7 and below
@@ -163,7 +163,7 @@ getDeviceInfo() {
   fi
 
   doProgress "   + checking for OS details" 3
-  echo "$(tab_classopen 'block')" >> "$devicedoc"
+  echo "$(tab_classopen 'block' 'tab_osdetails')" >> "$devicedoc"
   echo "$(trth2 'OS details')" >> "$devicedoc"
   echo "$(trthtd 'SDK/Android version' "${DEVPROP[ro.build.version.sdk]}/${DEVPROP[ro.build.version.release]}")" >> "$devicedoc" # 16/4.1.2
   [[ -n "${DEVPROP[ro.modversion]}" ]] && echo "$(trthtd 'Mod' "${DEVPROP[ro.modversion]}")" >> "$devicedoc" # ro.modversion=10-20121228-NIGHTLY-milestone2
@@ -185,7 +185,7 @@ getDeviceInfo() {
     echo "$(heading 2 'Device features' 'devfeat')" >> "$devicedoc"
     echo "  <li>$(href '#devfeat' 'Features')</li>" >> "$devicehead"
     echo "<p><code>pm list features</code>: <sup><b>$(href "${WIKI_BASE}/DeviceInfo-explained#device-features" 'ⓘ' 'Wiki')</b></sup></p>" >> "$devicedoc"
-    echo "<details><summary>expand</summary>$(tab_classopen 'block')" >> "$devicedoc"
+    echo "<details><summary>expand</summary>$(tab_classopen 'block' 'tab_pmfeatures')" >> "$devicedoc"
     lineno=0
     for feature in $(getAdbContent pm_list_features "adb ${ADBOPTS} shell pm list features"); do
       feature=${feature//[$'\r\n']}
@@ -204,7 +204,7 @@ getDeviceInfo() {
     echo "  <li>$(href '#devstatus' 'Status')</li>" >> "$devicehead"
 
     doProgress "  + Battery status" 3
-    echo "$(tab_classopen 'block')" >> "$devicedoc"
+    echo "$(tab_classopen 'block' 'tab_batterystats')" >> "$devicedoc"
     echo "$(trth2 'Battery Status')" >> "$devicedoc"
     copyAdbContent dumpsys_battery "adb ${ADBOPTS} shell dumpsys battery" $tmp
     local battstat=(none unknown charging discharging "not charging" full)
@@ -229,7 +229,7 @@ getDeviceInfo() {
     if [[ ${MK_RADIO} -gt 0 ]]; then
       doProgress "  + Radio status" 3
       echo >> "$devicedoc"
-      echo "$(tab_classopen 'block')" >> "$devicedoc"
+      echo "$(tab_classopen 'block' 'tab_radiostats')" >> "$devicedoc"
       echo "$(trth2 'Radio Status')" >> "$devicedoc"
       [[ -n "${DEVPROP[gsm.version.baseband]}" ]]  && echo "$(trthtd 'Baseband' "${DEVPROP[gsm.version.baseband]}")" >> "$devicedoc"
       [[ -n "${DEVPROP[gsm.version.baseband1]}" ]] && echo "$(trthtd 'Baseband (SIM2)' "${DEVPROP[gsm.version.baseband1]}")" >> "$devicedoc"
@@ -275,7 +275,7 @@ getDeviceInfo() {
 
     if [[ -n "${DEVPROP[gsm.operator.alpha]}" ]]; then # Provider info
       doProgress "  + Provider info" 3
-      echo "$(tab_classopen 'block')" >> "$devicedoc"
+      echo "$(tab_classopen 'block' 'tab_providerinfo1')" >> "$devicedoc"
       if [[ -n "${DEVPROP[gsm.operator.alpha.2]}" ]]; then # Dual-SIM device
         echo "$(trth2 'Provider info (SIM1)')" >> "$devicedoc"
       else
@@ -292,7 +292,7 @@ getDeviceInfo() {
     if [[ -n "${DEVPROP[gsm.operator.alpha.2]}" ]]; then # Provider info 2nd SIM (Dual-SIM devices)
       doProgress "  + Provider info (SIM2)" 3
       echo >> "$devicedoc"
-      echo "$(tab_classopen 'block')" >> "$devicedoc"
+      echo "$(tab_classopen 'block' 'tab_providerinfo2')" >> "$devicedoc"
       echo "$(trth2 'Provider info (SIM2)')" >> "$devicedoc"
       echo "$(trthtd 'Mobile provider' "${DEVPROP[gsm.operator.alpha.2]}")" >> "$devicedoc"
       [[ -n "${DEVPROP[gsm.operator.iso-country.2]}" ]] && echo "$(trthtd 'Provider country' "${DEVPROP[gsm.operator.iso-country.2]}")" >> "$devicedoc"
@@ -304,7 +304,7 @@ getDeviceInfo() {
   fi
 
   doProgress "  + networking details" 3
-  echo "$(tab_classopen 'block')" >> "$devicedoc"
+  echo "$(tab_classopen 'block' 'tab_networkdetails')" >> "$devicedoc"
   echo "$(trth2 'Networking details')" >> "$devicedoc"
   if [[ -n "${DEVPROP[net.hostname]}" ]]; then
     echo "$(trthtd 'Hostname' "${DEVPROP[net.hostname]}")" >> "$devicedoc"
@@ -331,7 +331,7 @@ getDeviceInfo() {
 
   # Storage
   doProgress "  + storage details" 3
-  echo "$(tab_classopen 'block')" >> "$devicedoc"
+  echo "$(tab_classopen 'block' 'tab_storagedetails')" >> "$devicedoc"
   echo "$(trth2 "Storage details <sup><b>$(href "${WIKI_BASE}/DeviceInfo-explained#storage-details" 'ⓘ' 'Wiki')</b></sup>")" >> "$devicedoc"
   [[ -n "${DEVPROP[EXTERNAL_STORAGE_MOUNT]}" ]] && echo "$(trthtd 'Internal SD mount point' "${DEVPROP[EXTERNAL_STORAGE_MOUNT]}")" >> "$devicedoc"
   [[ -n "${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" ]] && echo "$(trthtd 'External SD mount point' "${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}")" >> "$devicedoc"
@@ -357,7 +357,7 @@ getDeviceInfo() {
   # SafetyNet (Android 5+)
   [[ -n "${DEVPROP[ro.boot.flash.locked]}" || -n "${DEVPROP[ro.boot.verifiedbootstate]}" || -n "${DEVPROP[ro.boot.veritymode]}" ]] && {
     doProgress "  + SafetyNet details" 3
-    echo "$(tab_classopen 'block')" >> "$devicedoc"
+    echo "$(tab_classopen 'block' 'tab_safetynetdetails')" >> "$devicedoc"
     echo "$(trth2 "SafetyNet <b><sup>$(href "${WIKI_BASE}/DeviceInfo-explained#safetynet" 'ⓘ' 'Wiki')</sup></b>")" >> "$devicedoc"
     [[ -n "${DEVPROP[ro.boot.flash.locked]}" ]] && {
       if [[ ${DEVPROP[ro.boot.flash.locked]} -eq 1 ]]; then echo "$(trthtd 'BootLoader' 'locked')" >> "$devicedoc"
@@ -387,7 +387,7 @@ getDeviceInfo() {
 
   # Misc
   doProgress "  + misc details" 3
-  echo "$(tab_classopen 'block')" >> "$devicedoc"
+  echo "$(tab_classopen 'block' 'tab_miscdetails')" >> "$devicedoc"
   echo "$(trth2 'Miscellaneous')" >> "$devicedoc"
   [[ -n "${DEVPROP[keyguard.no_require_sim]}" ]] && {
     if [[ "${DEVPROP[keyguard.no_require_sim]}" = "true" ]]; then echo "$(trthtd 'SIM required for operation' 'No')" >> "$devicedoc"
@@ -423,7 +423,7 @@ getDeviceInfo() {
   echo >> "$devicedoc"
   echo "$(heading 2 'Configured accounts' 'devaccounts')" >> "$devicedoc"
   echo "  <li>$(href '#devaccounts' 'Accounts')</li>" >> "$devicehead"
-  echo "$(tab_classopen 'block')" >> "$devicedoc"
+  echo "$(tab_classopen 'block' 'tab_accounts')" >> "$devicedoc"
   lineno=0
   OIFS="${IFS}"
   IFS="
@@ -438,7 +438,7 @@ getDeviceInfo() {
   echo "$(heading 2 "Android Backup Manager <b><sup>$(href "${WIKI_BASE}/DeviceInfo-explained#android-backup-manager" 'ⓘ' 'Wiki')</sup></b>" 'androidbackup')" >> "$devicedoc"
   echo "  <li>$(href '#androidbackup' 'Backup Manager')</li>" >> "$devicehead"
   echo " </ul></li>" >> "$devicehead"
-  echo "$(tab_classopen 'block')" >> "$devicedoc"
+  echo "$(tab_classopen 'block' 'tab_backupmanager')" >> "$devicedoc"
   echo "$(trthtd 'Backup Manager' "$(sed -rn 's/Backup Manager is (.*)/\1/p' "$tmp")")" >> "$devicedoc"
   echo "$(trthtd 'Auto-restore' "$(sed -rn 's/Auto-restore is (.+)/\1/p' "$tmp")")" >> "$devicedoc"
   echo "$(trthtd_ 'Backup destinations' "$(tab_classopen 'inner')")" >> "$devicedoc"

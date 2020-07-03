@@ -130,7 +130,8 @@ format_fsize() {
 }
 
 #
-# ---------------------------------------------------=[ HTML/Doc wrappers ]=--
+# ====================================================[ HTML/Doc wrappers ]===
+# ------------------------------------------------------------=[ Headings ]=--
 # Create an HTML heading. Params: level (1-6), title [, id]
 function heading() {
   if [[ -n "$3" ]]; then
@@ -140,9 +141,14 @@ function heading() {
   fi
 }
 
+# --------------------------------------------------------------=[ Tables ]=--
 # Opening tag for a table. Param: css_class_name
 function tab_classopen() {
-  echo "<table class='${1}'>"
+  if [[ -n "$2" ]]; then
+    echo "<table class='${1}' id='${2}'>"
+  else
+    echo "<table class='${1}'>"
+  fi
 }
 
 # Closing tag for a table
@@ -176,6 +182,7 @@ function _tdtr() {
   echo "</td></tr>"
 }
 
+# ----------------------------------------------------------=[ Hyperlinks ]=--
 # Hyperlink. Parameters: url [, name [, title]]
 function href() {
   if [[ -n "$3" ]]; then
