@@ -26,7 +26,7 @@ As a side-effect, *Adebar* generates a „report“ (or „short documentation�
 * a [Markdown][2] file listing all user-installed apps with their sources you've installed them from (e.g. *Google Play*, *F-Droid*, *Aptoide*), date of first install/last update, installed version, and more (see [example `userApps.md` in the Wiki](https://codeberg.org/izzy/Adebar/wiki/example-userApps.md)).
 * a [Markdown][2] file with some general device documentation (see above – and the [example `deviceInfo.md` in the wiki](https://codeberg.org/izzy/Adebar/wiki/example-deviceInfo.md)).
 
-![Adebar-created files](https://codeberg.org/izzy/Adebar/wiki/AdebarFiles.png)
+![Adebar-created files](https://codeberg.org/izzy/Adebar/wiki/raw/AdebarFiles.png)
 
 Optionally, if you have the PHP [CLI](https://en.wikipedia.org/wiki/Command-line_interface "Wikipedia: Command-line interface") available on your computer, you can parse the `packages.xml` with provided PHP scripts, located in the `tools/` directory. This directory also includes a shell script to convert ADB backup files into `.tar.gz` archives (`ab2tar`; requires `openssl`) – and another one if you have issues restoring ADB backups on Android 7 or higher (`abrestore`; if your device is affected by the ADB restore bug, only restoring backups of apps already installed on the device).
 
