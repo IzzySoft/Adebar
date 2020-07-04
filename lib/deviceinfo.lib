@@ -33,13 +33,19 @@ print_radiostat() {
     if [[ "${mradio[mDataConnectionPossible]}" = "false" ]]; then
       echo "$(trthtd 'Data connection possible' "${mradio[mDataConnectionPossible]} (${mradio[mDataConnectionReason]})")" >> "$devicedoc"
     else
-      echo "$(trthtd 'Data connection possible' "${mradio[mDataConnectionPossible]}")" >> "$devicedoc"
+      [[ -n "${mradio[mDataConnectionPossible]}" ]] && echo "$(trthtd 'Data connection possible' "${mradio[mDataConnectionPossible]}")" >> "$devicedoc"
       left="${mradio[mDataActivity]}"
       echo "$(trthtd 'Data activity' "${mradio[mDataActivity]} (${dataactivity[${mradio[mDataActivity]}]})")" >> "$devicedoc"
-      if [[ -n "${mradio[mDataConnectionState]}" ]]; then
+      if [[ -n "${mradio[mDataConnectionState]}" && "${mradio[mDataConnectionState]}" != "-1" ]]; then
         echo "$(trthtd 'Data connection state' "${mradio[mDataConnectionState]} (${dataconnectionstate[${mradio[mDataConnectionState]}]})")" >> "$devicedoc"
+        [[ "${mradio[mDataActivity]}" -lt 4 ]] && { # not dormant
+          echo "$(trthtd 'Data connection link properties' "${mradio[mDataConnectionLinkProperties]#=*}")" >> "$devicedoc"
+          echo "$(trthtd 'Data connection network capabilities' "${mradio[mDataConnectionNetworkCapabilities]#=*}")" >> "$devicedoc"
+        }
       elif [[ -n "${mradio[mActiveDataConnectionState]}" ]]; then
         echo "$(trthtd 'Data connection state' "${mradio[mActiveDataConnectionState]} (${dataconnectionstate[${mradio[mActiveDataConnectionState]}]})")" >> "$devicedoc"
+      else
+        echo "$(trthtd 'Data connection state' 'unknown')" >> "$devicedoc"
       fi
       [[ -n "${mradio[mDataConnectionApn]}" ]] && echo "$(trthtd 'Current APN' "${mradio[mDataConnectionApn]}")" >> "$devicedoc"
     fi
@@ -149,7 +155,7 @@ getDeviceInfo() {
         done < "${tmp}"
       else # SDK 25+/Android 7.1+ (output format of "dumpsys sensorservice" changed)
         cat "${tmp}" |grep -E -A99999 "^Sensor List:" |grep -E -B99999 "^Fusion States:" > $tmp2
-        re="0[x0-9][0-9]+\)\s+([^|]+)\|\s*([^|]+)"
+        re="0[x0-9a-f][0-9a-f]+\)\s+([^|]+)\|\s*([^|]+)"
         while read zeile; do
           [[ $zeile =~ $re ]] && {
             lineno+=1
@@ -172,8 +178,11 @@ getDeviceInfo() {
   echo "$(trthtd 'Fingerprint' "${DEVPROP[ro.build.fingerprint]}")" >> "$devicedoc" # MOTO/A953_O2DE/milestone2:2.3.6/4.5.1-134_DFP-132/1317968148:user/release-keys
   [[ -n "${DEVPROP[ro.build.version.security_patch]}" ]] && echo "$(trthtd 'Security Patch Level' "${DEVPROP[ro.build.version.security_patch]}")" >> "$devicedoc" # 2019-12-05
   [[ "$(getAdbContent whence_uname "adb ${ADBOPTS} shell whence uname")" ]] && echo "$(trthtd 'Kernel' "$(getAdbContent uname-r "adb ${ADBOPTS} shell uname -r")")" >> "$devicedoc" || echo "$(trthtd 'Kernel' "$(getAdbContents uname-r "adb ${ADBOPTS} shell busybox uname -r")")" >> "$devicedoc"
-  echo "$(trthtd 'Factory language' "${DEVPROP[ro.product.locale.language]}_${DEVPROP[ro.product.locale.region]}")" >> "$devicedoc" # en_US
-  echo "$(trthtd 'Configured language' "${DEVPROP[persist.sys.language]}_${DEVPROP[persist.sys.country]}")" >> "$devicedoc" # de_DE
+  if [[ -n "${DEVPROP[ro.product.locale.language]}" ]]; then left="${DEVPROP[ro.product.locale.language]}"; else left="${DEVPROP[ro.product.locale]}"; fi
+  if [[ -n "${DEVPROP[ro.product.locale.region]}" ]]; then righ="${DEVPROP[ro.product.locale.region]}"; else right="${DEVPROP[ro.csc.country_code]}"; fi
+  echo "$(trthtd 'Factory language' "${left}_${right}")" >> "$devicedoc" # en_US
+  if [[ -n "${DEVPROP[persist.sys.language]}" ]]; then left="${DEVPROP[persist.sys.language]}"; else left="${DEVPROP[persist.sys.locale]}"; fi
+  echo "$(trthtd 'Configured language' "${left}_${DEVPROP[persist.sys.country]}")" >> "$devicedoc" # de_DE
   echo "$(trthtd 'Configured timezone' "${DEVPROP[persist.sys.timezone]}")" >> "$devicedoc" # Europe/Berlin
   echo "$(tab_close)" >> "$devicedoc"
   echo >> "$devicedoc"
@@ -184,7 +193,7 @@ getDeviceInfo() {
     echo  >> "$devicedoc"
     echo "$(heading 2 'Device features' 'devfeat')" >> "$devicedoc"
     echo "  <li>$(href '#devfeat' 'Features')</li>" >> "$devicehead"
-    echo "<p><code>pm list features</code>: <sup><b>$(href "${WIKI_BASE}/DeviceInfo-explained#device-features" 'ⓘ' 'Wiki')</b></sup></p>" >> "$devicedoc"
+    echo "<p><code>pm list features</code>: <sup><b>$(href "${WIKI_BASE}/DeviceInfo-explained#user-content-device-features" 'ⓘ' 'Wiki')</b></sup></p>" >> "$devicedoc"
     echo "<details><summary>expand</summary>$(tab_classopen 'block' 'tab_pmfeatures')" >> "$devicedoc"
     lineno=0
     for feature in $(getAdbContent pm_list_features "adb ${ADBOPTS} shell pm list features"); do
@@ -234,7 +243,7 @@ getDeviceInfo() {
       [[ -n "${DEVPROP[gsm.version.baseband]}" ]]  && echo "$(trthtd 'Baseband' "${DEVPROP[gsm.version.baseband]}")" >> "$devicedoc"
       [[ -n "${DEVPROP[gsm.version.baseband1]}" ]] && echo "$(trthtd 'Baseband (SIM2)' "${DEVPROP[gsm.version.baseband1]}")" >> "$devicedoc"
       [[ -n "${DEVPROP[gsm.version.ril-impl]}" ]]  && {
-        if [[ -n "${DEVPROP[rild.libpath]}" ]]; then echo "$(trthtd 'RIL' "${DEVPROP[gsm.version.ril-impl]} (\`${DEVPROP[rild.libpath]}\`)")" >> "$devicedoc"
+        if [[ -n "${DEVPROP[rild.libpath]}" ]]; then echo "$(trthtd 'RIL' "${DEVPROP[gsm.version.ril-impl]} (<code>${DEVPROP[rild.libpath]}</code>)")" >> "$devicedoc"
         else echo "$(trthtd 'RIL' "${DEVPROP[gsm.version.ril-impl]}")" >> "$devicedoc"
         fi
       }
@@ -244,8 +253,8 @@ getDeviceInfo() {
       grep "=" $tmp2 > $tmp
       local callstate=(idle ringing off-hook)
       local servicestate=(service "out of service" "emergency only" "powered off")
-      local dataactivity=(none in out inout)
-      local dataconnectionstate=(disconnected connecting connected suspended)
+      local dataactivity=(none in out inout dormant)
+      local dataconnectionstate=(disconnected connecting connected suspended disconnecting)
       local phoneid=0
       local vname
       while IFS='' read zeile; do
@@ -332,7 +341,7 @@ getDeviceInfo() {
   # Storage
   doProgress "  + storage details" 3
   echo "$(tab_classopen 'block' 'tab_storagedetails')" >> "$devicedoc"
-  echo "$(trth2 "Storage details <sup><b>$(href "${WIKI_BASE}/DeviceInfo-explained#storage-details" 'ⓘ' 'Wiki')</b></sup>")" >> "$devicedoc"
+  echo "$(trth2 "Storage details <sup><b>$(href "${WIKI_BASE}/DeviceInfo-explained#user-content-storage-details" 'ⓘ' 'Wiki')</b></sup>")" >> "$devicedoc"
   [[ -n "${DEVPROP[EXTERNAL_STORAGE_MOUNT]}" ]] && echo "$(trthtd 'Internal SD mount point' "${DEVPROP[EXTERNAL_STORAGE_MOUNT]}")" >> "$devicedoc"
   [[ -n "${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}" ]] && echo "$(trthtd 'External SD mount point' "${DEVPROP[EXTERNAL_ADD_STORAGE_MOUNT]}")" >> "$devicedoc"
   [[ -n "${DEVPROP[ro.crypto.fuse_sdcard]}" ]] && echo "$(trthtd 'Internal SD via FUSE' "${DEVPROP[ro.crypto.fuse_sdcard]}")" >> "$devicedoc"
@@ -341,13 +350,16 @@ getDeviceInfo() {
   [[ ${MK_PARTINFO} -gt 0 ]] && writePartInfo "$devicedoc"
   echo "$(trthtd_ 'Disk statistics' "$(tab_classopen 'inner')")" >> "$devicedoc"
   copyAdbContent dumpsys_diskstats "adb ${ADBOPTS} shell dumpsys diskstats" ${tmp}
-  re="(App|App Cache|Photos|Videos|Audio|Downloads|System|Other)( Size:)\s*([0-9]+)"
+  re="(App|App Cache|App Data|Photos|Videos|Audio|Downloads|System|Other)( Size):\s*([0-9]+)"
+  re2="(.+):\s*(.+)"
   while read zeile; do
     [[ "$zeile" =~ ^(Package Names:|App Sizes:|Cache Sizes:|App Data Sizes:) ]] && continue # 1-3 added w/ Android 7.1, 4 w/ Oreo
     if [[ "${zeile}" =~ $re ]]; then
-      echo "  $(trth2 "${BASH_REMATCH[1]}${BASH_REMATCH[2]}" "$((${BASH_REMATCH[3]} /1024/1024)) MiB")" >> "$devicedoc"
+      echo "  $(trthtd "${BASH_REMATCH[1]}${BASH_REMATCH[2]}" "$((${BASH_REMATCH[3]} /1024/1024)) MiB")" >> "$devicedoc"
+    elif [[ "${zeile}" =~ $re2 ]]; then
+      echo "  $(trthtd "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}")" >> "$devicedoc"
     else
-      echo -e "  $(trth2 "${zeile/// }" '')" >> "$devicedoc"
+      echo -e "  $(trthtd "${zeile/// }" '')" >> "$devicedoc"
     fi
   done < ${tmp}
   echo " $(tab_close)$(_tdtr)" >> "$devicedoc"
@@ -358,7 +370,7 @@ getDeviceInfo() {
   [[ -n "${DEVPROP[ro.boot.flash.locked]}" || -n "${DEVPROP[ro.boot.verifiedbootstate]}" || -n "${DEVPROP[ro.boot.veritymode]}" ]] && {
     doProgress "  + SafetyNet details" 3
     echo "$(tab_classopen 'block' 'tab_safetynetdetails')" >> "$devicedoc"
-    echo "$(trth2 "SafetyNet <b><sup>$(href "${WIKI_BASE}/DeviceInfo-explained#safetynet" 'ⓘ' 'Wiki')</sup></b>")" >> "$devicedoc"
+    echo "$(trth2 "SafetyNet <b><sup>$(href "${WIKI_BASE}/DeviceInfo-explained#user-content-safetynet" 'ⓘ' 'Wiki')</sup></b>")" >> "$devicedoc"
     [[ -n "${DEVPROP[ro.boot.flash.locked]}" ]] && {
       if [[ ${DEVPROP[ro.boot.flash.locked]} -eq 1 ]]; then echo "$(trthtd 'BootLoader' 'locked')" >> "$devicedoc"
       elif [[ ${DEVPROP[ro.boot.flash.locked]} -eq 0 ]]; then echo "$(trthtd 'BootLoader' 'unlocked (SafetyNet FAIL)')" >> "$devicedoc"
@@ -435,7 +447,7 @@ getDeviceInfo() {
   echo "$(tab_close)" >> "$devicedoc"
 
   echo >> "$devicedoc"
-  echo "$(heading 2 "Android Backup Manager <b><sup>$(href "${WIKI_BASE}/DeviceInfo-explained#android-backup-manager" 'ⓘ' 'Wiki')</sup></b>" 'androidbackup')" >> "$devicedoc"
+  echo "$(heading 2 "Android Backup Manager <b><sup>$(href "${WIKI_BASE}/DeviceInfo-explained#user-content-android-backup-manager" 'ⓘ' 'Wiki')</sup></b>" 'androidbackup')" >> "$devicedoc"
   echo "  <li>$(href '#androidbackup' 'Backup Manager')</li>" >> "$devicehead"
   echo " </ul></li>" >> "$devicehead"
   echo "$(tab_classopen 'block' 'tab_backupmanager')" >> "$devicedoc"
