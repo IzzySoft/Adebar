@@ -213,7 +213,7 @@ getDeviceInfo() {
     echo "  <li>$(href '#devstatus' 'Status')</li>" >> "$devicehead"
 
     doProgress "  + Battery status" 3
-    echo "$(tab_classopen 'block' 'tab_batterystats')" >> "$devicedoc"
+    echo "$(tab_classopen 'block' 'tab_batterystatus')" >> "$devicedoc"
     echo "$(trth2 'Battery Status')" >> "$devicedoc"
     copyAdbContent dumpsys_battery "adb ${ADBOPTS} shell dumpsys battery" $tmp
     local battstat=(none unknown charging discharging "not charging" full)
@@ -238,7 +238,7 @@ getDeviceInfo() {
     if [[ ${MK_RADIO} -gt 0 ]]; then
       doProgress "  + Radio status" 3
       echo >> "$devicedoc"
-      echo "$(tab_classopen 'block' 'tab_radiostats')" >> "$devicedoc"
+      echo "$(tab_classopen 'block' 'tab_radiostatus')" >> "$devicedoc"
       echo "$(trth2 'Radio Status')" >> "$devicedoc"
       [[ -n "${DEVPROP[gsm.version.baseband]}" ]]  && echo "$(trthtd 'Baseband' "${DEVPROP[gsm.version.baseband]}")" >> "$devicedoc"
       [[ -n "${DEVPROP[gsm.version.baseband1]}" ]] && echo "$(trthtd 'Baseband (SIM2)' "${DEVPROP[gsm.version.baseband1]}")" >> "$devicedoc"

@@ -39,7 +39,6 @@ td { background-color:#f5f5f5; }
     position: absolute;
     z-index: 99;
   }
-  td.inner { word-break:break-all; }
 }
 
 
@@ -47,9 +46,10 @@ td { background-color:#f5f5f5; }
 /* Adebar */
 h1,h2,h3,h4,h5 { color:#000bff; }
 table + h1, table + h2, table + h3, table + h4, table + h5 { clear:both; }
-table.block, #content table apps { margin-bottom:1em; margin-right:.5em; }
-table.block { float:left; }
-th, #content td { font-size:12px; }
+table.block, table apps { margin-bottom:1em; margin-right:.5em; }
+table.block { float:inline-start; }
+#tab_networkdetails + #tab_storagedetails { float:inline-end; clear:left; }
+th, td { font-size:12px; }
 th { text-align:right; background-color:lightskyblue; padding-right:.5em; }
 th.title { text-align:center; }
 th.left { text-align:left; }
@@ -62,5 +62,7 @@ p.date_info { margin-top:-13px; font-size:11px !important; }
 details ul { padding-inline-start:20px; }
 summary + ul { margin-top:0; margin-bottom:0; }
 @media (max-width: 800px) {
-  table.block { float:none; }
+  table.block, #tab_networkdetails + #tab_storagedetails { float:none; clear:none; }
+  table.inner th { word-break:break-all; }
+  #tab_storagedetails > tbody > tr > th { max-width: -moz-min-content; }
 }
