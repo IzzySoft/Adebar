@@ -1,0 +1,67 @@
+# Sample configuration file for a "quick start"
+# (without too many "confusing" details; for a config with all options contained
+# and explained, please see "config.sample")
+#
+# This example config only mentions the most essential settings you will need
+# (or want) to change. Copy it to "../config/<name>" and adjust at least:
+#
+# * STORAGE_BASE: root directory of where all output shall be placed
+# * DEVICE_NAME : How your device should be named, e.g. "BQAquaris"
+#                 (spaces are permitted)
+# * if your device is rooted, ajust the two ROOT_ settings
+# * inside the example postrun function, adjust WEBDIR and TPLDIR
+#
+# That done, attach your ADB-enabled device and call
+#   ./adebar-cli <name>
+# passing adebar-cli the name you gave your config file. Once Adebar successfully
+# completed its run, you should find adebar.css and <DEVICE_NAME>.html in the
+# specified WEBDIR – and everything else below STORAGE_BASE.
+#
+# For a detailed description, please refer to the corresponding Wiki page:
+# https://codeberg.org/izzy/Adebar/wiki/Configuration
+
+# ------------------------=[ directories ]=--
+# base below which all output (scripts and real backups) are placed
+STORAGE_BASE=
+
+# -------------------=[ device specifics ]=--
+# Give you device a name you can understand
+DEVICE_NAME="MyDroid"
+
+# -------------------------------=[ Misc ]=--
+# Script to call when finished
+POSTRUN_CMD="uf_postrun"
+# If your device is rooted, but the ADB daemon does not run in root mode, set this to 1
+ROOT_COMPAT=0
+# Run "pm disable" and "pm enable" command as root?
+ROOT_PMDISABLE=0
+
+# ------------=[ Example postrun function ]=--
+# to avoid possible collisions with functions defined by Adebar itself, use
+# the "uf_" ("user function") prefix for your own functions
+# This example function glues the files from the created doc/ directory
+# to one file in your web tree, the file name based on your DEVICE_NAME
+# setting, using the default templates shipping with Adebar (make sure to
+# adjust WEBDIR and TPLDIR accordingly when using this):
+uf_postrun() {
+  local WEBDIR="/var/www/docs"
+  local TPLDIR="/home/johnny/adebar/templates/default"
+  cp "${TPLDIR}/head.html" "${WEBDIR}/${DEVICE_NAME}.md"
+  echo >> "${WEBDIR}/${DEVICE_NAME}.md"
+  cat "${TPLDIR}/tocopen.html" >> "${WEBDIR}/${DEVICE_NAME}.md"
+  cat "${OUTDIR}/docs/deviceInfo.head" >> "${WEBDIR}/${DEVICE_NAME}.md"
+  cat "${OUTDIR}/docs/apps.head" >> "${WEBDIR}/${DEVICE_NAME}.md"
+  cat "${TPLDIR}/tocclose.html" >> "${WEBDIR}/${DEVICE_NAME}.md"
+  echo >> "${WEBDIR}/${DEVICE_NAME}.md"
+  cat "${OUTDIR}/docs/deviceInfo.md" >> "${WEBDIR}/${DEVICE_NAME}.md"
+  echo >> "${WEBDIR}/${DEVICE_NAME}.md"
+  echo "<h1 id='apps'>Apps</h1>" >> "${WEBDIR}/${DEVICE_NAME}.md"
+  cat "${OUTDIR}/docs/userApps.md" >> "${WEBDIR}/${DEVICE_NAME}.md"
+  [[ -f "${OUTDIR}/docs/sysApps.md" ]] && {
+    echo >> "${WEBDIR}/${DEVICE_NAME}.md"
+    cat "${OUTDIR}/docs/sysApps.md" >> "${WEBDIR}/${DEVICE_NAME}.md"
+  }
+  cat "${TPLDIR}/foot.html" >> "${WEBDIR}/${DEVICE_NAME}.md"
+  mv "${WEBDIR}/${DEVICE_NAME}.md" "${WEBDIR}/${DEVICE_NAME}.html"
+  cp "${TPLDIR}/adebar.css" "${WEBDIR}"
+}

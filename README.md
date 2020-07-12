@@ -42,6 +42,10 @@ Most of them should already be obvious from above description. Nevertheless, all
 * some features require root on the Android device
 
 
+## QuickStart
+To get started without too much hazzle, please see `doc/quickstart_config.sample`. Basically, you just copy that file to `config/` (giving it a name of your choice), adjust 4 to 6 settings to reflect your device plus directory structure, and you're ready-to-go.
+
+
 ## More details
 A documentation describing steps for installation, configuration, usage, and more can be found in [the project wiki][3].
 
