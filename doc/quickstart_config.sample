@@ -47,6 +47,8 @@ uf_postrun() {
   local WEBDIR="/var/www/docs"
   local TPLDIR="/home/johnny/adebar/templates/default"
   cp "${TPLDIR}/head.html" "${WEBDIR}/${DEVICE_NAME}.md"
+  sed -i "s/__DEVICE_NAME__/${DEVICE_NAME}/" "${WEBDIR}/${DEVICE_NAME}.md"
+  sed -i "s/__DATE__/$(date +'%Y-%m-%d')/" "${WEBDIR}/${DEVICE_NAME}.md"
   echo >> "${WEBDIR}/${DEVICE_NAME}.md"
   cat "${TPLDIR}/tocopen.html" >> "${WEBDIR}/${DEVICE_NAME}.md"
   cat "${OUTDIR}/docs/deviceInfo.head" >> "${WEBDIR}/${DEVICE_NAME}.md"
