@@ -26,7 +26,7 @@ As a side-effect, *Adebar* generates a „report“ (or „short documentation�
 * a [HTML][2] file listing all user-installed apps with their sources you've installed them from (e.g. *Google Play*, *F-Droid*, *Aptoide*), date of first install/last update, installed version, and more – plus the same for the (pre-installed) system apps.
 * a [HTML][2] file with some general device documentation.
 
-Those three HTML files still have a `.md` file extension for historical reasons (before v2.0.0, they were created using [Markdown][4]). They are not complete HTML documents (no header, no footer); the example configuration in `doc/` has a user-function `uf_postrun()` taking care to assemble the pieces into one file which then will be a valid HTML document and thus have an `.html` file extension.
+Those three HTML files still have a `.md` file extension for historical reasons (before v2.0.0, they were created using [Markdown][4]). They are not complete HTML documents (no header, no footer); the example configuration in `doc/` has a user-function `uf_postrun()` taking care to assemble the pieces into one file which then will be a valid HTML document and thus have an `.html` file extension. Some examples of such "assembled device documentation pages" can be [found here](https://pages.codeberg.org/izzy/adebar/).
 
 ![Adebar-created files](https://codeberg.org/izzy/Adebar/wiki/raw/AdebarFiles.png)
 
