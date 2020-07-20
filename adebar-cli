@@ -306,7 +306,11 @@ initAppLists() {
   done
 
   doProgress "- systemApps" 2
-  apps=$(getAdbContent pm_list_packages_s "adb ${ADBOPTS} shell pm list packages -s 2>/dev/null")
+  if [[ $DEVICE_SDKVER -lt 8 ]]; then   # on Eclair, "pm list packages" only knows of "-f" so no distinction of user/system
+    apps=$(getAdbContent pm_list_packages "adb ${ADBOPTS} shell pm list packages 2>/dev/null")
+  else
+    apps=$(getAdbContent pm_list_packages_s "adb ${ADBOPTS} shell pm list packages -s 2>/dev/null")
+  fi
   for app in $apps; do
     if [[ "${app}" =~ ^package: ]]; then
       app=${app//[$'\t\r\n']}
