@@ -115,8 +115,12 @@ getDeviceInfo() {
     serial="$(grep -i "device id" "${tmp}" | awk '{print $NF}' | sed 's/\r//g')"
   }
   [[ -z "$serial" ]] && { # https://stackoverflow.com/a/27003016/2533433 (iphonesubinfo 1-3 seem identical, but 3 is explicitly getImeiForSubscriber)
-    serial="$(getAdbContent serviceCall_iphonesubinfo_3 "adb $ADBOPTS shell service call iphonesubinfo 3 | awk -F \"'\" '{print \$2}' | sed '1 d' | tr -d '.' | awk '{print}' ORS=")"
-    serial="$(trim $serial)"
+    serial="$(getAdbContent serviceCall_iphonesubinfo_3 "adb $ADBOPTS shell service call iphonesubinfo 3")"
+    [[ ${#serial} -gt 30 ]] && {    # DummyDevices already do the cleanup on creation
+      echo "$serial" | awk -F "'" '{print $2}' | sed '1 d' | tr -d '.' | awk '{print}' ORS= > $tmp2
+      serial="$(cat $tmp2)"
+      serial="$(trim $(cat $tmp2))"
+    }
   }
   [[ -n "$serial" ]] && echo "$(trthtd 'IMEI' "$serial")" >> "$devicedoc"
   [[ -n "${DEVPROP[ro.board.platform]}" ]] && echo "$(trthtd 'Platform' "${DEVPROP[ro.board.platform]}")" >> "$devicedoc" # omap3
