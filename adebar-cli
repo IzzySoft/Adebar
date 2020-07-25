@@ -50,6 +50,7 @@ PULL_SETTINGS=1
 MK_TIBU=0
 MK_USERAPPS=1
 MK_SYSAPPS=1
+MK_UNINSTAPPS=1
 MK_SYSAPPS_RETRIEVE_NAMES=0
 MK_INSTALLLOC=1
 MK_DEVICEINFO=1
@@ -285,7 +286,8 @@ DEVICE_SDKVER=${DEVICE_SDKVER//[$'\t\r\n']}
 
 declare -a userApps # list of package names
 declare -a sysApps
-declare -a dApps
+declare -a disApps
+declare -a uninstApps
 
 
 #
@@ -318,14 +320,25 @@ initAppLists() {
     fi
   done
 
-  doProgress "- checking for uninstalled apps remembered by the system" 2
+  doProgress "- disabled apps" 2    # disabled only; they are also included with "list [-s]"; in package data they have enabled=3 for the user
+  apps=$(getAdbContent pm_list_packages_d "adb ${ADBOPTS} shell pm list packages -d 2>/dev/null")
+  for app in $apps; do
+    if [[ "${app}" =~ ^package: ]]; then
+      app=${app//[$'\t\r\n']}
+      disApps+=(${app##*:})
+      doProgress "  + ${app##*:}" 4
+    fi
+  done
+
+  # uninstalled is obviously per-user ("pm uninstall --user 0 <packageName>")
+  doProgress "- uninstalled apps" 2 # installed=false enabled=0 for the given user in package data
   apps=$(getAdbContent pm_list_packages_u "adb ${ADBOPTS} shell pm list packages -u 2>/dev/null")
   for app in $apps; do
     if [[ "${app}" =~ ^package: ]]; then
       app=${app//[$'\t\r\n']}
       in_array "${app##*:}" ${sysApps[@]} && continue
       in_array "${app##*:}" ${userApps[@]} && continue
-      dApps+=($app)
+      uninstApps+=(${app##*:})
       doProgress "  + ${app##*:}" 4
     fi
   done

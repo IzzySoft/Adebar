@@ -78,10 +78,11 @@ MK_XPRIVACY_PULL=0
 PULL_SETTINGS=1
 # create the script to pull stuff from the TiBu web server
 MK_TIBU=0
-# process package information via dumpsys and generate userApps.md/sysApps.md
+# process package information via dumpsys and generate userApps.md/sysApps.md/uninstApps.md
 MK_USERAPPS=1
 MK_SYSAPPS=0
 MK_SYSAPPS_RETRIEVE_NAMES=0
+MK_UNINSTAPPS=1
 # deal with the default-install-location (where apps should be installed)
 MK_INSTALLLOC=1
 # Create deviceInfo.md
@@ -172,6 +173,10 @@ uf_postrun() {
   [[ -f "${OUTDIR}/docs/sysApps.md" ]] && {
     echo >> "${WEBDIR}/${DEVICE_NAME}.md"
     cat "${OUTDIR}/docs/sysApps.md" >> "${WEBDIR}/${DEVICE_NAME}.md"
+  }
+  [[ -f "${OUTDIR}/docs/uninstApps.md" ]] && {
+    echo >> "${WEBDIR}/${DEVICE_NAME}.md"
+    cat "${OUTDIR}/docs/uninstApps.md" >> "${WEBDIR}/${DEVICE_NAME}.md"
   }
   cat "${TPLDIR}/foot.html" >> "${WEBDIR}/${DEVICE_NAME}.md"
   mv "${WEBDIR}/${DEVICE_NAME}.md" "${WEBDIR}/${DEVICE_NAME}.html"

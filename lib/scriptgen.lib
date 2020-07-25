@@ -13,7 +13,7 @@
 getDisabled() {
   [[ $MK_APPDISABLE -ne 1 ]] && return
 
-  doProgress "Obtaining list of disabled apps"
+  doProgress "Creating script to disable apps currently disabled"
 
   if [[ $DEVICE_SDKVER -gt 20 ]]; then  # Android 5.0+
     local disableCmd="hide"
@@ -24,17 +24,26 @@ getDisabled() {
   echo "#!${BASH_LOCATION}" > "${scriptname}"
   echo "# Disabled apps for ${DEVICE_NAME} as of $(date '+%Y-%m-%d %H:%M')" >> "${scriptname}"
   echo -e "#\n# Check carefully before executing. Not all of those have been disabled by you :)\n#\n" >> "${scriptname}"
-  echo -e "#\n# Disabled apps\n#\n" >> "${scriptname}"
-  for app in $(getAdbContent pm_list_packages_d "adb ${ADBOPTS} shell ''pm list packages -d 2>/dev/null''"); do
-    if [[ "${app}" =~ ^package: ]]; then
-      app=${app//[$'\t\r\n']}
+
+  [[ ${#disApps} -ne 0 ]] && {      # Disabled apps
+    echo -e "#\n# Disabled apps\n#\n" >> "${scriptname}"
+    for app in ${disApps[*]}; do
       if [[ $ROOT_PMDISABLE -eq 0 ]]; then
         echo "adb ${ADBOPTS} shell \"pm ${disableCmd} ${app##*:}\"" >> "${scriptname}"
       else
         echo "adb ${ADBOPTS} shell \"su -c 'pm ${disableCmd} ${app##*:}'\"" >> "${scriptname}"
       fi
-    fi
-  done
+    done
+  }
+
+  [[ ${#uninstApps} -ne 0 ]] && {   # Uninstalled apps
+    echo -e "\n\n#\n# Uninstall Bloatware\n#" >> "${scriptname}"
+    echo -e "# commented lines can be used to re-install\n#" >> "${scriptname}"
+    for app in ${uninstApps[*]}; do
+      echo "adb ${ADBOPTS} shell \"pm uninstall --user 0 ${app}\"" >> "${scriptname}"
+      echo "# adb ${ADBOPTS} shell \"pm install-existing ${app}\"" >> "${scriptname}"
+    done
+  }
 
   [[ $((${MK_USERAPPS} + ${MK_SYSAPPS})) -ne 0 ]] && return     # faster done over there :)
 

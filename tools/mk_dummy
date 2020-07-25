@@ -46,7 +46,7 @@ adb ${ADBOPTS} shell "getprop ro.build.version.sdk" > $dummy/getprop_ro.build.ve
 adb ${ADBOPTS} shell pm list packages -3 2>/dev/null > $dummy/pm_list_packages_3
 adb ${ADBOPTS} shell pm list packages -s 2>/dev/null > $dummy/pm_list_packages_s
 adb ${ADBOPTS} shell pm list packages -u 2>/dev/null > $dummy/pm_list_packages_u
-
+adb ${ADBOPTS} shell pm list packages -d 2>/dev/null > $dummy/pm_list_packages_d
 
 #
 # --=[ deviceinfo.lib ]=--
