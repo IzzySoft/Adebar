@@ -50,6 +50,7 @@ PULL_SETTINGS=1
 MK_TIBU=0
 MK_USERAPPS=1
 MK_SYSAPPS=1
+MK_DISAPPS=1
 MK_UNINSTAPPS=1
 MK_SYSAPPS_RETRIEVE_NAMES=0
 MK_INSTALLLOC=1
@@ -307,6 +308,16 @@ initAppLists() {
     fi
   done
 
+  doProgress "- disabled apps" 2    # disabled only; they are also included with "list [-s]"; in package data they have enabled=3 for the user
+  apps=$(getAdbContent pm_list_packages_d "adb ${ADBOPTS} shell pm list packages -d 2>/dev/null")
+  for app in $apps; do
+    if [[ "${app}" =~ ^package: ]]; then
+      app=${app//[$'\t\r\n']}
+      disApps+=(${app##*:})
+      doProgress "  + ${app##*:}" 4
+    fi
+  done
+
   doProgress "- systemApps" 2
   if [[ $DEVICE_SDKVER -lt 8 ]]; then   # on Eclair, "pm list packages" only knows of "-f" so no distinction of user/system
     apps=$(getAdbContent pm_list_packages "adb ${ADBOPTS} shell pm list packages 2>/dev/null")
@@ -316,17 +327,8 @@ initAppLists() {
   for app in $apps; do
     if [[ "${app}" =~ ^package: ]]; then
       app=${app//[$'\t\r\n']}
+      [[ $MK_DISAPPS -ne 0 ]] && in_array "${app##*:}" ${disApps[@]} && continue    # skip disabled apps when separate list was requested
       sysApps+=(${app##*:})
-    fi
-  done
-
-  doProgress "- disabled apps" 2    # disabled only; they are also included with "list [-s]"; in package data they have enabled=3 for the user
-  apps=$(getAdbContent pm_list_packages_d "adb ${ADBOPTS} shell pm list packages -d 2>/dev/null")
-  for app in $apps; do
-    if [[ "${app}" =~ ^package: ]]; then
-      app=${app//[$'\t\r\n']}
-      disApps+=(${app##*:})
-      doProgress "  + ${app##*:}" 4
     fi
   done
 

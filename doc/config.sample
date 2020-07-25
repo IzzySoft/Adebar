@@ -82,6 +82,7 @@ MK_TIBU=0
 MK_USERAPPS=1
 MK_SYSAPPS=0
 MK_SYSAPPS_RETRIEVE_NAMES=0
+MK_DISAPPS=1
 MK_UNINSTAPPS=1
 # deal with the default-install-location (where apps should be installed)
 MK_INSTALLLOC=1
@@ -173,6 +174,10 @@ uf_postrun() {
   [[ -f "${OUTDIR}/docs/sysApps.md" ]] && {
     echo >> "${WEBDIR}/${DEVICE_NAME}.md"
     cat "${OUTDIR}/docs/sysApps.md" >> "${WEBDIR}/${DEVICE_NAME}.md"
+  }
+  [[ -f "${OUTDIR}/docs/disApps.md" ]] && {
+    echo >> "${WEBDIR}/${DEVICE_NAME}.md"
+    cat "${OUTDIR}/docs/disApps.md" >> "${WEBDIR}/${DEVICE_NAME}.md"
   }
   [[ -f "${OUTDIR}/docs/uninstApps.md" ]] && {
     echo >> "${WEBDIR}/${DEVICE_NAME}.md"

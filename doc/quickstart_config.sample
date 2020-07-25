@@ -63,6 +63,10 @@ uf_postrun() {
     echo >> "${WEBDIR}/${DEVICE_NAME}.md"
     cat "${OUTDIR}/docs/sysApps.md" >> "${WEBDIR}/${DEVICE_NAME}.md"
   }
+  [[ -f "${OUTDIR}/docs/disApps.md" ]] && {
+    echo >> "${WEBDIR}/${DEVICE_NAME}.md"
+    cat "${OUTDIR}/docs/disApps.md" >> "${WEBDIR}/${DEVICE_NAME}.md"
+  }
   [[ -f "${OUTDIR}/docs/uninstApps.md" ]] && {
     echo >> "${WEBDIR}/${DEVICE_NAME}.md"
     cat "${OUTDIR}/docs/uninstApps.md" >> "${WEBDIR}/${DEVICE_NAME}.md"

@@ -461,10 +461,12 @@ getAppDetails() {
   getAppStorageStats
 
   [[ ${#uninstApps} -eq 0 ]] && MK_UNINSTAPPS=0 # no need to process if there are none
+  [[ ${#disApps} -eq 0 ]] && MK_DISAPPS=0       # no need to process if there are none
   [[ ${#userApps} -eq 0 ]] && MK_USERAPPS=0     # no need to process if there are none (e.g. Android 2.x)
   [[ $((${MK_USERAPPS} + ${MK_SYSAPPS} + ${MK_UNINSTAPPS})) -ne 0 ]] && echo " <li>$(href '#apps' 'Apps')<ul>" > "${DOCDIR}/apps.head"
   [[ ${MK_USERAPPS} -ne 0 ]] && _makeAppDoc "user"
   [[ ${MK_SYSAPPS}  -ne 0 ]] && _makeAppDoc "system"
+  [[ ${MK_DISAPPS} -ne 0 ]] && _makeAppDoc "disabled"
   [[ ${MK_UNINSTAPPS} -ne 0 ]] && _makeAppDoc "uninst"
   [[ $((${MK_USERAPPS} + ${MK_SYSAPPS} + ${MK_UNINSTAPPS})) -ne 0 ]] && echo " </li></ul>" >> "${DOCDIR}/apps.head"
 
@@ -500,6 +502,13 @@ function _makeAppDoc() {
         echo -e "\n\n#\n# Disable System Components\n#" >> "${SH_DISABLED}"
         _retrieveAppNames=${MK_SYSAPPS_RETRIEVE_NAMES}
         ;;
+    "disabled")
+        doProgress "- generating disApps.md" 2
+        mdfile="${DOCDIR}/disApps.md"
+        apptype="Disabled Apps"
+        applist=(${disApps[*]})
+        _retrieveAppNames=${MK_SYSAPPS_RETRIEVE_NAMES}
+        ;;
     "uninst")
         doProgress "- generating uninstApps.md" 2
         mdfile="${DOCDIR}/uninstApps.md"
@@ -526,7 +535,7 @@ function _makeAppDoc() {
     local HAVE_AAPT=0
   fi
 
-  if [[ "$1" = "uninst" ]]; then
+  if [[ "$1" = "uninst" || "$1" = "disabled" ]]; then
     echo "$(heading 2 "${apptype} on ${DEVICE_NAME}" "${apptype/[- ]/_}")" > "${mdfile}"
   else
     echo "$(heading 2 "Installed ${apptype} on ${DEVICE_NAME}" "${apptype/[- ]/_}")" > "${mdfile}"
@@ -540,7 +549,7 @@ function _makeAppDoc() {
   local CUR_INSTALLER
   local APPNAME
   for app in ${applist[@]}; do
-    if [[ ("$1" = "system" || "$1" = "uninst") && -n "${APPCACHESPLUS}" ]]; then
+    if [[ ("$1" = "system" || "$1" = "uninst" || "$1" = "disabled") && -n "${APPCACHESPLUS}" ]]; then
       for appcache in ${APPCACHESPLUS}; do
         APPNAME=$(getAppname "${app}" "${PK_CODEPATH[$app]}" $_retrieveAppNames "${appcache}")
         [[ "${APPNAME}" != "${app}" ]] && break;
