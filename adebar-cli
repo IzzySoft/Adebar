@@ -340,6 +340,7 @@ initAppLists() {
       app=${app//[$'\t\r\n']}
       in_array "${app##*:}" ${sysApps[@]} && continue
       in_array "${app##*:}" ${userApps[@]} && continue
+      in_array "${app##*:}" ${disApps[@]} && continue
       uninstApps+=(${app##*:})
       doProgress "  + ${app##*:}" 4
     fi
