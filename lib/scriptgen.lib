@@ -38,7 +38,7 @@ getDisabled() {
 
   [[ ${#uninstApps} -ne 0 ]] && {   # Uninstalled apps
     echo -e "\n\n#\n# Uninstall Bloatware\n#" >> "${scriptname}"
-    echo -e "# commented lines can be used to re-install\n#" >> "${scriptname}"
+    echo -e "# commented lines can be used to re-install. Add -k if you wish to keep the app's data.\n#" >> "${scriptname}"
     for app in ${uninstApps[*]}; do
       echo "adb ${ADBOPTS} shell \"pm uninstall --user 0 ${app}\"" >> "${scriptname}"
       echo "# adb ${ADBOPTS} shell \"pm install-existing ${app}\"" >> "${scriptname}"
