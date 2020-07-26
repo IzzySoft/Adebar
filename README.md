@@ -51,7 +51,7 @@ Most of them should already be obvious from above description. Nevertheless, all
 
 
 ## QuickStart
-To get started without too much hazzle, please see `doc/quickstart_config.sample`. Basically, you just copy that file to `config/` (giving it a name of your choice), adjust 4 to 6 settings to reflect your device plus directory structure (as indicated by comments in the file), and you're ready-to-go.
+To get started without too much hazzle, please see `doc/quickstart_config.sample`. Basically, you just copy that file to `config/` (giving it a name of your choice), adjust 4 to 6 settings to reflect your device plus directory structure (as indicated by comments in the file), and you're ready-to-go (i.e. starting `adebar-cli` with the name of your config as only parameter, e.g. `./adebar-cli myandy`).
 
 
 ## More details
