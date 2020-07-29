@@ -464,10 +464,12 @@ getAppDetails() {
   [[ ${#disApps} -eq 0 ]] && MK_DISAPPS=0       # no need to process if there are none
   [[ ${#userApps} -eq 0 ]] && MK_USERAPPS=0     # no need to process if there are none (e.g. Android 2.x)
   [[ $((${MK_USERAPPS} + ${MK_SYSAPPS} + ${MK_UNINSTAPPS})) -ne 0 ]] && echo " <li>$(href '#apps' 'Apps')<ul>" > "${DOCDIR}/apps.head"
+  [[ ${MK_DEFAULTAPPS} -ne 0 ]] && echo "  <li>$(href "#defaultApps" "Default Apps")</li>" >> "${DOCDIR}/apps.head"
   [[ ${MK_USERAPPS} -ne 0 ]] && _makeAppDoc "user"
   [[ ${MK_SYSAPPS}  -ne 0 ]] && _makeAppDoc "system"
   [[ ${MK_DISAPPS} -ne 0 ]] && _makeAppDoc "disabled"
   [[ ${MK_UNINSTAPPS} -ne 0 ]] && _makeAppDoc "uninst"
+  [[ ${MK_DEFAULTAPPS} -ne 0 ]] && _makeDefaultAppDoc   # calling this last so userApps/sysApps can take care for app name retrieval
   [[ $((${MK_USERAPPS} + ${MK_SYSAPPS} + ${MK_UNINSTAPPS})) -ne 0 ]] && echo " </li></ul>" >> "${DOCDIR}/apps.head"
 
   doProgress "- removing temporary dumpfile" 2
@@ -475,6 +477,134 @@ getAppDetails() {
 }
 
 
+#
+# Create "default apps" section
+# (called from getAppDetails())
+#
+function _makeDefaultAppDoc() {
+  doProgress "- generating defaultApps.md" 2
+  local mdfile="${DOCDIR}/defaultApps.md"
+  echo -e "$(heading 2 "Default Apps on ${DEVICE_NAME}" "defaultApps")\n" >> "${mdfile}"
+  _makeWebviewDetails
+}
+
+#
+# Retrieve webview details
+# (called from _makeDefaultAppDoc())
+#
+function _makeWebviewDetails() {
+  local tmp=$(mktemp)
+  local pname
+  local name
+  local value
+  declare -A WEBVIEW
+  declare -a WEBVIEWAVAIL
+  local tmplist
+
+  # get and parse dumpsys
+  copyAdbContent "dumpsys_webviewupdate" "adb $ADBOPTS shell dumpsys webviewupdate" "$tmp"
+  local regex='^\s\s(\S.+?): (.+)$'
+  local pkgreg='\((.+?), (.+?)\)'
+  # Valid package com.android.chrome (versionName: 84.0.4147.89, versionCode: 414708970, targetSdkVersion: 30) is  installed/enabled for all users
+  local availreg='^    Valid package (\S+) \(.+) is\s+(.+)$'
+  declare -i avail=0
+  while IFS='
+' read zeile; do
+    if [[ "${zeile}" =~ $regex ]]; then
+      name=${BASH_REMATCH[1]}
+      value=${BASH_REMATCH[2]}
+      case $name in
+        "Fallback logic enabled")   WEBVIEW['fallback']="$value" ;;
+        'Multiprocess enabled')     WEBVIEW['multiprocess']="$value" ;;
+        'WebView package dirty')    WEBVIEW['dirty']="$value" ;;
+        'Any WebView package installed') WEBVIEW['installed']="$value" ;;
+        'Current WebView package (name, version)')          ## Value: '(com.android.chrome, 84.0.4147.89)'
+            if [[ "$value" =~ $pkgreg ]]; then
+              WEBVIEW['curpkg']=${BASH_REMATCH[1]}
+              WEBVIEW['curver']=${BASH_REMATCH[2]}
+              WEBVIEW['curname']=$(getAppname "${BASH_REMATCH[1]}" "-" 0 "")
+              [[ "${WEBVIEW['curname']}" = "${WEBVIEW['curpkg']}" && -n "${APPCACHESPLUS}" ]] && {
+                for appcache in ${APPCACHESPLUS}; do
+                  WEBVIEW['curname']=$(getAppname "${BASH_REMATCH[1]}" "-" 0 "${appcache}")
+                  [[ "${WEBVIEW['curname']}" != "${WEBVIEW['curpkg']}" ]] && break;
+                done
+              }
+            fi
+            ;;
+        'Preferred WebView package (name, version)')
+            if [[ "$value" =~ $pkgreg ]]; then
+              WEBVIEW['prefpkg']=${BASH_REMATCH[1]}
+              WEBVIEW['prefver']=${BASH_REMATCH[2]}
+              WEBVIEW['prefname']=$(getAppname "${BASH_REMATCH[1]}" "-" 0 "${appcache}")
+              [[ "${WEBVIEW['prefname']}" = "${WEBVIEW['prefpkg']}" && -n "${APPCACHESPLUS}" ]] && {
+                for appcache in ${APPCACHESPLUS}; do
+                  WEBVIEW['prefname']=$(getAppname "${BASH_REMATCH[1]}" "-" 0 "${appcache}")
+                  [[ "${WEBVIEW['prefname']}" != "${WEBVIEW['prefpkg']}" ]] && break;
+                done
+              }
+            fi
+            ;;
+      esac
+
+    elif [[ "${zeile}" =~ $availreg ]]; then
+      WEBVIEWAVAIL[avail]="${BASH_REMATCH[1]} ${BASH_REMATCH[2]}"
+      avail+=1
+    fi
+  done < "${tmp}"
+
+  # generate document
+  echo "$(tab_classopen 'apps')" >> "${mdfile}"
+  echo "$(trth2 'WebViews')" >> "${mdfile}"
+  [[ -n "${WEBVIEW['installed']}" ]]      && echo "$(trthtd 'Any WebView package installed' "${WEBVIEW['installed']}")" >> "${mdfile}"
+  [[ -n "${WEBVIEW['dirty']}" ]]          && echo "$(trthtd 'WebView package dirty' "${WEBVIEW['dirty']}")" >> "${mdfile}"
+  [[ -n "${WEBVIEW['multiprocess']}" ]]   && echo "$(trthtd 'Multiprocess enabled' "${WEBVIEW['multiprocess']}")" >> "${mdfile}"
+  [[ -n "${WEBVIEW['fallback']}" ]]       && echo "$(trthtd 'Fallback logic enabled' "${WEBVIEW['fallback']}")" >> "${mdfile}"
+  [[ -n "${WEBVIEW['curpkg']}" ]]         && {
+    tmplist="$(_mkAppLink "${WEBVIEW['curpkg']}" "${WEBVIEW['curname']}")"
+    echo "$(trthtd 'Current WebView package' "${tmplist} v${WEBVIEW['curver']}")" >> "${mdfile}"
+  }
+  [[ -n "${WEBVIEW['prefpkg']}" ]]        && {
+    tmplist="$(_mkAppLink "${WEBVIEW['prefpkg']}" "${WEBVIEW['prefname']}")"
+    echo "$(trthtd 'Preferred WebView package' "${tmplist} v${WEBVIEW['prefver']}")" >> "${mdfile}"
+  }
+  [[ ${#WEBVIEWAVAIL[*]} -gt 0 ]] && {
+    tmplist='<ul>'
+    for item in $(seq 0 $((${#WEBVIEWAVAIL[*]} -1))); do
+      pname="${WEBVIEWAVAIL[$item]}"
+      value="${pname#* }"
+      pname="${pname%% *}"
+      name="${pname}"
+      name="$(getAppname "${pname}" "-" 0 "")"
+      [[ "${name}" = "${pname}" && -n "${APPCACHESPLUS}" ]] && {
+        for appcache in ${APPCACHESPLUS}; do
+          name="$(getAppname "${pname}" "-" 0 "$appcache")"
+          [[ "${name}" != "${pname}" ]] && break
+        done
+      }
+      tmplist="${tmplist}<li>$(_mkAppLink "$pname" "$name") ${value}</li>"
+    done
+    echo "$(trthtd 'Available WebView packages' "${tmplist}</ul>")" >> "${mdfile}"
+  }
+  echo -e "$(tab_close)\n" >> "${mdfile}"
+}
+
+#
+# Create app link depending on whether name and URL are available
+# (used by _makeWebviewDetails())
+# params: pkgname, appname
+function _mkAppLink() {
+  local pkgname=$1
+  local appname="$2"
+  local link
+  if [[ "${appname}" = "${pkgname}" || -z "${appname}" ]]; then
+    link=$pkgname
+  elif [[ -n "${APP_MARKET_URL[unknown]}" ]]; then
+    link="$(href "${APP_MARKET_URL[unknown]/\%s/${pkgname}}" "${appname}")"
+  else
+    link="${appname} (${pkgname})"
+  fi
+  echo "${link}"
+}
 
 #
 # Create app documentation

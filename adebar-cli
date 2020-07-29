@@ -48,6 +48,7 @@ MK_XPRIVACY_EXPORT=0
 MK_XPRIVACY_PULL=0
 PULL_SETTINGS=1
 MK_TIBU=0
+MK_DEFAULTAPPS=1
 MK_USERAPPS=1
 MK_SYSAPPS=1
 MK_DISAPPS=1
@@ -274,6 +275,11 @@ fi
 }
 DEVICE_SDKVER=${DEVICE_SDKVER//[$'\t\r\n']}
 
+# not all features are available with all Android versions
+[[ $DEVICE_SDKVER -lt 24 ]] && {    # "cmd package" was introduced with Nougat, "dumpsys webviewupdate" with Oreo
+  MK_DEFAULTAPPS=0
+}
+
 # Load libraries if needed
 . "${BINDIR}/lib/common.lib"
 . "${BINDIR}/lib/dummydevs.lib"
@@ -295,7 +301,7 @@ declare -a uninstApps
 # Gather lists of installed apps
 #
 initAppLists() {
-  [[ $(($MK_USERBACKUP + $MK_SYSBACKUP)) -eq 0 ]] && return
+  [[ $(($MK_USERBACKUP + $MK_SYSBACKUP + $MK_DISAPPS + $MK_UNINSTAPPS + $MK_DEFAULTAPPS)) -eq 0 ]] && return
   doProgress "Gathering lists of installed apps"
   local apps
 
