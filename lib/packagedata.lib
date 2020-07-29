@@ -522,26 +522,14 @@ function _makeWebviewDetails() {
             if [[ "$value" =~ $pkgreg ]]; then
               WEBVIEW['curpkg']=${BASH_REMATCH[1]}
               WEBVIEW['curver']=${BASH_REMATCH[2]}
-              WEBVIEW['curname']=$(getAppname "${BASH_REMATCH[1]}" "-" 0 "")
-              [[ "${WEBVIEW['curname']}" = "${WEBVIEW['curpkg']}" && -n "${APPCACHESPLUS}" ]] && {
-                for appcache in ${APPCACHESPLUS}; do
-                  WEBVIEW['curname']=$(getAppname "${BASH_REMATCH[1]}" "-" 0 "${appcache}")
-                  [[ "${WEBVIEW['curname']}" != "${WEBVIEW['curpkg']}" ]] && break;
-                done
-              }
+              WEBVIEW['curname']="$(_getSysAppName "${BASH_REMATCH[1]}")"
             fi
             ;;
         'Preferred WebView package (name, version)')
             if [[ "$value" =~ $pkgreg ]]; then
               WEBVIEW['prefpkg']=${BASH_REMATCH[1]}
               WEBVIEW['prefver']=${BASH_REMATCH[2]}
-              WEBVIEW['prefname']=$(getAppname "${BASH_REMATCH[1]}" "-" 0 "${appcache}")
-              [[ "${WEBVIEW['prefname']}" = "${WEBVIEW['prefpkg']}" && -n "${APPCACHESPLUS}" ]] && {
-                for appcache in ${APPCACHESPLUS}; do
-                  WEBVIEW['prefname']=$(getAppname "${BASH_REMATCH[1]}" "-" 0 "${appcache}")
-                  [[ "${WEBVIEW['prefname']}" != "${WEBVIEW['prefpkg']}" ]] && break;
-                done
-              }
+              WEBVIEW['prefname']="$(_getSysAppName "${BASH_REMATCH[1]}")"
             fi
             ;;
       esac
@@ -574,18 +562,29 @@ function _makeWebviewDetails() {
       value="${pname#* }"
       pname="${pname%% *}"
       name="${pname}"
-      name="$(getAppname "${pname}" "-" 0 "")"
-      [[ "${name}" = "${pname}" && -n "${APPCACHESPLUS}" ]] && {
-        for appcache in ${APPCACHESPLUS}; do
-          name="$(getAppname "${pname}" "-" 0 "$appcache")"
-          [[ "${name}" != "${pname}" ]] && break
-        done
-      }
+      name="$(_getSysAppName "${pname}")"
       tmplist="${tmplist}<li>$(_mkAppLink "$pname" "$name") ${value}</li>"
     done
     echo "$(trthtd 'Available WebView packages' "${tmplist}</ul>")" >> "${mdfile}"
   }
   echo -e "$(tab_close)\n" >> "${mdfile}"
+}
+
+#
+# Get app name from appcache
+# (used by _makeWebviewDetails())
+# param: pkgname
+function _getSysAppName() {
+  local pkgname=$1
+  local appname
+  appname="$(getAppname "${pkgname}" "-" 0 "")"
+  [[ "${pkgname}" = "${appname}" && -n "${APPCACHESPLUS}" ]] && {
+    for appcache in ${APPCACHESPLUS}; do
+      appname="$(getAppname "${pkgname}" "-" 0 "$appcache")"
+      [[ "${pkgname}" != "${appname}" ]] && break;
+    done
+  }
+  echo "${appname}"
 }
 
 #
