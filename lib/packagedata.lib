@@ -486,6 +486,47 @@ function _makeDefaultAppDoc() {
   local mdfile="${DOCDIR}/defaultApps.md"
   echo -e "$(heading 2 "Default Apps on ${DEVICE_NAME}" "defaultApps")\n" >> "${mdfile}"
   _makeWebviewDetails
+  _mkStandardApps
+}
+
+#
+# Standard Apps
+# (called from _makeDefaultAppDoc())
+# needs to be disabled for Dummies due to a bunch of separate calls
+#
+function _mkStandardApps() {
+  [[ -n "${DUMMYDIR}" ]] && {
+    doProgress "! skipping StandardApps for dummy device"
+    return
+  }
+
+  local pkgname
+
+  echo "$(tab_classopen 'block')" >> "${mdfile}"
+  echo "$(trth2 'Standard Apps')" >> "${mdfile}"
+  pkgname="$(trim "$(adb $ADBOPTS shell cmd package resolve-activity tel://123456 |grep packageName|head -n 1)")"
+  _defAppLine "Dialer" "${pkgname}"
+  pkgname="$(trim "$(adb $ADBOPTS shell cmd package resolve-activity mailto:john@example.com |grep packageName|head -n 1)")"
+  _defAppLine "Mail" "${pkgname}"
+  pkgname="$(trim "$(adb $ADBOPTS shell cmd package resolve-activity http://www.example.com/ |grep packageName|head -n 1)")"
+  _defAppLine "Browser" "${pkgname}"
+  pkgname="$(trim "$(adb $ADBOPTS shell cmd package resolve-activity sms://123456 |grep packageName|head -n 1)")"
+  _defAppLine "Messenging" "${pkgname}"
+  pkgname="$(trim "$(adb $ADBOPTS shell cmd package resolve-activity -c android.intent.category.HOME -a android.intent.action.MAIN |grep packageName|head -n 1)")"
+  _defAppLine "Homescreen" "${pkgname}"
+
+  echo -e "$(tab_close)\n" >> "${mdfile}"
+}
+function _defAppLine() {
+  local app=$1
+  local pkgname=$2
+  [[ -n "${pkgname}" ]] && {
+    if [[ "${pkgname#packageName=*}" = "android" ]]; then
+      echo "$(trthtd "$app" 'unknown')" >> "${mdfile}"
+    else
+      echo "$(trthtd "$app" "$(_mkAppLink "${pkgname#packageName=*}" "$(_getSysAppName "${pkgname#packageName=*}")")")" >> "${mdfile}"
+    fi
+  }
 }
 
 #
@@ -541,7 +582,7 @@ function _makeWebviewDetails() {
   done < "${tmp}"
 
   # generate document
-  echo "$(tab_classopen 'apps')" >> "${mdfile}"
+  echo "$(tab_classopen 'block')" >> "${mdfile}"
   echo "$(trth2 'WebViews')" >> "${mdfile}"
   [[ -n "${WEBVIEW['installed']}" ]]      && echo "$(trthtd 'Any WebView package installed' "${WEBVIEW['installed']}")" >> "${mdfile}"
   [[ -n "${WEBVIEW['dirty']}" ]]          && echo "$(trthtd 'WebView package dirty' "${WEBVIEW['dirty']}")" >> "${mdfile}"
@@ -572,7 +613,7 @@ function _makeWebviewDetails() {
 
 #
 # Get app name from appcache
-# (used by _makeWebviewDetails())
+# (used by _makeWebviewDetails() & _mkStandardApps())
 # param: pkgname
 function _getSysAppName() {
   local pkgname=$1
@@ -589,7 +630,7 @@ function _getSysAppName() {
 
 #
 # Create app link depending on whether name and URL are available
-# (used by _makeWebviewDetails())
+# (used by _makeWebviewDetails() & _mkStandardApps())
 # params: pkgname, appname
 function _mkAppLink() {
   local pkgname=$1
