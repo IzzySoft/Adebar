@@ -71,6 +71,7 @@ adb ${ADBOPTS} shell dumpsys backup > $dummy/dumpsys_backup
 echo "* details for packagedata.lib..."
 # adb shell dumpsys diskstats   # already there from deviceinfo
 adb ${ADBOPTS} shell "dumpsys package" > $dummy/dumpsys_package
+adb ${ADBOPTS} shell "dumpsys webviewupdate" > $dummy/dumpsys_webviewupdate
 
 #
 # --=[ scriptgen.lib ]=--
