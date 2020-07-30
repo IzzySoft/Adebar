@@ -88,9 +88,11 @@ getDeviceInfo() {
     DEVPROP[${propname}]="${prop[*]}"
   done < "${tmp}"
 
+  #=============================================[ Device & ROM properties ]====
   # Do something with the collected information (and collect more while on it)
   echo "$(heading 2 'Device and ROM properties' 'devprops')" >> "$devicedoc"
   echo "  <li>$(href '#devprops' 'Properties')</li>" >> "$devicehead"
+  #-------------------------------------------------------=[ Product Info ]=---
   doProgress "   + checking for product details" 3
   echo "$(tab_classopen 'block' 'tab_prodinfo')" >> "$devicedoc"
   echo "$(trth2 'Product Info')" >> "$devicedoc"
@@ -136,6 +138,7 @@ getDeviceInfo() {
   echo "$(tab_close)" >> "$devicedoc"
   echo >> "$devicedoc"
 
+  #------------------------------------------------------------=[ Sensors ]=---
   if [[ ${MK_DEVICEINFO_SENSORS} -gt 0 ]]; then
     doProgress "   + checking for sensor details" 3
     copyAdbContent dumpsys_sensorservice "adb ${ADBOPTS} shell dumpsys sensorservice 2>/dev/null" "${tmp}"
@@ -172,6 +175,7 @@ getDeviceInfo() {
     fi
   fi
 
+  #---------------------------------------------------------=[ OS Details ]=---
   doProgress "   + checking for OS details" 3
   echo "$(tab_classopen 'block' 'tab_osdetails')" >> "$devicedoc"
   echo "$(trth2 'OS details')" >> "$devicedoc"
@@ -191,7 +195,7 @@ getDeviceInfo() {
   echo "$(tab_close)" >> "$devicedoc"
   echo >> "$devicedoc"
 
-  # pm list features
+  #====================================================[ pm list features ]====
   if [[ ${MK_DEVICEINFO_PMLISTFEATURES} -gt 0 ]]; then
     doProgress "- Evaluating 'pm list features'" 2
     echo  >> "$devicedoc"
@@ -209,13 +213,14 @@ getDeviceInfo() {
     echo >> "$devicedoc"
   fi
 
-  # device status
+  #=======================================================[ Device status ]====
   if [[ ${MK_DEVICEINFO_STATUS} -gt 0 ]]; then
     doProgress "- Evaluating device status" 2
     echo >> "$devicedoc"
     echo "$(heading 2 'Device Status' 'devstatus')" >> "$devicedoc"
     echo "  <li>$(href '#devstatus' 'Status')</li>" >> "$devicehead"
 
+    #---------------------------------------------------=[ Battery Status ]=---
     doProgress "  + Battery status" 3
     echo "$(tab_classopen 'block' 'tab_batterystatus')" >> "$devicedoc"
     echo "$(trth2 'Battery Status')" >> "$devicedoc"
@@ -239,6 +244,7 @@ getDeviceInfo() {
     echo "$(tab_close)" >> "$devicedoc"
     echo >> "$devicedoc"
 
+    #--------------------------------------------=[ Radio, SIM & Provider ]=---
     if [[ ${MK_RADIO} -gt 0 ]]; then
       doProgress "  + Radio status" 3
       echo >> "$devicedoc"
@@ -316,6 +322,7 @@ getDeviceInfo() {
     fi
   fi
 
+  #-------------------------------------------------=[ Networking details ]=---
   doProgress "  + networking details" 3
   echo "$(tab_classopen 'block' 'tab_networkdetails')" >> "$devicedoc"
   echo "$(trth2 'Networking details')" >> "$devicedoc"
@@ -342,7 +349,7 @@ getDeviceInfo() {
   echo "$(tab_close)" >> "$devicedoc"
   echo >> "$devicedoc"
 
-  # Storage
+  #------------------------------------------------------------=[ Storage ]=---
   doProgress "  + storage details" 3
   echo "$(tab_classopen 'block' 'tab_storagedetails')" >> "$devicedoc"
   echo "$(trth2 "Storage details <sup><b>$(href "${WIKI_BASE}/DeviceInfo-explained#user-content-storage-details" 'ⓘ' 'Wiki')</b></sup>")" >> "$devicedoc"
@@ -370,7 +377,7 @@ getDeviceInfo() {
   echo "$(tab_close)" >> "$devicedoc"
   echo >> "$devicedoc"
 
-  # SafetyNet (Android 5+)
+  #---------------------------------------------=[ SafetyNet (Android 5+) ]=---
   [[ -n "${DEVPROP[ro.boot.flash.locked]}" || -n "${DEVPROP[ro.boot.verifiedbootstate]}" || -n "${DEVPROP[ro.boot.veritymode]}" ]] && {
     doProgress "  + SafetyNet details" 3
     echo "$(tab_classopen 'block' 'tab_safetynetdetails')" >> "$devicedoc"
@@ -401,7 +408,7 @@ getDeviceInfo() {
   }
 
 
-  # Misc
+  #---------------------------------------------------------------=[ Misc ]=---
   doProgress "  + misc details" 3
   echo "$(tab_classopen 'block' 'tab_miscdetails')" >> "$devicedoc"
   echo "$(trth2 'Miscellaneous')" >> "$devicedoc"
@@ -429,6 +436,7 @@ getDeviceInfo() {
   echo "$(tab_close)" >> "$devicedoc"
 
 
+#=======================================================[ Users & Accounts ]===
   # ADB calls for the next two blocks must be made with default IFS or will fail
   doProgress "- Obtaining account and backup details" 2
   copyAdbContent dumpsys_account "adb ${ADBOPTS} shell dumpsys account" $tmp
@@ -437,9 +445,53 @@ getDeviceInfo() {
   cat $tmp2 | sed 's/\r//g' > "$tmp"
 
   echo >> "$devicedoc"
-  echo "$(heading 2 'Configured accounts' 'devaccounts')" >> "$devicedoc"
-  echo "  <li>$(href '#devaccounts' 'Accounts')</li>" >> "$devicehead"
+  echo "$(heading 2 'Users and Accounts' 'devaccounts')" >> "$devicedoc"
+  echo "  <li>$(href '#devaccounts' 'Users &amp; Accounts')</li>" >> "$devicehead"
+
+  #----------------------------------------------------------=[ MultiUser ]=---
+  copyAdbContent dumpsys_user "adb ${ADBOPTS} shell dumpsys user" $tmp2
+  [[ -s "$tmp2" ]] && {     # only if the file exists and has content
+    echo "$(tab_classopen 'block' 'tab_multiuser')" >> "$devicedoc"
+    echo "$(trth2 'Multi-User settings')" >> "$devicedoc"
+    OIFS="${IFS}"
+    IFS=''
+    regex='^    (\S*)$'
+    grep -E -A99999 "^  Device managed:" $tmp2 | while read zeile; do
+      zeile="$(trim "$zeile")"
+      [[ -z "$zeile" ]] && continue
+      echo "$(trthtd "${zeile%:*}" "${zeile#*: }")" >> "$devicedoc"
+    done
+    IFS=$OIFS
+    echo "$(tab_close)" >> "$devicedoc"
+    echo >> "$devicedoc"
+
+    echo "$(tab_classopen 'block' 'tab_guestrestrict')" >> "$devicedoc"
+    OIFS="${IFS}"
+    IFS=''
+    local regex='^    (\S*)$'
+    echo "$(trth2 'Guest Account restrictions')" >> "$devicedoc"
+    lineno=0
+    grep -E -A99999 "^  Guest restrictions:" $tmp2 | grep -iE -B99999 "^  Device managed:" | while read zeile; do
+      [[ "$zeile" =~ $regex ]] && {
+        lineno+=1
+        case "${BASH_REMATCH[1]}" in
+          "no_sms") echo "$(trthtd $lineno "No SMS")" >> "$devicedoc" ;;
+          "no_su")  echo "$(trthtd $lineno "No SuperUser")" >> "$devicedoc" ;;
+          "no_install_unknown_sources") echo "$(trthtd $lineno "No installation from unknown sources")" >> "$devicedoc" ;;
+          "no_config_wifi")     echo "$(trthtd $lineno "No WiFi configuration")" >> "$devicedoc" ;;
+          "no_outgoing_calls")  echo "$(trthtd $lineno "No outgoing calls")" >> "$devicedoc" ;;
+          *)                    echo "$(trthtd $lineno "${BASH_REMATCH[1]}")" >> "$devicedoc" ;;
+        esac
+      }
+    done
+    IFS=$OIFS
+    echo "$(tab_close)" >> "$devicedoc"
+    echo >> "$devicedoc"
+  }
+
+  #-----------------------------------------------------------=[ Accounts ]=---
   echo "$(tab_classopen 'block' 'tab_accounts')" >> "$devicedoc"
+  echo "$(trth2 'Configured Accounts')" >> "$devicedoc"
   lineno=0
   OIFS="${IFS}"
   IFS="
@@ -450,6 +502,7 @@ getDeviceInfo() {
   done
   echo "$(tab_close)" >> "$devicedoc"
 
+  echo >> "$devicedoc"
   echo >> "$devicedoc"
   echo "$(heading 2 "Android Backup Manager <b><sup>$(href "${WIKI_BASE}/DeviceInfo-explained#user-content-android-backup-manager" 'ⓘ' 'Wiki')</sup></b>" 'androidbackup')" >> "$devicedoc"
   echo "  <li>$(href '#androidbackup' 'Backup Manager')</li>" >> "$devicehead"
@@ -482,5 +535,3 @@ getDeviceInfo() {
 
   IFS="${OIFS}"
 }
-
-
