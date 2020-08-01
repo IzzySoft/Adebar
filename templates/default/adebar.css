@@ -53,6 +53,7 @@ th, td { font-size:12px; }
 th { text-align:right; background-color:lightskyblue; padding-right:.5em; }
 th.title { text-align:center; }
 th.left { text-align:left; }
+th.sub { background-color:transparent; text-align:center; }
 table.inner th { background-color:lightsteelblue; }
 td { padding-left:.5em; }
 td code { font-family:Liberation Mono, DejaVu Sans Mono, monospace; }
