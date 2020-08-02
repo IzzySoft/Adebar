@@ -451,6 +451,7 @@ getDeviceInfo() {
   #----------------------------------------------------------=[ MultiUser ]=---
   copyAdbContent dumpsys_user "adb ${ADBOPTS} shell dumpsys user" $tmp2
   [[ -s "$tmp2" ]] && {     # only if the file exists and has content
+    doProgress "  + Processing user info" 3
     echo "$(tab_classopen 'block' 'tab_users')" >> "$devicedoc"
     echo "$(trth2 'Users')" >> "$devicedoc"
     OIFS="${IFS}"
@@ -502,6 +503,7 @@ getDeviceInfo() {
     echo "$(tab_close)" >> "$devicedoc"
     echo >> "$devicedoc"
 
+    doProgress "  + Processing multi-user settings" 3
     echo "$(tab_classopen 'block' 'tab_multiuser')" >> "$devicedoc"
     echo "$(trth2 'Multi-User settings')" >> "$devicedoc"
     OIFS="${IFS}"
@@ -540,6 +542,7 @@ getDeviceInfo() {
   }
 
   #-----------------------------------------------------------=[ Accounts ]=---
+  doProgress "  + Processing accounts info" 3
   echo "$(tab_classopen 'block' 'tab_accounts')" >> "$devicedoc"
   echo "$(trth2 'Configured Accounts')" >> "$devicedoc"
   lineno=0
@@ -552,6 +555,64 @@ getDeviceInfo() {
   done
   echo "$(tab_close)" >> "$devicedoc"
 
+  #-------------------------------------------------------=[ DeviceAdmins ]=---
+  [[ $MK_DEVICEINFO_DEVICEPOLICY -gt 0 ]] && {
+    copyAdbContent dumpsys_device_policy "adb ${ADBOPTS} shell dumpsys device_policy" $tmp2
+    if [[ -s "$tmp2" ]]; then
+      doProgress "  + Processing device admins" 3
+      echo "$(tab_classopen 'block' 'tab_devadmins')" >> "$devicedoc"
+      echo "$(trth2 'Device Admins (first user only)')" >> "$devicedoc"
+      OIFS="${IFS}"
+      IFS=''
+      regex='^    (\S+)\/(\S+):\s*$'      # name of the admin, e.g. 'com.google.android.gms/.mdm.receivers.MdmDeviceAdminReceiver'
+      local regex2='^      (.+)=(.*)$'    # device admin option
+      local regex3='^      (\S+):$'       # policies/options follow
+      local regex4='^        (\S+)$'      # policies/options
+      left=''
+      right=''
+      lineno=0
+      # Note: we only parse device admins for the first user
+      grep -E -A99999 "^  Enabled Device Admins" $tmp2 | grep -iE -B99999 "^    mPasswordOwner=" | \
+        grep -v "Enabled Device Admins" | grep -v "mPasswordOwner=" | { while read zeile; do
+          [[ -z "$zeile" ]] && continue
+          lineno+=1
+          if [[ "${zeile}" =~ $regex ]]; then      # new device admin
+            [[ -n "$left" ]] && {     # finish policy/options block first
+              echo "$(trthtd "$left" "${right:2}")" >> "$devicedoc"
+              left=''
+              right=''
+            }
+            echo "$(trth2 "${BASH_REMATCH[1]}/${BASH_REMATCH[2]}" 'sub')" >> "$devicedoc"     # note: "${BASH_REMATCH[1]}" could be made an app link
+          elif [[ "${zeile}" =~ $regex2 ]]; then   # option for current device admin
+            [[ -n "$left" ]] && {
+              echo "$(trthtd "$left" "${right:2}")" >> "$devicedoc"
+              left=''
+              right=''
+            }
+            echo "$(trthtd "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}")" >> "$devicedoc"
+          elif [[ "${zeile}" =~ $regex3 ]]; then
+            [[ -n "$left" ]] && {
+              echo "$(trthtd "$left" "${right:2}")" >> "$devicedoc"
+              left=''
+              right=''
+            }
+            left="${BASH_REMATCH[1]}"
+            right=''
+          elif [[ "${zeile}" =~ $regex4 ]]; then
+            right="${right}, ${BASH_REMATCH[1]}"
+          fi
+      done
+      IFS=${OIFS}
+      [[ $lineno -eq 0 ]] && echo "$(trth2 "None found" 'sub')" >> "$devicedoc"    # block was empty
+      } # ends the extended subshell of the while loop to keep the value of $lineno
+      echo "$(tab_close)" >> "$devicedoc"
+      echo >> "$devicedoc"
+    else
+      doProgress "  ! Skipping device policy (could not obtain data)"
+    fi
+  }
+
+#================================================================[ Backups ]===
   echo >> "$devicedoc"
   echo >> "$devicedoc"
   echo "$(heading 2 "Android Backup Manager <b><sup>$(href "${WIKI_BASE}/DeviceInfo-explained#user-content-android-backup-manager" 'ⓘ' 'Wiki')</sup></b>" 'androidbackup')" >> "$devicedoc"
@@ -581,7 +642,8 @@ getDeviceInfo() {
   done
   echo " </ul></details>$(_tdtr)" >> "$devicedoc"
   echo "$(tab_close)" >> "$devicedoc"
-  rm "$tmp" "$tmp2"
 
   IFS="${OIFS}"
+
+  rm "$tmp" "$tmp2"
 }

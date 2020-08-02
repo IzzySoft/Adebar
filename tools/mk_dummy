@@ -65,6 +65,7 @@ adb ${ADBOPTS} shell dumpsys diskstats > $dummy/dumpsys_diskstats
 adb ${ADBOPTS} shell dumpsys account > $dummy/dumpsys_account
 adb ${ADBOPTS} shell dumpsys user > $dummy/dumpsys_user
 adb ${ADBOPTS} shell dumpsys backup > $dummy/dumpsys_backup
+adb ${ADBOPTS} shell dumpsys device_policy > $dummy/dumpsys_device_policy
 
 #
 # --=[ packagedata.lib ]=--
