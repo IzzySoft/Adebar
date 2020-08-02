@@ -63,6 +63,7 @@ adb ${ADBOPTS} shell dumpsys battery > $dummy/dumpsys_battery
 adb ${ADBOPTS} shell dumpsys telephony.registry > $dummy/dumpsys_telephony.registry
 adb ${ADBOPTS} shell dumpsys diskstats > $dummy/dumpsys_diskstats
 adb ${ADBOPTS} shell dumpsys account > $dummy/dumpsys_account
+adb ${ADBOPTS} shell dumpsys user > $dummy/dumpsys_user
 adb ${ADBOPTS} shell dumpsys backup > $dummy/dumpsys_backup
 
 #
