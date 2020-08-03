@@ -513,7 +513,7 @@ function _mkStandardApps() {
   pkgname="$(trim "$(adb $ADBOPTS shell cmd package resolve-activity http://www.example.com/ |grep packageName|head -n 1)")"
   _defAppLine "Browser" "${pkgname}"
   pkgname="$(trim "$(adb $ADBOPTS shell cmd package resolve-activity sms://123456 |grep packageName|head -n 1)")"
-  _defAppLine "Messenging" "${pkgname}"
+  _defAppLine "Messaging" "${pkgname}"
   pkgname="$(trim "$(adb $ADBOPTS shell cmd package resolve-activity -a android.intent.action.MUSIC_PLAYER |grep packageName|head -n 1)")"
   _defAppLine "Music" "${pkgname}"
   pkgname="$(trim "$(adb $ADBOPTS shell cmd package resolve-activity -a android.media.action.IMAGE_CAPTURE |grep packageName|head -n 1)")"
