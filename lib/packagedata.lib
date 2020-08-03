@@ -504,6 +504,8 @@ function _mkStandardApps() {
 
   echo "$(tab_classopen 'block')" >> "${mdfile}"
   echo "$(trth2 'Standard Apps')" >> "${mdfile}"
+  pkgname="$(trim "$(adb $ADBOPTS shell cmd package resolve-activity -a com.android.contacts.action.LIST_ALL_CONTACTS |grep packageName|head -n 1)")"
+  _defAppLine "Contacts" "${pkgname}"
   pkgname="$(trim "$(adb $ADBOPTS shell cmd package resolve-activity tel://123456 |grep packageName|head -n 1)")"
   _defAppLine "Dialer" "${pkgname}"
   pkgname="$(trim "$(adb $ADBOPTS shell cmd package resolve-activity mailto:john@example.com |grep packageName|head -n 1)")"
@@ -512,8 +514,12 @@ function _mkStandardApps() {
   _defAppLine "Browser" "${pkgname}"
   pkgname="$(trim "$(adb $ADBOPTS shell cmd package resolve-activity sms://123456 |grep packageName|head -n 1)")"
   _defAppLine "Messenging" "${pkgname}"
+  pkgname="$(trim "$(adb $ADBOPTS shell cmd package resolve-activity -a android.intent.action.MUSIC_PLAYER |grep packageName|head -n 1)")"
+  _defAppLine "Music" "${pkgname}"
   pkgname="$(trim "$(adb $ADBOPTS shell cmd package resolve-activity -c android.intent.category.HOME -a android.intent.action.MAIN |grep packageName|head -n 1)")"
   _defAppLine "Homescreen" "${pkgname}"
+  pkgname="$(trim "$(adb $ADBOPTS shell cmd package resolve-activity -a android.telephony.action.EMERGENCY_ASSISTANCE |grep packageName|head -n 1)")"
+  _defAppLine "Emergency" "${pkgname}"
 
   echo -e "$(tab_close)\n" >> "${mdfile}"
 }
