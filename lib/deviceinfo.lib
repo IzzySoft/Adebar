@@ -217,10 +217,11 @@ getDeviceInfo() {
   if [[ ${MK_DEVICEINFO_STATUS} -gt 0 ]]; then
     doProgress "- Evaluating device status" 2
     echo >> "$devicedoc"
-    echo "$(heading 2 'Device Status' 'devstatus')" >> "$devicedoc"
+    echo "$(heading 2 "Device Status <sup><b>$(href "${WIKI_BASE}/DeviceInfo-explained#user-content-device-status" 'ⓘ' 'Wiki')</b></sup>" 'devstatus')" >> "$devicedoc"
     echo "  <li>$(href '#devstatus' 'Status')</li>" >> "$devicehead"
 
     #---------------------------------------------------=[ Battery Status ]=---
+    # @TODO: This needs to be reworked for Android 9+ (see "skip header") as new sections have been added
     doProgress "  + Battery status" 3
     echo "$(tab_classopen 'block' 'tab_batterystatus')" >> "$devicedoc"
     echo "$(trth2 'Battery Status')" >> "$devicedoc"
@@ -230,11 +231,8 @@ getDeviceInfo() {
     while IFS='' read zeile; do
       [[ "${zeile:0:1}" != " " ]] && continue # skip header
       zeile="${zeile//[$'\t\r\n']}"
-      right="${zeile#*:}"
-      [[ "${right:0:1}" = " " ]] && right="${right:1}"
-      [[ -z "${right:1}" ]] && continue
-      left="${zeile%:*}"
-      left="${left#"${left%%[![:space:]]*}"}" # remove leading spaces"
+      right="$(trim "${zeile#*:}")"
+      left="$(trim "${zeile%:*}")"
       case "$left" in
         "status") echo "$(trthtd "${left}" "${right} (${battstat[${right}]})")"  >> "$devicedoc" ;;
         "health") echo "$(trthtd "${left}" "${right} (${batthealth[${right}]})")"  >> "$devicedoc" ;;
