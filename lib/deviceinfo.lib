@@ -185,7 +185,7 @@ getDeviceInfo() {
   [[ -n "${DEVPROP[ro.build.date]}" ]] && echo "$(trthtd 'Build date' "${DEVPROP[ro.build.date]}")" >> "$devicedoc"
   echo "$(trthtd 'Fingerprint' "${DEVPROP[ro.build.fingerprint]}")" >> "$devicedoc" # MOTO/A953_O2DE/milestone2:2.3.6/4.5.1-134_DFP-132/1317968148:user/release-keys
   [[ -n "${DEVPROP[ro.build.version.security_patch]}" ]] && echo "$(trthtd 'Security Patch Level' "${DEVPROP[ro.build.version.security_patch]}")" >> "$devicedoc" # 2019-12-05
-  [[ "$(getAdbContent whence_uname "adb ${ADBOPTS} shell whence uname")" ]] && echo "$(trthtd 'Kernel' "$(getAdbContent uname-r "adb ${ADBOPTS} shell uname -r")")" >> "$devicedoc" || echo "$(trthtd 'Kernel' "$(getAdbContents uname-r "adb ${ADBOPTS} shell busybox uname -r")")" >> "$devicedoc"
+  [[ "$(getAdbContent whence_uname "adb ${ADBOPTS} shell whence uname")" ]] && echo "$(trthtd 'Kernel' "$(getAdbContent uname-r "adb ${ADBOPTS} shell uname -r")")" >> "$devicedoc" || echo "$(trthtd 'Kernel' "$(getAdbContent uname-r "adb ${ADBOPTS} shell busybox uname -r")")" >> "$devicedoc"
   if [[ -n "${DEVPROP[ro.product.locale.language]}" ]]; then left="${DEVPROP[ro.product.locale.language]}"; else left="${DEVPROP[ro.product.locale]}"; fi
   if [[ -n "${DEVPROP[ro.product.locale.region]}" ]]; then righ="${DEVPROP[ro.product.locale.region]}"; else right="${DEVPROP[ro.csc.country_code]}"; fi
   echo "$(trthtd 'Factory language' "${left}_${right}")" >> "$devicedoc" # en_US
