@@ -447,7 +447,7 @@ getDeviceInfo() {
   echo "  <li>$(href '#devaccounts' 'Users &amp; Accounts')</li>" >> "$devicehead"
 
   #----------------------------------------------------------=[ MultiUser ]=---
-  [[ $DEVICE_SDKVER -gt 10 ]] && {  # not available on Android < 3
+  [[ $DEVICE_SDKVER -gt 16 ]] && {  # not available on Android <= 4
     copyAdbContent dumpsys_user "adb ${ADBOPTS} shell dumpsys user" $tmp2
     [[ -s "$tmp2" ]] && {     # only if the file exists and has content
       doProgress "  + Processing user info" 3
