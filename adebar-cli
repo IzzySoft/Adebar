@@ -190,7 +190,6 @@ if [[ -n "${DUMMY}" ]]; then
   fi
   HAVE_AAPT=0       # no app check in dummy mode
   PULL_SETTINGS=0   # nothing to pull from dummies
-  MK_PARTINFO=0
   MK_PARTBACKUP=0
   MK_XPRIVACY_EXPORT=0
   MK_XPRIVACY_PULL=0
