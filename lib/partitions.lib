@@ -38,6 +38,8 @@ _fsProcMtd() {
       ;;
   esac
   copyAdbContent ls_1_dev_block "adb ${ADBOPTS} shell ls -1 /dev/block 2>/dev/null" "${tmp2}"
+  # some devices do not support 'ls -1', so safe-guard:
+  [[ $? -ne 0 || ! -s "${tmp2}" || $(cat "${tmp2}" | wc -l) -lt 3 ]] && copyAdbContent ls_1_dev_block "adb ${ADBOPTS} shell ls /dev/block 2>/dev/null" "${tmp2}"
   copyAdbContent proc_mounts "adb ${ADBOPTS} shell cat /proc/mounts 2>/dev/null" "${tmp3}"
   local azeile
   local aret
@@ -50,9 +52,9 @@ _fsProcMtd() {
     azeile=(${zeile//[$'\r']})              # mtd0: 00400000 00100000 "bootloader"
     MTD_D[${counter}]="${azeile[0]//\:/}"   # mtd0
     if [[ "$src" = "/proc/mtd" ]]; then
-      aret="$(egrep "^/dev/block/${MTD_D[${counter}]//mtd/mtdblock}\$" "$tmp2")"   # /dev/block/mtdblock0
+      [[ -n "$(egrep "^${MTD_D[${counter}]//mtd/mtdblock}?\$" "$tmp2")" ]] && aret="/dev/block/${MTD_D[${counter}]//mtd/mtdblock}"  # /dev/block/mtdblock0
     else
-      aret="$(egrep "^/dev/block/${MTD_D[${counter}]}\$" "$tmp2")"
+      [[ -n "$(egrep "^${MTD_D[${counter}]}?\$" "$tmp2")" ]] && aret="/dev/block/${MTD_D[${counter}]}"
     fi
     if [[ "${aret//[$'\r']}" = "/dev/block/${MTD_D[${counter}]//mtd/mtdblock}" ]]; then
       MTD_DEV[${counter}]="/dev/block/${MTD_D[${counter}]//mtd/mtdblock}"
@@ -160,7 +162,7 @@ _fsProcPart() {
   declare -i counter=0
   while read zeile; do
     azeile=(${zeile//[$'\r']})
-    [[ "${azeile[0]}" != "179" ]] && continue # we only want "major 179" (skip loop devices etc.)
+    [[ "${azeile[0]}" != "179" && "${azeile[0]}" != "31"  ]] && continue # we only want "majors" 179/31 (mmc/mtdblock) (skip loop devices etc.)
     MTD_D[${counter}]="${azeile[3]}"
     MTD_DEV[${counter}]="/dev/block/${azeile[3]}"
     MTD_SIZE[${counter}]="${azeile[2]}"
