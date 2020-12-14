@@ -68,13 +68,17 @@ You like *Adebar* and want to contribute?
 ## Tribute
 errm… I mean, Credits and thanks:
 
-* Adebar Logo design by [Mathis Brüchert](https://social.anoxinon.de/@m4TZ)
+* Adebar Logo design by [Mathis Brüchert](https://social.anoxinon.de/@m4TZ) and Acrylic by [Mondstern](https://codeberg.org/mondstern)
 * Code submitted by [many contributors](https://github.com/IzzySoft/Adebar/graphs/contributors)
 * suggestions, problems pointed out, ideas given by even more great people via [issues](https://codeberg.org/izzy/Adebar/issues), by mail, at [Mastodon](https://mastodon.technology/@IzzyOnDroid)…
 
+[<img src='https://pixelfed.social/storage/m/_v2/13678/83a90637a-595111/ay84jSsXAhjQ/UukzNM5gRsshoVCa1kNtGSmfWdFFfvBc1W3bGibH.jpg' width='30'>][6] (Adebar Logo in [Mondstern's Gallery][7] of [Codeberg projects][8])
 
 [1]: https://codeberg.org/izzy/Adebar "Adebar at Codeberg"
 [2]: https://en.wikipedia.org/wiki/HTML "Wikipedia: HTML"
 [3]: https://codeberg.org/izzy/Adebar/wiki "Adebar Wiki at Codeberg"
 [4]: https://en.wikipedia.org/wiki/Markdown "Wikipedia: Markdown"
 [5]: https://pages.codeberg.org/izzy/adebar/ "Adebar DeviceDoc Examples"
+[6]: https://pixelfed.social/p/mondstern/244110717177958400 "Acrylic Logo by Mondstern"
+[7]: https://pixelfed.social/mondstern "Mondstern Acrylic Gallery"
+[8]: https://codeberg.org/mondstern/artworks/wiki/Codeberg "Codeberg projects in Mondstern's gallery"
