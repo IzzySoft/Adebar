@@ -35,7 +35,7 @@ Optionally, if you have the PHP [CLI](https://en.wikipedia.org/wiki/Command-line
 * `ab2tar`: shell script to convert ADB backup files into `.tar.gz` archives (requires `openssl` or `zlib-flate` and currently can only handle backups which were not password-protected)
 * `abrestore`: to help you if you have issues restoring ADB backups on Android 7 or higher (if your device is affected by the ADB restore bug, only restoring backups of apps already installed on the device)
 * `getapk`: grab the APK for a given app via ADB
-* `restore_apks`: restore all the APK's you have in a folder via ADB
+* `restoreapks`: restore all the APK's you have in a folder via ADB
 * `mkdummy`: to create a "dummy device" from your real one (mainly intended for debug purposes: if you need assistance, you could zip/tar that after having it sanitized and attach it to an issue, or send it by other means)
 * `ssnap`: to create a series of screenshots from your device
 
