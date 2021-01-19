@@ -42,7 +42,7 @@ path=$(adb shell pm path $pkgname | awk -F':' '{print $2}')
 path="${path//[$'\t\r\n']}"
 if [[ -n "$path" ]]; then
   adb pull $path
-  mv base.apk ${pkgname}.apk
+  mv $(basename $path) ${pkgname}.apk
 else
   echo "Package $pkgname not found on device."
   echo
