@@ -37,13 +37,30 @@ case $1 in
   *) pkgname=${1//[$'\t\r\n']} ;;
 esac
 
-# still here? then we have a single APK to get
-path=$(adb shell pm path $pkgname | awk -F':' '{print $2}')
-path="${path//[$'\t\r\n']}"
-if [[ -n "$path" ]]; then
-  adb pull $path
-  mv $(basename $path) ${pkgname}.apk
+# still here? then we have a package to deal with
+lines=$(adb shell pm path $pkgname | awk -F':' '{print $2}'|wc -l)
+if [[ $lines -eq 0 ]]; then
+  echo "No APK found for $pkgname"
+  exit
+elif [[ $lines -gt 1 ]]; then
+  echo "$pkgname is a split APK having $lines parts, using subdir"
+  mkdir -p $pkgname
+  for path in $(adb shell pm path $pkgname | awk -F':' '{print $2}'); do
+    path="${path//[$'\t\r\n']}"
+    if [[ -n "$path" ]]; then
+      adb pull $path $pkgname/$(basename $path)
+    else
+      echo "skipping empty path for split APK"
+    fi
+  done
 else
-  echo "Package $pkgname not found on device."
-  echo
+  path=$(adb shell pm path $pkgname | awk -F':' '{print $2}')
+  path="${path//[$'\t\r\n']}"
+  if [[ -n "$path" ]]; then
+    adb pull $path
+    mv $(basename $path) ${pkgname}.apk
+  else
+    echo "Package $pkgname not found on device."
+    echo
+  fi
 fi
