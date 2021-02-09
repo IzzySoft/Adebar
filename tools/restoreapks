@@ -5,29 +5,36 @@
 # using the "getapk.sh" script. Installation is done only for
 # "Owner" user (user 0). Intended for user apps only.
 
-
-if [ $# -gt 0 ]
-then
-	echo -e "\n\033[1;37mrestore_apks\033[0m\n"
-	echo "**Restoring APKs to connected device**"
-	echo " "
-	echo "Usage: Install all APK's in current folder to"
-	echo "connected device, including split APK's, which"
-	echo "consist of multiple apk's in their respective"
-	echo "folders, as extracted by the getapk script."
-	echo "Only installs apps to Owner user (user 0)"
-	echo "Intended for user apps only."
-	echo " "
-	exit;
-fi
+case "$1" in
+  [0-9]) USER="--user $1";;
+  all) USER="";;
+  *)
+    echo -e "\n\033[1;37mrestore_apks\033[0m\n"
+    echo "**Restoring APKs to connected device**"
+    echo " "
+    echo "Usage: Install all APK's in current folder to"
+    echo "connected device, including split APK's, which"
+    echo "consist of multiple apk's in their respective"
+    echo "folders, as extracted by the getapk script."
+    echo "Only installs apps to Owner user (user 0)"
+    echo "Intended for user apps only."
+    echo " "
+    echo "Syntax:"
+    echo "  $0 <all> | <userId>"
+    echo "Examples:"
+    echo "  $0 0   # install only for the device owner"
+    echo "  $0 all # do not specify user to install for (use default)"
+    exit;
+    ;;
+esac
 
 # This option is for preventing the loop from evaluating its body
 # for "*.apk", in case no actual apk's exist to match the wildcard
 shopt -s nullglob
 for i in *.apk; do
-    adb install --user 0 "$i"
+    adb install $USER "$i"
 done
 for directory in */ ; do
     multipath="$directory*.apk"
-    adb install-multiple --user 0 $multipath
+    adb install-multiple $USER $multipath
 done
