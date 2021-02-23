@@ -1,5 +1,5 @@
 ##############################################################################
-# Adebar © 2014 - 2020 by Itzchak Rehberg
+# Adebar © 2014 - 2021 by Itzchak Rehberg
 # This is part of the Adebar project, see https://codeberg.org/izzy/Adebar
 # Protected by the GPLv2
 # ----------------------------------------------------------------------------
@@ -194,6 +194,31 @@ getDeviceInfo() {
   echo "$(trthtd 'Configured timezone' "${DEVPROP[persist.sys.timezone]}")" >> "$devicedoc" # Europe/Berlin
   echo "$(tab_close)" >> "$devicedoc"
   echo >> "$devicedoc"
+
+  #-----------------------------------------------------=[ Memory Details ]=---
+  doProgress "   + checking for Memory details" 3
+  copyAdbContent proc_meminfo "adb ${ADBOPTS} shell cat /proc/meminfo 2>/dev/null" "${tmp}"
+  if [[ $(cat "${tmp}" | wc -l) -gt 1 ]]; then # make sure details are available
+    echo "$(tab_classopen 'block' 'tab_memdetails')" >> "$devicedoc"
+    echo "$(trth2 'Memory details')" >> "$devicedoc"
+    while read zeile; do
+      left=($zeile)
+      case "${left[0]}" in
+        "MemTotal:") ;;
+        "Buffers:") ;;
+        "Cached:") ;;
+        "SwapTotal:") ;;
+        *) continue ;;
+      esac
+      [[ ${left[1]} -gt 1024 && "${left[2],,}" = "kb" ]] && {
+        left[1]=$((${left[1]} / 1024))
+        left[2]="MiB"
+      }
+      echo "$(trthtd "${left[0]}" "${left[1]} ${left[2]}")" >> "$devicedoc"
+    done < "${tmp}"
+    echo "$(tab_close)" >> "$devicedoc"
+    echo >> "$devicedoc"
+  fi
 
   #====================================================[ pm list features ]====
   if [[ ${MK_DEVICEINFO_PMLISTFEATURES} -gt 0 ]]; then
