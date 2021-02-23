@@ -214,7 +214,7 @@ getDeviceInfo() {
         left[1]=$((${left[1]} / 1024))
         left[2]="MiB"
       }
-      echo "$(trthtd "${left[0]}" "${left[1]} ${left[2]}")" >> "$devicedoc"
+      echo "$(trthtd "${left[0]/:/}" "${left[1]} ${left[2]}")" >> "$devicedoc"
     done < "${tmp}"
     echo "$(tab_close)" >> "$devicedoc"
     echo >> "$devicedoc"
