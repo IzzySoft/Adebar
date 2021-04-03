@@ -79,8 +79,8 @@ adb shell "su -c 'am force-stop $pkg'"
 adb shell "su -c 'pm clear $pkg'"
 
 # Restore data files
-adb shell -e none -T "su -c 'tar xf - <$USER_TAR'"
-adb shell -e none -T "su -c 'tar xf - <$USER_DE_TAR'"
+cat "$USER_TAR" | adb shell -e none -T "su -c 'tar xf -'"
+cat "$USER_DE_TAR" | adb shell -e none -T "su -c 'tar xf -'"
 
 # Remove cache contents
 adb shell "su -c 'rm -rf /data/user{,_de}/0/${pkg}/{cache,code_cache}'"
@@ -94,4 +94,4 @@ adb shell "su -c 'restorecon -F -R /data/user/0/${pkg}'"
 adb shell "su -c 'restorecon -F -R /data/user_de/0/${pkg}'"
 
 # Reenable package
-adb shell "su -c 'pm enable §pkg'"
+adb shell "su -c 'pm enable $pkg'"
