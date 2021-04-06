@@ -10,7 +10,7 @@
 # --=[ Syntax ]=--
 [[ -z "$1" ]] && {
   echo -e "\n\033[1;37mroot_backup\033[0m"
-  echo "Obtaining APK and data of a given app using root powers"
+  echo "Restoring APK and data of a given app using root powers"
   echo
   echo "Syntax:"
   echo -e "  $0 <packageName> [sourceDirectory]\n"
@@ -73,6 +73,14 @@ else
     exit 99
 fi
 
+# Find the PKGUID to (later) own the data to. If we cannot identify it, processing should be stopped
+PKGUID=$(adb shell "su -c 'cat /data/system/packages.list'" | grep "${pkg} " | cut -d' ' -f2)
+[[ -z $PKGUID ]] && PKGUID=$(adb shell "dumpsys package ${pkg}" | grep "userId" | head -n1 | cut -d'=' -f2)
+[[ $(echo "$PKGUID" | grep -E '^[0-9]+$') ]] || {   # UID must be numeric and not NULL
+    echo "Cannot find PKGUID, exiting."
+    exit 101
+}
+
 # Make sure the app closes and stays closed
 adb shell "su -c 'pm disable $pkg'"
 adb shell "su -c 'am force-stop $pkg'"
@@ -86,7 +94,6 @@ cat "$USER_DE_TAR" | adb shell -e none -T "su -c 'tar xf -'"
 adb shell "su -c 'rm -rf /data/user{,_de}/0/${pkg}/{cache,code_cache}'"
 
 # Adapt to new UID
-PKGUID=$(adb shell "su -c \"pm list packages -U ${pkg} | cut -d':' -f3\"")
 adb shell "su -c 'chown -R $PKGUID:$PKGUID /data/user/0/${pkg} /data/user_de/0/${pkg}'"
 
 # Restore SELinux contexts
