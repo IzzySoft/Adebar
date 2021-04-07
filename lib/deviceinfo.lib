@@ -486,9 +486,8 @@ getDeviceInfo() {
       left=''
       while read zeile; do
         lineno+=1
-        [[ $lineno -eq 1 ]] && continue   # header
-        if [[ "${zeile:0:10}" = "  UserInfo" ]]; then     # UserInfo{0:null:13} serialNo=0
-          regex=".*UserInfo\{([0-9]+)\:.*"
+        [[ "$(trim "$zeile")" = "User:" || "${zeile:0:13}" = "Current user:" ]] && continue
+        if [[ "${zeile:0:10}" = "  UserInfo" ]]; then     # UserInfo{0:null:13} serialNo=0 // Android 11+ (Samsung A40): UserInfo{0:c13} serialNo=0 isPrimary=true
           regex=".*UserInfo.([0-9]+)\:.*"
           [[ "$zeile" =~ $regex ]] && userno=${BASH_REMATCH[1]}
           echo "$(trth2 "User $userno" 'sub')" >> "$devicedoc"
@@ -535,6 +534,7 @@ getDeviceInfo() {
       grep -E -A99999 "^  Device managed:" $tmp2 | while read zeile; do
         zeile="$(trim "$zeile")"
         [[ -z "$zeile" ]] && continue
+        [[ "${zeile:0:10}" = "User types" ]] && break   # added with Android 11?
         echo "$(trthtd "${zeile%:*}" "${zeile#*: }")" >> "$devicedoc"
       done
       IFS=$OIFS
