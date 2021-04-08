@@ -486,7 +486,7 @@ getDeviceInfo() {
       left=''
       while read zeile; do
         lineno+=1
-        [[ "$(trim "$zeile")" = "User:" || "${zeile:0:13}" = "Current user:" ]] && continue
+        [[ "$(trim "$zeile")" = "Users:" || "${zeile:0:13}" = "Current user:" ]] && continue
         if [[ "${zeile:0:10}" = "  UserInfo" ]]; then     # UserInfo{0:null:13} serialNo=0 // Android 11+ (Samsung A40): UserInfo{0:c13} serialNo=0 isPrimary=true
           regex=".*UserInfo.([0-9]+)\:.*"
           [[ "$zeile" =~ $regex ]] && userno=${BASH_REMATCH[1]}
