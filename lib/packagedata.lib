@@ -170,6 +170,8 @@ getAppDetails() {
   declare -A PK_PRIMARYCPU
   declare -A PK_SECONDARYCPU
   declare -A PK_APPCATEGORY
+  declare -A PK_QUERIESINTENTS
+  declare -A PK_LEGACYSTORAGE
   declare -A PK_SCREENSIZE
   declare -A PK_FIRSTINSTALL
   declare -A PK_LASTUPDATE
@@ -354,8 +356,21 @@ getAppDetails() {
               doProgress "    +appCategory: ${PK_APPCATEGORY[$P_PKGNAME]}" 5
               continue
             fi
+            if [[ "${zeile:0:18}" == "    queriesIntents" ]]; then
+              PK_QUERIESINTENTS[$P_PKGNAME]="${zeile:19}"
+              doProgress "    +appQueriesIntents: ${PK_QUERIESINTENTS[$P_PKGNAME]}" 5
+              continue
+            fi
+            if [[ "${zeile:0:36}" == "    hasPreserveLegacyExternalStorage" ]]; then
+              PK_LEGACYSTORAGE[$P_PKGNAME]="${zeile:37}"
+              doProgress "    +legacyStorage: ${PK_LEGACYSTORAGE[$P_PKGNAME]}" 5
+              continue
+            fi
             # silently skip some stuff:
-            if [[ "${zeile:0:24}" == "    install permissions:" || "${zeile:0:25}" == "    declared permissions:" || "${zeile:0:11}" == "    dexMode" || "${zeile:0:32}" == "    nativeLibraryRootRequiresIsa" || "${zeile:0:29}" == "    secondaryNativeLibraryDir" || "${zeile:0:20}" == "    nativeLibraryDir" || "${zeile:0:24}" == "    nativeLibraryRootDir" || "${zeile:0:26}" == "    legacyNativeLibraryDir" || "${zeile:0:10}" == "    splits" || "${zeile:0:16}" == "    compat name=" ]]; then
+            if [[ "${zeile:0:24}" == "    install permissions:" || "${zeile:0:25}" == "    declared permissions:" || "${zeile:0:11}" == "    dexMode" || "${zeile:0:32}" == "    nativeLibraryRootRequiresIsa"
+               || "${zeile:0:29}" == "    secondaryNativeLibraryDir" || "${zeile:0:20}" == "    nativeLibraryDir" || "${zeile:0:24}" == "    nativeLibraryRootDir" || "${zeile:0:26}" == "    legacyNativeLibraryDir"
+               || "${zeile:0:10}" == "    splits" || "${zeile:0:16}" == "    compat name=" || "${zeile:0:18}" == "    forceQueryable" || "${zeile:0:19}" == "    queriesPackages"
+               || "${zeile:0:23}" == "    usesStaticLibraries" || "${zeile:0:20}" == "    usesLibraryFiles" || "${zeile:0:18}" == "    static library" || "${zeile:0:17}" == "    overlay paths" ]]; then
               continue
             fi
 
@@ -772,6 +787,8 @@ function _makeAppDoc() {
     [[ -n "${PK_PRIMARYCPU[$app]}" && "${PK_PRIMARYCPU[$app]}" != "null" ]]     && tmpstring+="$(trthtd 'Primary CPU ABI' "<code>${PK_PRIMARYCPU[$app]}</code>")\n"
     [[ -n "${PK_SECONDARYCPU[$app]}" && "${PK_SECONDARYCPU[$app]}" != "null" ]] && tmpstring+="$(trthtd 'Secondary CPU ABI' "<code>${PK_SECONDARYCPU[$app]}</code>")\n"
     [[ -n "${PK_SCREENSIZE[$app]}" ]]   && tmpstring+="$(trthtd 'supported screen sizes' "${PK_SCREENSIZE[$app]}")\n"
+    [[ -n "${PK_QUERIESINTENTS[$app]}" ]] && tmpstring+="$(trthtd 'queries Intents' "${PK_QUERIESINTENTS[$app]}")\n"
+    [[ -n "${PK_LEGACYSTORAGE[$app]}" ]]  && tmpstring+="$(trthtd 'preserve Legacy Storage' "${PK_LEGACYSTORAGE[$app]}")\n"
     [[ -n "${PK_FLAGS[$app]}" ]]        && tmpstring+="$(trthtd 'flags' "${PK_FLAGS[$app]}")\n"
     [[ -n "${PK_PRIVFLAGS[$app]}" ]]    && tmpstring+="$(trthtd 'privateFlags' "${PK_PRIVFLAGS[$app]}")\n"
     [[ -n "${PK_MTKFLAGS[$app]}" ]]     && tmpstring+="$(trthtd 'mtkFlags' "${PK_MTKFLAGS[$app]}")\n"
