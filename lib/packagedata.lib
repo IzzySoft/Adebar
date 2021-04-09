@@ -566,6 +566,7 @@ function _makeWebviewDetails() {
   declare -A WEBVIEW
   declare -a WEBVIEWAVAIL
   local tmplist
+  trap "rm -f -- '$tmp'" RETURN
 
   # get and parse dumpsys
   copyAdbContent "dumpsys_webviewupdate" "adb $ADBOPTS shell dumpsys webviewupdate" "$tmp"
@@ -634,6 +635,8 @@ function _makeWebviewDetails() {
     echo "$(trthtd 'Available WebView packages' "${tmplist}</ul>")" >> "${mdfile}"
   }
   echo -e "$(tab_close)\n" >> "${mdfile}"
+
+  rm $tmp
 }
 
 #
