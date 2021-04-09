@@ -541,6 +541,36 @@ getDeviceInfo() {
       echo "$(tab_close)" >> "$devicedoc"
       echo >> "$devicedoc"
 
+      [[ -n "$(grep -E -A99999 "^  User types" $tmp2)" ]] && {  # Android 11+
+        echo "$(tab_classopen 'block' 'tab_usertypes')" >> "$devicedoc"
+        echo "$(trth2 'User Types')" >> "$devicedoc"
+        OIFS="${IFS}"
+        IFS=''
+        regex='^    (\S+)'
+        local utype=''
+        local stash=''
+        lineno=0
+        grep -E -A99999 "^  User types" $tmp2 | while read zeile; do
+          lineno+=1
+          [[ $lineno -eq 1 ]] && continue   # skip header
+          [[ -z "$(trim "$zeile")" ]] && break
+          if [[ "$zeile" =~ $regex ]]; then
+            [[ -n "${stash}" ]] && {
+              echo "$(trthtd "${utype}" "<details><summary>Details</summary><pre>${stash:1}</pre></details>")" >> "$devicedoc"
+              stash=''
+            }
+            zeile="${zeile%%:*}"
+            utype="${zeile##*.}"
+          else
+            stash="${stash}
+${zeile:7}"
+          fi
+        done
+        IFS=$OIFS
+        echo "$(tab_close)" >> "$devicedoc"
+        echo >> "$devicedoc"
+      }
+
       echo "$(tab_classopen 'block' 'tab_guestrestrict')" >> "$devicedoc"
       OIFS="${IFS}"
       IFS=''
