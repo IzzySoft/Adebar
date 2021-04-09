@@ -125,6 +125,7 @@ getDeviceInfo() {
     }
   }
   [[ -n "$serial" ]] && echo "$(trthtd 'IMEI' "$serial")" >> "$devicedoc"
+  [[ -n "${DEVPROP[ro.hardware]}" ]] && echo "$(trthtd 'Chipset' "${DEVPROP[ro.hardware]}")" >> "$devicedoc" # qcom, exynos7904 etc
   [[ -n "${DEVPROP[ro.board.platform]}" ]] && echo "$(trthtd 'Platform' "${DEVPROP[ro.board.platform]}")" >> "$devicedoc" # omap3
   [[ -n "${DEVPROP[ro.radio.hw.version]}" ]] && echo "$(trthtd 'Radio version' "${DEVPROP[ro.radio.hw.version]}")" >> "$devicedoc" # SJUG5980AA
   [[ -n "${DEVPROP[gsm.baseband.version]}" ]] && echo "$(trthtd 'Baseband' "${DEVPROP[gsm.baseband.version]}")" >> "$devicedoc" # L6260_MODEM_SIC_02.1233.00
