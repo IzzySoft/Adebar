@@ -485,7 +485,7 @@ getAppDetails() {
   [[ ${MK_DISAPPS} -ne 0 ]] && _makeAppDoc "disabled"
   [[ ${MK_UNINSTAPPS} -ne 0 ]] && _makeAppDoc "uninst"
   [[ ${MK_DEFAULTAPPS} -ne 0 ]] && _makeDefaultAppDoc   # calling this last so userApps/sysApps can take care for app name retrieval
-  [[ $((${MK_USERAPPS} + ${MK_SYSAPPS} + ${MK_UNINSTAPPS})) -ne 0 ]] && echo " </li></ul>" >> "${DOCDIR}/apps.head"
+  [[ $((${MK_USERAPPS} + ${MK_SYSAPPS} + ${MK_UNINSTAPPS})) -ne 0 ]] && echo " </ul></li></ul>" >> "${DOCDIR}/apps.head"
 
   doProgress "- removing temporary dumpfile" 2
   rm -f "${PKGDUMP}" "$tmp"
