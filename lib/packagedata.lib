@@ -499,7 +499,7 @@ getAppDetails() {
 function _makeDefaultAppDoc() {
   doProgress "- generating defaultApps.md" 2
   local mdfile="${DOCDIR}/defaultApps.md"
-  echo -e "$(heading 2 "Default Apps on ${DEVICE_NAME}" "defaultApps")\n" >> "${mdfile}"
+  echo -e "$(heading 2 "Default Apps on ${DEVICE_NAME}" "defaultApps")\n" > "${mdfile}"
   _makeWebviewDetails
   _mkStandardApps
 }
