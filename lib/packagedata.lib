@@ -432,6 +432,9 @@ getAppDetails() {
         if [[ "${zeile:0:6}" = "      " ]]; then
           continue # we don't include enabled components
         fi
+        if [[ -z "${zeile}" ]]; then
+          continue # skip empty lines
+        fi
         if [[ "${zeile}" = "    grantedPermissions:" ]]; then
           P_BLOCK="perms"
           doProgress "    +perms" 5
