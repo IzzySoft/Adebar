@@ -750,7 +750,7 @@ function _makeAppDoc() {
   local CUR_INSTALLER
   local APPNAME
   for app in ${applist[@]}; do
-    if [[ ("$1" = "system" || "$1" = "uninst" || "$1" = "disabled") && -n "${APPCACHESPLUS}" ]]; then
+    if [[ ("$1" = "system" || "$1" = "uninst" || "$1" = "disabled" || "$1" = "user") && -n "${APPCACHESPLUS}" ]]; then
       for appcache in ${APPCACHESPLUS}; do
         APPNAME=$(getAppname "${app}" "${PK_CODEPATH[$app]}" $_retrieveAppNames "${appcache}")
         [[ "${APPNAME}" != "${app}" ]] && break;
