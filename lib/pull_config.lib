@@ -1,5 +1,5 @@
 ##############################################################################
-# Adebar © 2014, 2015 by Itzchak Rehberg
+# Adebar © 2014-2021 by Itzchak Rehberg
 # This is part of the Adebar project, see https://codeberg.org/izzy/Adebar
 # Protected by the GPLv2
 # ----------------------------------------------------------------------------
@@ -27,14 +27,19 @@ getSettings() {
   doProgress "- build.prop: $(trim "${msg##*]}")" 2
 
   # wpa_supplicant.conf
+  local wificonf="/data/misc/wifi/wpa_supplicant.conf"
   if [[ ${ROOT_COMPAT} -eq 1 ]]; then
-    msg="$((adb ${ADBOPTS} shell "su -c 'cat /data/misc/wifi/wpa_supplicant.conf'" > "${CONFDIR}/wpa_supplicant.conf") 2>&1)"
+    adb ${ADBOPTS} shell "su -c 'ls /data/misc/wifi/wpa_supplicant.conf' >/dev/null 2>&1"
+    [[ $? -ne 0 ]] && wificonf="/data/misc/wifi/WifiConfigStore.xml"
+    msg="$((adb ${ADBOPTS} shell "su -c 'cat $wificonf'" > "${CONFDIR}/$(basename $wificonf)") 2>&1)"
   else
-    msg="$((adb ${ADBOPTS} pull /data/misc/wifi/wpa_supplicant.conf "${CONFDIR}/wpa_supplicant.conf") 2>&1)"
+    adb ${ADBOPTS} shell "ls /data/misc/wifi/wpa_supplicant.conf >/dev/null 2>&1"
+    [[ $? -ne 0 ]] && wificonf="/data/misc/wifi/WifiConfigStore.xml"
+    msg="$((adb ${ADBOPTS} pull $wificonf "${CONFDIR}/$(basename $wificonf)") 2>&1)"
   fi
   [[ $? -ne 0 ]] && msg=$(ansi_code "${msg}" "red")
   [[ -z "$msg" ]] && msg="OK"
-  doProgress "- wpa_supplicant.conf: $msg" 2
+  doProgress "- $(basename ${wificonf}): $msg" 2
 
   # softap.conf
   if [[ ${ROOT_COMPAT} -eq 1 ]]; then
