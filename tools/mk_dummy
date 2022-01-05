@@ -80,9 +80,11 @@ adb ${ADBOPTS} shell ls -1 /dev/block 2>/dev/null > $dummy/ls_1_dev_block
 adb ${ADBOPTS} shell cat /proc/mounts 2>/dev/null > $dummy/proc_mounts
 adb ${ADBOPTS} shell cat /proc/dumchar_info 2>/dev/null > $dummy/proc_dumchar_info
 adb ${ADBOPTS} shell 'ls -al /dev/block/platform/*/by-name 2>/dev/null' > $dummy/dev_block_byname
-[[ $? -ne 0 ]] && adb ${ADBOPTS} shell 'ls -al /dev/block/platform/*/*/by-name 2>/dev/null' > $dummy/dev_block_byname
-[[ $? -ne 0 ]] && adb ${ADBOPTS} shell "su -c 'ls -al /dev/block/platform/*/by-name'" 2>/dev/null > $dummy/dev_block_byname
-[[ $? -ne 0 ]] && adb ${ADBOPTS} shell "su -c 'ls -al /dev/block/platform/*/*/by-name'" 2>/dev/null > $dummy/dev_block_byname
+[[ ! -s $dummy/dev_block_byname ]] && adb ${ADBOPTS} shell 'ls -al /dev/block/platform/*/*/by-name 2>/dev/null' > $dummy/dev_block_byname
+[[ ! -s $dummy/dev_block_byname ]] && adb ${ADBOPTS} shell 'ls -al /dev/block/bootdevice/by-name 2>/dev/null' > $dummy/dev_block_byname
+[[ ! -s $dummy/dev_block_byname ]] && adb ${ADBOPTS} shell "su -c 'ls -al /dev/block/platform/*/by-name'" 2>/dev/null > $dummy/dev_block_byname
+[[ ! -s $dummy/dev_block_byname ]] && adb ${ADBOPTS} shell "su -c 'ls -al /dev/block/platform/*/*/by-name'" 2>/dev/null > $dummy/dev_block_byname
+[[ ! -s $dummy/dev_block_byname ]] && adb ${ADBOPTS} shell "su -c 'ls -al /dev/block/bootdevice/by-name'" 2>/dev/null > $dummy/dev_block_byname
 adb ${ADBOPTS} shell cat /proc/partitions 2>/dev/null > $dummy/proc_partitions
 
 #
