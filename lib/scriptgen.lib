@@ -117,7 +117,7 @@ getEnable() {
 #
 RETRY41() {
   echo >> "$backupscript"
-  echo "NOT_BACKED_UP=(\$(find -maxdepth 1 -type f -size -42c | xargs))" >> "$backupscript"
+  echo "NOT_BACKED_UP=(\$(find -maxdepth 1 -type f -size -50c | xargs))" >> "$backupscript"
   echo "while [[ \"\${#NOT_BACKED_UP[@]}\" -gt 0 ]]; do" >> "$backupscript"
   echo "  echo -e \"\\Some of the apps are not backed up properly (\"\${#NOT_BACKED_UP[@]}\"):\\n\"" >> "$backupscript"
   echo "  for i in \"\${NOT_BACKED_UP[@]}\"; do" >> "$backupscript"
@@ -167,7 +167,7 @@ RETRY41() {
   fi
   echo "      done" >> "$backupscript"
   echo "      NOT_BACKED_UP=()" >> "$backupscript"
-  echo "      NOT_BACKED_UP=(\$(find -maxdepth 1 -type f -size -42c | xargs))" >> "$backupscript"
+  echo "      NOT_BACKED_UP=(\$(find -maxdepth 1 -type f -size -50c | xargs))" >> "$backupscript"
   echo "    else" >> "$backupscript"
   echo "      validbackres=0" >> "$backupscript"
   echo -n "      echo -e \"" >> "$backupscript"
