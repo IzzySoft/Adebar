@@ -1,5 +1,5 @@
 ##############################################################################
-# Adebar © 2014-2020 by Itzchak Rehberg
+# Adebar © 2014-2022 by Itzchak Rehberg
 # This is part of the Adebar project, see https://codeberg.org/izzy/Adebar
 # Protected by the GPLv2
 # ----------------------------------------------------------------------------
@@ -337,6 +337,10 @@ getUserAppBackup() {
       fi
     else
       echo "# ${app} does not allow backups" >> "$backupscript"
+      echo "# if the device is rooted, you can try the following (experimental) method:" >> "$backupscript"
+      echo "# ${BINDIR}/tools/root_appbackup.sh ${app}" >> "$backupscript"
+      echo "# no regular backups for ${app} – but if you backed up via the (experimental) root method, you can (hopefully) restore using:" >> "$restorescript"
+      echo "# ${BINDIR}/tools/root_apprestore.sh ${app}" >> "$restorescript"
     fi
   done
 
