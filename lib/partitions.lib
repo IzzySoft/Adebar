@@ -1,5 +1,5 @@
 ##############################################################################
-# Adebar © 2014 - 2020 by Itzchak Rehberg
+# Adebar © 2014 - 2022 by Itzchak Rehberg
 # This is part of the Adebar project, see https://codeberg.org/izzy/Adebar
 # Protected by the GPLv2
 # ----------------------------------------------------------------------------
@@ -115,12 +115,15 @@ _fsProcByName() {
   local tmp3=$(mktemp)
   if [[ ${ROOT_COMPAT} -eq 1 ]]; then # some devices give "permission denied" here w/o root
     copyAdbContent dev_block_byname "adb ${ADBOPTS} shell su -c 'ls -al /dev/block/platform/*/by-name 2>/dev/null'" "${tmp}"
-    [[ $? -ne 0 ]] && copyAdbContent dev_block_byname "adb ${ADBOPTS} shell su -c 'ls -al /dev/block/platform/*/*/by-name 2>/dev/null'" "${tmp}"  # eg. BQ Aquaris X5 Plus
+    [[ ! -s "${tmp}" ]] && copyAdbContent dev_block_byname "adb ${ADBOPTS} shell su -c 'ls -al /dev/block/platform/*/*/by-name 2>/dev/null'" "${tmp}"  # eg. BQ Aquaris X5 Plus
+    [[ ! -s "${tmp}" ]] && copyAdbContent dev_block_byname "adb ${ADBOPTS} shell su -c 'ls -al /dev/block/bootdevice/by-name 2>/dev/null'" "${tmp}" # eg. Samsung Galaxy S20 FE
+    copyAdbContent proc_partitions "adb ${ADBOPTS} shell su -c 'cat /proc/partitions 2>/dev/null'" "${tmp2}"
   else
-    copyAdbContent dev_block_byname "adb ${ADBOPTS} shell 'ls -al /dev/block/platform/*/by-name 2>/dev/null'" "${tmp}"
-    [[ $? -ne 0 ]] && copyAdbContent dev_block_byname "adb ${ADBOPTS} shell 'ls -al /dev/block/platform/*/*/by-name 2>/dev/null'" "${tmp}"
+    copyAdbContent dev_block_byname "adb ${ADBOPTS} shell ls -al /dev/block/platform/*/by-name 2>/dev/null" "${tmp}"
+    [[ ! -s "${tmp}" ]] && copyAdbContent dev_block_byname "adb ${ADBOPTS} shell ls -al /dev/block/platform/*/*/by-name 2>/dev/null" "${tmp}"
+    [[ ! -s "${tmp}" ]] && copyAdbContent dev_block_byname "adb ${ADBOPTS} shell ls -al /dev/block/bootdevice/by-name" "${tmp}"
+    copyAdbContent proc_partitions "adb ${ADBOPTS} shell cat /proc/partitions 2>/dev/null" "${tmp2}"
   fi
-  copyAdbContent proc_partitions "adb ${ADBOPTS} shell cat /proc/partitions 2>/dev/null" "${tmp2}"
   copyAdbContent proc_mounts "adb ${ADBOPTS} shell cat /proc/mounts 2>/dev/null" "${tmp3}"
   local azeile
   local aret
